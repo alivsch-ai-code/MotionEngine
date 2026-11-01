@@ -1,0 +1,74 @@
+name: Research Discussion
+description: Discuss a research idea, paper, or algorithm for potential integration
+title: "[Research]: "
+labels: ["research", "discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Discuss a research paper, algorithm, or scientific concept that could
+        enhance MotionEngine. This template is for open-ended technical discussion.
+
+  - type: textarea
+    id: topic
+    attributes:
+      label: Research Topic
+      description: What research area or paper are you discussing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: References
+      description: >
+        Papers, books, or other sources (include DOIs or URLs where possible).
+      placeholder: |
+        - Author et al. (Year). Title. Journal. DOI: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: relevance
+    attributes:
+      label: Relevance to MotionEngine
+      description: >
+        How could this research be integrated? Which modules would it affect?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Research Area
+      options:
+        - Motion Planning
+        - Vehicle Dynamics
+        - Tire Modeling
+        - Control Theory
+        - State Estimation
+        - Prediction / Behavior
+        - Safety / Verification
+        - Optimization
+        - Sensor Modeling
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Implementation Complexity
+      options:
+        - Low — straightforward to add
+        - Medium — requires moderate effort
+        - High — significant research/development needed
+        - Unknown — needs investigation
+    validations:
+      required: true
+
+  - type: textarea
+    id: discussion
+    attributes:
+      label: Discussion Points
+      description: What questions or trade-offs should be considered?

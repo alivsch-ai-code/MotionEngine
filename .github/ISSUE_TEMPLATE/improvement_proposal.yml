@@ -1,0 +1,71 @@
+name: Improvement Proposal
+description: Propose an improvement to existing functionality
+title: "[Improve]: "
+labels: ["enhancement", "improvement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose an improvement to an existing MotionEngine feature.
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Behavior
+      description: How does the current implementation work?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed Improvement
+      description: What specific changes would improve this?
+    validations:
+      required: true
+
+  - type: textarea
+    id: justification
+    attributes:
+      label: Justification
+      description: >
+        Why is this improvement worthwhile? Include references to papers,
+        benchmarks, or real-world use cases if applicable.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Component Area
+      options:
+        - Trajectory Planning
+        - Vehicle Dynamics
+        - Tire Models
+        - Controllers
+        - ADAS Systems
+        - Simulation Engine
+        - GUI / Visualization
+        - Performance
+        - Documentation
+        - Build / CI
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking Change?
+      options:
+        - "No"
+        - "Yes — API change required"
+        - "Possibly — needs investigation"
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Notes
+      description: Optional technical notes on how this could be implemented.

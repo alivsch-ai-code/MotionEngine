@@ -10,9 +10,13 @@
 
 **Open-source framework for motion planning, trajectory optimization, vehicle dynamics simulation, and autonomous driving research.**
 
-[![CI](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/ci.yml)
+[![Build](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/build.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/build.yml)
+[![Tests](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/test.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/test.yml)
+[![Coverage](https://img.shields.io/badge/coverage-%E2%89%A580%25-brightgreen.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/coverage.yml)
+[![CodeQL](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/security.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/security.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/alivsch-ai-code/MotionEngine?include_prereleases&label=release)](https://github.com/alivsch-ai-code/MotionEngine/releases)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
 [Getting Started](#-quick-start) · [Architecture](#-architecture) · [Documentation](docs/) · [Examples](examples/) · [Contributing](CONTRIBUTING.md)
