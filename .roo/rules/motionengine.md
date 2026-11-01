@@ -1,0 +1,3 @@
+# MotionEngine
+
+Follow `AGENTS.md` in the repository root. It defines the setup, the checks, the rules for every agent and the review flow. Agent definitions are in `agents/`.

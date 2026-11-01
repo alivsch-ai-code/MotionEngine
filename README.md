@@ -369,6 +369,12 @@ See [docs/references/](docs/references/) for the complete reference collection o
 
 ---
 
+## Governance
+
+MotionEngine is reviewed by specialized agents for architecture, planning, dynamics, mathematics, physics, performance, testing, documentation, research, repository health and releases. [AGENTS.md](AGENTS.md) explains the review flow, and works with Claude Code, GitHub Copilot, Cursor, Cline and Roo Code.
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. The plugin architecture makes it straightforward to add new components without modifying the core.

@@ -72,6 +72,10 @@ See `examples/custom_nodes/` for complete examples in Python, C++, and Rust.
 - Keep the first line under 72 characters
 - Reference issues when applicable: "Fix #123"
 
+## Review Process
+
+Major changes follow the agent review flow in [AGENTS.md](AGENTS.md). The role definitions in [agents/](agents/) contain the checklists. They apply to human contributors and AI coding assistants alike.
+
 ## Reporting Bugs
 
 Use the [bug report template](https://github.com/alivsch-ai-code/MotionEngine/issues/new?template=bug_report.yml) and include a minimal reproduction script.
