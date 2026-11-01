@@ -12,7 +12,7 @@
 
 [![Build](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/build.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/build.yml)
 [![Tests](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/test.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/test.yml)
-[![Coverage](https://img.shields.io/badge/coverage-%E2%89%A580%25-brightgreen.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/coverage.yml)
+[![Coverage](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/coverage.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/coverage.yml)
 [![CodeQL](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/security.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/security.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -95,35 +95,54 @@ Five fidelity levels, all validated against analytical solutions:
 
 ## Visual Examples
 
-### Trajectory Planning — Lane Change & Following
+All figures come from real simulation runs. Regenerate them with `python scripts/generate_readme_figures.py`.
 
-<div align="center">
-<table>
-<tr>
-<td align="center"><img src="examples/planning/output/lane_change.png" alt="Lane Change" width="400"><br/><sub>Lane change trajectory</sub></td>
-<td align="center"><img src="examples/planning/output/following.png" alt="Following" width="400"><br/><sub>Vehicle following</sub></td>
-</tr>
-<tr>
-<td align="center"><img src="examples/planning/output/evasion.png" alt="Evasion" width="400"><br/><sub>Emergency evasion</sub></td>
-<td align="center"><img src="examples/planning/output/stopping.png" alt="Stopping" width="400"><br/><sub>Controlled stopping</sub></td>
-</tr>
-</table>
-</div>
+### Evasion around a parked car with oncoming traffic
 
-### Trajectory Stabilization — Controller Comparison
+The Werling planner optimizes lateral and longitudinal motion together: it slows down further and lets the oncoming car pass first. The sequential baseline fixes the speed profile before it plans laterally.
 
-<div align="center">
-<table>
-<tr>
-<td align="center"><img src="examples/stabilization/output/controller_comparison.png" alt="Controller Comparison" width="400"><br/><sub>Tracking controller comparison</sub></td>
-<td align="center"><img src="examples/stabilization/output/highway_gust.png" alt="Highway Gust" width="400"><br/><sub>Highway wind gust response</sub></td>
-</tr>
-<tr>
-<td align="center"><img src="examples/stabilization/output/slow_comparison_path.png" alt="Slow Path" width="400"><br/><sub>Low-speed path comparison</sub></td>
-<td align="center"><img src="examples/planning/output/consistency.png" alt="Consistency" width="400"><br/><sub>Planning consistency across cycles</sub></td>
-</tr>
-</table>
-</div>
+<img src="docs/images/results/evasion.png" alt="Evasion scenario with candidate trajectories and speed profiles" width="100%">
+
+### Temporal consistency
+
+Changing the replanning period does not change the Werling result (0.00 cm deviation). A naive Frenet planner with a relative time grid deviates by up to 6.5 cm.
+
+<img src="docs/images/results/consistency.png" alt="Deviation between replanning periods for both planners" width="100%">
+
+### Tracking controllers
+
+Lateral error on a double lane change from 15 to 20 m/s, starting with a 0.3 m offset.
+
+<img src="docs/images/results/controller_comparison.png" alt="Lateral error of five tracking controllers" width="100%">
+
+### Side-wind gust at 30 m/s
+
+Bi-level stabilization re-initializes the trajectory at the predicted vehicle state instead of steering back onto the old one.
+
+<img src="docs/images/results/highway_gust.png" alt="Lateral position and tracking error during a side-wind gust" width="100%">
+
+<details>
+<summary><b>More examples: lane change, following, stopping, low-speed tracking</b></summary>
+
+<br/>
+
+**Lane change at 20 m/s**
+
+<img src="docs/images/results/lane_change.png" alt="Lane change candidate set, lateral offset and lateral acceleration" width="100%">
+
+**Following a braking lead vehicle**
+
+<img src="docs/images/results/following.png" alt="Speed and gap while following a braking lead vehicle" width="100%">
+
+**Stopping at a stop line**
+
+<img src="docs/images/results/stopping.png" alt="Position and speed while stopping at a line" width="100%">
+
+**Low-speed stop-and-go tracking, forward and reverse**
+
+<img src="docs/images/results/slow_tracking.png" alt="Driven paths of three low-speed stabilization variants" width="100%">
+
+</details>
 
 ---
 
