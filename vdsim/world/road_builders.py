@@ -11,8 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..geometry.reference_line import ReferenceLine
-from .road import (ConflictZone, Lane, ParkingSpot, RoadNetwork, StopLine, TrafficLight, connect_poses,
-                   transform_line)
+from .road import ConflictZone, Lane, ParkingSpot, RoadNetwork, StopLine, TrafficLight, connect_poses, transform_line
 
 ARM_ANGLES = {"E": 0.0, "N": np.pi / 2, "W": np.pi, "S": -np.pi / 2}
 OPPOSITE_ARM = {"E": "W", "W": "E", "N": "S", "S": "N"}

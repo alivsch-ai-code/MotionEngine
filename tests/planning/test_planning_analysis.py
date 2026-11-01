@@ -1,8 +1,13 @@
 import numpy as np
 import pytest
 
-from vdsim.planning.analysis import (continuous_solution, estimate_sampling_horizon, lock_in_check, lock_in_distance,
-                                     optimal_end_time, transversality_residual)
+from vdsim.planning.analysis import (
+    continuous_solution,
+    estimate_sampling_horizon,
+    lock_in_check,
+    lock_in_distance,
+    optimal_end_time,
+)
 from vdsim.planning.cost import CostSettings
 from vdsim.planning.polynomials import polyval
 from vdsim.planning.sampling import SamplingParams

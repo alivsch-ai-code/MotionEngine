@@ -11,7 +11,7 @@ from __future__ import annotations
 from .. import nodes as N
 from ..typeinfer import BOOL, SCALAR
 from .base import GeneratedCode, Unsupported, camel
-from .native import P_ATOM, P_OR, P_POST, NativeGenerator
+from .native import P_OR, P_POST, NativeGenerator
 
 CPP_KEYWORDS = {
     "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", "catch", "char",

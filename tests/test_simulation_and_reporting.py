@@ -10,6 +10,8 @@ from vdsim.simulation.results import SimulationResult
 from vdsim.simulation.scenario import Scenario, ScenarioManager
 from vdsim.simulation.solver import create_solver
 
+pytestmark = pytest.mark.integration
+
 
 def test_vehicle_config_json_roundtrip(tmp_path, sedan):
     sedan.save(tmp_path / "v.json")

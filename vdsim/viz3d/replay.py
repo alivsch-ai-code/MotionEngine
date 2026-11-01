@@ -42,7 +42,6 @@ def play(result, host="localhost", port=2000, speed=1.0, follow_ego=True,
         on_frame:       Callback(t, ego_state, sensor_rig) pro Tick
         weather:        CARLA WeatherParameters Preset
     """
-    from ..framework.types import EgoState, ObjectState
 
     conn = connect(host, port)
     signals = result.signals
@@ -105,7 +104,6 @@ def play(result, host="localhost", port=2000, speed=1.0, follow_ego=True,
             conn.tick()
 
             if follow_ego:
-                import carla
                 tf = mgr.handles[0].carla_actor.get_transform()
                 conn.spectator_follow(tf, camera_z, camera_pitch)
 

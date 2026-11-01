@@ -33,6 +33,7 @@ jobs:
         run: python -m build
 
       - name: Verify package installs
+        shell: bash
         run: pip install dist/*.whl
 
       - name: Verify import

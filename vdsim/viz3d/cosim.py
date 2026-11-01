@@ -23,17 +23,11 @@ die in die vdsim-Perception eingespeist werden können (sensor-in-the-loop).
 
 from __future__ import annotations
 
-import time
-from pathlib import Path
-
-import numpy as np
-
 from ..core.logging_setup import get_logger
 from ..core.parameters import load_vehicle_preset
 from ..framework.context import RunContext
 from .actor_sync import ActorManager
 from .connection import connect
-from .road_export import suggest_carla_map
 from .sensors import SensorRig
 
 log = get_logger("viz3d.cosim")
@@ -74,10 +68,7 @@ class CARLABridge:
             ADResult mit allen Zeitreihen, KPIs und optional Sensordaten
         """
         from ..ad.runner import run_scenario
-        from ..ad.stack import build_graph, merge_stack
-        from ..runtime import Executor, Graph
         from ..world import build_scenario as build_scen
-        from ..framework.types import WorldState
 
         conn = connect(self.host, self.port)
 
@@ -142,13 +133,14 @@ class CARLABridge:
           3. CARLA rendert und liefert Sensorbilder
           4. Optional: Sensorbilder → vdsim-Perception
         """
-        from ..ad.runner import _spec_dict, _road_geometry, _Recorder, _apply_kicks
+        import math
+
         from ..ad.results import ADResult
+        from ..ad.runner import _apply_kicks, _Recorder, _road_geometry, _spec_dict
         from ..ad.stack import build_graph, merge_stack
+        from ..framework.types import WorldState
         from ..runtime import Executor, Graph
         from ..world import build_scenario as build_scen
-        from ..framework.types import WorldState
-        import math
 
         conn = connect(self.host, self.port)
         if self.map_name:

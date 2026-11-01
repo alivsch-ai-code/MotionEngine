@@ -1,11 +1,10 @@
-import time
 from dataclasses import dataclass
 
 import numpy as np
 import pytest
 
 from vdsim.core.parameters import load_vehicle_preset, param
-from vdsim.framework.plugins import available_components, create_component, get_component
+from vdsim.framework.plugins import available_components, component, create_component, get_component
 from vdsim.framework.types import BehaviorCommand, EgoState, LongitudinalMode, PlannerDebug, Prediction
 from vdsim.geometry import ReferenceLine
 from vdsim.planning import WerlingPlanner, create_planner
@@ -13,7 +12,6 @@ from vdsim.planning.combination import PlanningContext, TrajectoryBatch
 from vdsim.planning.constraints import BUILTIN_CONSTRAINTS, Constraint
 from vdsim.planning.kinematics import EgoGeometry
 from vdsim.planning.simulation import constant_velocity_object, run_closed_loop
-from vdsim.framework.plugins import component
 
 ROAD = ReferenceLine.straight(1000.0, ds=0.5)
 EXAMPLES = "examples/custom_nodes/python"

@@ -5,8 +5,7 @@ import pytest
 
 from vdsim.framework.component import Component, Port
 from vdsim.framework.plugins import component
-from vdsim.runtime import (BreakHit, ExecutionError, Executor, Graph, NodeStep, Recorder,
-                           RuntimeTypeError)
+from vdsim.runtime import BreakHit, ExecutionError, Executor, Graph, NodeStep, Recorder, RuntimeTypeError
 
 
 @component

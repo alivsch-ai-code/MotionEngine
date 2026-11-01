@@ -4,8 +4,14 @@ import pytest
 from vdsim.ad.results import ADResult
 from vdsim.framework.types import ObjectState, PlannedTrajectory, PlannerDebug
 from vdsim.research.experiments import BatchResult, get_path, monte_carlo, parameter_sweep, set_path
-from vdsim.research.metrics import (_rect_corners, consistency_deviation, cost_analysis, evaluate,
-                                    rectangle_distance, safety_metrics)
+from vdsim.research.metrics import (
+    _rect_corners,
+    consistency_deviation,
+    cost_analysis,
+    evaluate,
+    rectangle_distance,
+    safety_metrics,
+)
 
 
 def _following_result(gap0=30.0, v_ego=20.0, v_lead=15.0, T=4.0, dt=0.01):

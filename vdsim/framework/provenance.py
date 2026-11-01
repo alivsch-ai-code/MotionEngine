@@ -27,6 +27,7 @@ def _git_commit(root):
 def manifest(config=None, components=None, seed=None):
     import numpy
     import scipy
+
     from .. import __version__
     root = Path(__file__).resolve().parents[2]
     return {

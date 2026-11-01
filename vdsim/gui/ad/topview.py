@@ -9,8 +9,23 @@ import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .data import circle, join, object_circles, rect
-from .style import (ACCENT_REF, BEST, COST_RAMP, DESIRED, EGO, INVALID, LANE, LIGHT_COLORS, MUTED, OBJECT, PANEL,
-                    TEXT, BORDER, brush, cat_color, make_plot, pen)
+from .style import (
+    ACCENT_REF,
+    BEST,
+    COST_RAMP,
+    DESIRED,
+    EGO,
+    INVALID,
+    LANE,
+    LIGHT_COLORS,
+    MUTED,
+    OBJECT,
+    TEXT,
+    brush,
+    cat_color,
+    make_plot,
+    pen,
+)
 
 LAYERS = [("lanes", "Fahrspuren"), ("reference", "Referenzpfad"), ("infra", "Haltelinien, Ampeln, Parkplätze"),
           ("candidates", "Kandidaten"), ("best", "Gewählte Trajektorie"), ("envelope", "Fahrzeug-Envelope"),

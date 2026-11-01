@@ -8,7 +8,6 @@ graph, traceability table, sources (search, create, link) and full-text search.
 
 from __future__ import annotations
 
-import html
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets

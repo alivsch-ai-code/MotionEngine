@@ -13,7 +13,7 @@ Steuerung, da die vdsim-Physik autoritativ ist).
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -83,7 +83,6 @@ class ActorManager:
         return bp
 
     def spawn_ego(self, ego_state, z=0.5):
-        import carla
         bp = self._bp_lib.find(self.ego_blueprint)
         if bp.has_attribute("color"):
             bp.set_attribute("color", EGO_COLOR)
@@ -99,7 +98,6 @@ class ActorManager:
         return actor
 
     def spawn_object(self, obj, z=0.5):
-        import carla
         bp = self._pick_bp(obj.type, obj.id)
         t = _transform(obj.x, obj.y, obj.psi, z)
         actor = self.conn.world.try_spawn_actor(bp, t)

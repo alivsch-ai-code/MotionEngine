@@ -4,8 +4,16 @@ import numpy as np
 import pytest
 
 from vdsim.core.registry import available
-from vdsim.trajectory import (PathBuilder, Trajectory, Waypoint, WaypointEditor, generate, lap_time, load_trajectory,
-                              speed_profile)
+from vdsim.trajectory import (
+    PathBuilder,
+    Trajectory,
+    Waypoint,
+    WaypointEditor,
+    generate,
+    lap_time,
+    load_trajectory,
+    speed_profile,
+)
 
 
 def test_all_maneuvers_generate():

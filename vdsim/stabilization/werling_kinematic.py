@@ -26,8 +26,17 @@ from ..framework.knowledge import ComponentDoc, trace
 from ..framework.layers import TrackingControllerBase
 from ..framework.plugins import component
 from ..framework.types import ControlCommand, ControllerStatus
-from .common import (StepTimer, cog_point_as_rear_axle, design_parameters, desired_from_point, drive_share,
-                     empty_status, force_ratio, hold_command, vehicle_config)
+from .common import (
+    StepTimer,
+    cog_point_as_rear_axle,
+    design_parameters,
+    desired_from_point,
+    drive_share,
+    empty_status,
+    force_ratio,
+    hold_command,
+    vehicle_config,
+)
 from .errors import center_errors, flat_reference_transform, rear_axle_error_rates, rear_axle_errors, series_terms
 
 

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from ..framework.types import EgoState, Prediction, PredictedObject
+from ..framework.types import EgoState, PredictedObject, Prediction
 
 
 def ego_from_point(point, geometry, reference_point, t=None):

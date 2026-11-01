@@ -3,8 +3,8 @@ control systems), JSON import/export."""
 
 from pathlib import Path
 
-from PySide6 import QtCore, QtWidgets
 from pyqtgraph.parametertree import ParameterTree
+from PySide6 import QtCore, QtWidgets
 
 from ...core.parameters import VehicleConfig, default_config_dir
 from ..param_tree import config_to_parameter, parameter_to_config

@@ -15,7 +15,7 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..theme import ACCENT, BACKGROUND, BORDER, FAIL, MUTED, OK, PANEL, TEXT, WARN
+from ..theme import FAIL, MUTED, OK, WARN
 
 TAB_TITLE = "MATLAB"
 
@@ -233,7 +233,7 @@ class AnalysisView(QtWidgets.QWidget):
         cl.append(f"Integrator:   {', '.join(ctrl.get('integrators', [])) or '-'}")
         cl.append(f"Differenzierer: {', '.join(ctrl.get('differentiators', [])) or '-'}")
         cpx = fa.complexity or {}
-        cl.append(f"\nKomplexität:")
+        cl.append("\nKomplexität:")
         cl.append(f"  Zyklomatisch: {cpx.get('cyclomatic', '-')}")
         cl.append(f"  Max. Tiefe:   {cpx.get('max_nesting', '-')}")
         cl.append(f"  Zeilen:       {cpx.get('lines', '-')}")

@@ -20,7 +20,7 @@ from dataclasses import dataclass, field, fields, is_dataclass
 from pathlib import Path
 
 from ..framework import types as T
-from ..framework.component import Component, Port
+from ..framework.component import Port
 from ..framework.layers import LAYER_BASES
 from . import codecs, codegen
 

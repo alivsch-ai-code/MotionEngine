@@ -67,6 +67,7 @@ def main():
         print(f"Engineering Summary geschrieben: {args.summary}")
     if args.plot:
         import matplotlib.pyplot as plt
+
         from vdsim.visualization import plotter
         for result in results:
             plotter.overview_figure(result)

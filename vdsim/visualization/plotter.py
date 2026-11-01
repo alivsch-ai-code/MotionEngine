@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..core.conventions import G, WHEEL_NAMES
+from ..core.conventions import WHEEL_NAMES, G
 
 # categorical colors in fixed order (validated palette), neutral reference color
 COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"]

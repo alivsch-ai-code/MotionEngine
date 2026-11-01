@@ -9,9 +9,14 @@ from vdsim.framework.types import ControllerStatus
 from vdsim.stabilization.reinit import ReinitMonitor, elliptic_measure, predict_motion
 from vdsim.stabilization.simulate import run_closed_loop
 from vdsim.stabilization.switching import select_controller
-from vdsim.stabilization.trajectories import (SpeedProfile, build_trajectory, path_from_curvature,
-                                              path_from_lateral_offset, replan_from_prediction,
-                                              transform_rear_to_point)
+from vdsim.stabilization.trajectories import (
+    SpeedProfile,
+    build_trajectory,
+    path_from_curvature,
+    path_from_lateral_offset,
+    replan_from_prediction,
+    transform_rear_to_point,
+)
 
 
 def test_select_controller_regimes():

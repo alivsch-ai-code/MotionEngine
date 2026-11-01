@@ -9,8 +9,8 @@ Bild: examples/planning/output/following.png
 import common  # noqa: F401
 import matplotlib.pyplot as plt
 import numpy as np
-
 from common import save
+
 from vdsim.framework.types import BehaviorCommand, EgoState, LongitudinalMode, Prediction
 from vdsim.geometry import ReferenceLine
 from vdsim.planning import WerlingPlanner

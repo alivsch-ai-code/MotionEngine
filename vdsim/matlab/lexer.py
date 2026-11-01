@@ -308,7 +308,7 @@ class Lexer:
         rest = src[end:rest_end]
         if not rest.strip():
             return False
-        if not rest[0] in " \t" or rest.lstrip()[0] in "=(":
+        if rest[0] not in " \t" or rest.lstrip()[0] in "=(":
             return False
         args = rest.split()
         if any(not re.fullmatch(r"[-\w.]+", a) for a in args):

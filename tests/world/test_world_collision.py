@@ -39,13 +39,13 @@ class TestSATOverlap:
         a = rect_corners(0.0, 0.0, 0.0, 4.0, 2.0)[0]
         b = rect_corners(1.0, 0.0, 0.0, 4.0, 2.0)
         result = sat_overlap(a, b)
-        assert result[0] is True or result[0] == True
+        assert result[0]
 
     def test_separated_rectangles(self):
         a = rect_corners(0.0, 0.0, 0.0, 2.0, 2.0)[0]
         b = rect_corners(10.0, 0.0, 0.0, 2.0, 2.0)
         result = sat_overlap(a, b)
-        assert result[0] is False or result[0] == False
+        assert not result[0]
 
     def test_touching_edge(self):
         a = rect_corners(0.0, 0.0, 0.0, 2.0, 2.0)[0]
@@ -57,7 +57,7 @@ class TestSATOverlap:
         a = rect_corners(0.0, 0.0, 0.0, 4.0, 2.0)[0]
         b = rect_corners(1.5, 0.0, np.pi / 4, 4.0, 2.0)
         result = sat_overlap(a, b)
-        assert result[0] is True or result[0] == True
+        assert result[0]
 
     def test_multiple_targets(self):
         a = rect_corners(0.0, 0.0, 0.0, 4.0, 2.0)[0]
@@ -70,9 +70,7 @@ class TestSATOverlap:
         )
         result = sat_overlap(a, b)
         assert result.shape == (3,)
-        assert result[0] == True
-        assert result[1] == False
-        assert result[2] == True
+        assert result.tolist() == [True, False, True]
 
     def test_empty_targets(self):
         a = rect_corners(0.0, 0.0, 0.0, 4.0, 2.0)[0]

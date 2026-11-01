@@ -8,7 +8,7 @@ from vdsim.knowledge.references import ReferenceDB
 
 @pytest.fixture(scope="module")
 def qapp():
-    from PySide6 import QtWidgets
+    QtWidgets = pytest.importorskip("PySide6.QtWidgets")
     return QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 
 

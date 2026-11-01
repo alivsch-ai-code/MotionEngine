@@ -16,7 +16,7 @@ import numpy as np
 from ..core.parameters import param
 from ..framework.knowledge import ComponentDoc
 from ..framework.layers import ScenarioWorldBase
-from ..framework.types import EgoState, ObjectState, WorldState
+from ..framework.types import ObjectState, WorldState
 from .actors import EGO_ID, TrafficSimulator
 from .collision import collisions, rect_corners
 

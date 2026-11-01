@@ -28,7 +28,7 @@ Einstieg:
     bridge.run(duration=48.0, sensors=["camera_front", "lidar_top"])
 """
 
-from .connection import connect, CARLAConnection
-from . import replay, cosim, road_export, sensors
+from . import cosim, replay, road_export, sensors
+from .connection import CARLAConnection, connect
 
 __all__ = ["connect", "CARLAConnection", "replay", "cosim", "road_export", "sensors"]

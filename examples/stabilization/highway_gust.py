@@ -13,8 +13,12 @@ from plotting import SERIES, plt, save, style
 
 from vdsim.core.parameters import load_vehicle_preset
 from vdsim.stabilization.simulate import run_closed_loop
-from vdsim.stabilization.trajectories import (SpeedProfile, build_trajectory, path_from_lateral_offset,
-                                              replan_from_prediction)
+from vdsim.stabilization.trajectories import (
+    SpeedProfile,
+    build_trajectory,
+    path_from_lateral_offset,
+    replan_from_prediction,
+)
 
 GUST = [{"t": 7.0, "duration": 0.4, "fy": 7000.0, "mz": 2500.0}]   # side wind gust at the CoG
 

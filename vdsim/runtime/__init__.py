@@ -18,10 +18,9 @@ Importing this package registers the blocks and the loaders "python", "rust" and
 
 from ..framework.plugins import register_loader
 from . import blocks  # noqa: F401  (registers the basic blocks)
-from .debug import Breakpoint, BreakHit, NodeStep, Probe, Profiler
+from .debug import BreakHit, Breakpoint, NodeStep, Probe, Profiler
 from .executor import ExecutionError, Executor, RunResult, RuntimeTypeError
-from .graph import (Connection, Graph, GraphError, GraphValidationError, Node, ValidationIssue,
-                    ValidationReport)
+from .graph import Connection, Graph, GraphError, GraphValidationError, Node, ValidationIssue, ValidationReport
 from .hot_reload import HotReloader, ReloadEvent
 from .python_nodes import load_python_node
 from .recorder import Event, Recorder

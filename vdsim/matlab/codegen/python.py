@@ -16,8 +16,7 @@ import re
 from .. import nodes as N
 from .. import pyruntime
 from ..typeinfer import SCALAR
-from .base import (BaseGenerator, GeneratedCode, Unsupported, assigned_count, index_mutated, int_literal,
-                   uses_name)
+from .base import BaseGenerator, GeneratedCode, Unsupported, index_mutated, int_literal, uses_name
 
 _MATH1 = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "log", "log10", "log2", "sqrt"}
 _NP1 = {"sin": "np.sin", "cos": "np.cos", "tan": "np.tan", "asin": "np.arcsin", "acos": "np.arccos",
@@ -321,7 +320,7 @@ class PythonGenerator(BaseGenerator):
         if args and not isinstance(args[0], N.String) and name == "fprintf" and len(args) > 1:
             args = args[1:]            # file id
         if not args:
-            return [f"raise RuntimeError('error')"] if name == "error" else ["pass"]
+            return ["raise RuntimeError('error')"] if name == "error" else ["pass"]
         self.use("m_sprintf")
         fmt = ", ".join(self.code(a) for a in args)
         text = self.code(args[0]) if len(args) == 1 and isinstance(args[0], N.String) and "%" not in \

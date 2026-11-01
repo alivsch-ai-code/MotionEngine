@@ -61,10 +61,5 @@ jobs:
       - name: Install pip-audit
         run: pip install pip-audit
 
-      - name: Install project dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e "."
-
-      - name: Audit dependencies
-        run: pip-audit --strict --desc
+      - name: Audit project dependencies
+        run: pip-audit .

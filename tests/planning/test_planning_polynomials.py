@@ -1,13 +1,20 @@
 import numpy as np
 import pytest
 
+from vdsim.geometry.reference_line import FrenetState
 from vdsim.planning.cost import CostModel, CostSettings
 from vdsim.planning.lateral import build_lateral_set
 from vdsim.planning.longitudinal import StoppingTarget, VelocityTarget, build_longitudinal_set
-from vdsim.planning.polynomials import (ConstantReference, PolynomialSet, coefficient_matrices, jerk_integral, polyval,
-                                        quartic_coefficients, quintic_coefficients)
+from vdsim.planning.polynomials import (
+    ConstantReference,
+    PolynomialSet,
+    coefficient_matrices,
+    jerk_integral,
+    polyval,
+    quartic_coefficients,
+    quintic_coefficients,
+)
 from vdsim.planning.sampling import SamplingParams, end_grid
-from vdsim.geometry.reference_line import FrenetState
 
 
 def test_quintic_boundary_conditions_and_matrix_form():

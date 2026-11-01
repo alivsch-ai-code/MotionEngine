@@ -1,8 +1,16 @@
 import numpy as np
 import pytest
 
-from vdsim.world.road_builders import (build_highway, build_intersection, build_parking_street, build_ring_road,
-                                       build_roundabout, build_rural_road, build_urban_street, ring_route)
+from vdsim.world.road_builders import (
+    build_highway,
+    build_intersection,
+    build_parking_street,
+    build_ring_road,
+    build_roundabout,
+    build_rural_road,
+    build_urban_street,
+    ring_route,
+)
 
 BUILDERS = [lambda: build_highway(merge={}, exit={}), build_ring_road,
             lambda: build_rural_road(solid_sections=[(500, 800)]), lambda: build_urban_street(junction_x=200.0),

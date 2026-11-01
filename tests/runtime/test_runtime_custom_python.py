@@ -1,7 +1,6 @@
 """Python custom nodes: loader, hot reload with state transfer, error handling, examples, scaffolding."""
 
 import os
-import time
 from pathlib import Path
 
 import numpy as np

@@ -4,9 +4,8 @@ import struct
 import xml.etree.ElementTree as ET
 
 import numpy as np
-import pytest
 
-from vdsim.framework.types import ActuatorCommand, ControlCommand, EgoState
+from vdsim.framework.types import ActuatorCommand, ControlCommand
 from vdsim.viz3d.hil import control_to_can, ego_from_can, generate_dbc
 from vdsim.viz3d.road_export import road_to_opendrive, suggest_carla_map
 

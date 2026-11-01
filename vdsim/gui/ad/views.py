@@ -7,9 +7,22 @@ import numpy as np
 import pyqtgraph as pg
 from PySide6 import QtCore, QtWidgets
 
-from .data import rect
-from .style import (BEST, CAT, FAIL, INVALID, MUTED, OBJECT, TEXT, WARN, brush, cat_color, cursor, fmt, make_plot,
-                    pen, set_bars, sig)
+from .style import (
+    BEST,
+    CAT,
+    FAIL,
+    MUTED,
+    OBJECT,
+    TEXT,
+    WARN,
+    brush,
+    cat_color,
+    cursor,
+    make_plot,
+    pen,
+    set_bars,
+    sig,
+)
 from .topview import CandidateLayer
 
 DEG = 180.0 / np.pi

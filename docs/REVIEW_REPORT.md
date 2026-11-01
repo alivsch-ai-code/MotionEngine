@@ -18,11 +18,11 @@ The primary gap for open-source readiness is **internationalization**: ~500+ use
 |---|---|---|
 | Physics/Math correctness | 98/100 | No confirmed bugs in the reviewed models |
 | Software architecture | 92/100 | Clean layers, plugin registry, good separation of concerns |
-| Code quality | 85/100 | No dead code, no TODOs in production code, consistent naming |
-| Test coverage | 90/100 | 60+ test files, 500+ tests; line coverage not yet measured; visualization untested |
+| Code quality | 85/100 | No TODOs in production code, consistent naming; 10 unused local variables remain |
+| Test coverage | 83/100 | 520+ tests; measured line coverage 83 % without `gui` and `viz3d`, 65 % including them |
 | Documentation | 80/100 | ARCHITECTURE.md translated to English; technical docs complete; API docs TBD |
 | Internationalization | 40/100 | All code in English; all user-facing text in German |
-| Repository infrastructure | 98/100 | 8 CI/CD workflows, 4 issue templates, enhanced PR template, security scanning, release automation; workflows not yet confirmed green |
+| Repository infrastructure | 98/100 | 7 CI/CD workflows, 4 issue templates, enhanced PR template, security scanning, release automation; workflows not yet confirmed green |
 | Performance | 85/100 | Efficient numpy vectorization; minor optimization opportunities |
 
 ---
@@ -114,7 +114,7 @@ All models use appropriate guards:
 
 ### Clean
 
-- **No dead code** found
+- **Dead code:** 10 unused local variables, listed in the Ruff per-file ignores
 - **No TODO/FIXME** in production code (only in scaffolded template code — intentional)
 - **No security vulnerabilities** — exec() only in controlled contexts (MATLAB transpiler, plugin loader)
 - **Variable names consistently English** throughout
@@ -163,7 +163,7 @@ All models use appropriate guards:
 | 1 | `.gitignore` | Created |
 | 2 | `LICENSE` (MIT) | Created |
 | 3 | `pyproject.toml` (modern Python packaging) | Created |
-| 4 | GitHub Actions CI (`ci.yml`) | Created |
+| 4 | GitHub Actions CI (replaced by the specialized workflows below) | Replaced |
 | 5 | Bug report template (`bug_report.yml`) | Created |
 | 6 | Feature request template (`feature_request.yml`) | Created |
 | 7 | Pull request template | Created |
@@ -222,7 +222,7 @@ All models use appropriate guards:
 | LICENSE | 10/10 | MIT — permissive, research-friendly |
 | README | 10/10 | Visual SVG diagrams, badges, comprehensive |
 | CONTRIBUTING | 10/10 | Clear, complete |
-| CI/CD | 10/10 | 8 workflows: build, test, lint, quality, coverage, release, security, CI |
+| CI/CD | 7/10 | 7 workflows: build, test, lint, quality, coverage, release, security; format check still advisory |
 | Issue templates | 10/10 | Bug, feature, improvement, research discussion |
 | Code quality | 8/10 | Clean; needs type annotations |
 | Tests | 9/10 | 60+ test files, 500+ tests; gaps only in visualization (GUI) |

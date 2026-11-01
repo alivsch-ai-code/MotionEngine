@@ -8,7 +8,7 @@ import pytest
 
 from vdsim.matlab import generate
 from vdsim.matlab import toolchains as tc
-from vdsim.matlab.verify import build_native, rust_main, run_interpreter, run_native, run_python, deviation
+from vdsim.matlab.verify import build_native, deviation, run_interpreter, run_native, run_python, rust_main
 
 ROOT = Path(__file__).resolve().parents[2]
 A5 = ROOT / "examples" / "matlab" / "kin_tracking_with_orientation_stab.m"

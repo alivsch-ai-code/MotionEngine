@@ -14,8 +14,16 @@ import re
 
 from .. import nodes as N
 from ..typeinfer import BOOL, SCALAR
-from .base import (BaseGenerator, Unsupported, assigned_count, camel, first_assignments, index_mutated, int_literal,
-                   uses_name)
+from .base import (
+    BaseGenerator,
+    Unsupported,
+    assigned_count,
+    camel,
+    first_assignments,
+    index_mutated,
+    int_literal,
+    uses_name,
+)
 
 P_OR, P_AND, P_BOR, P_BAND, P_EQ, P_REL, P_ADD, P_MUL, P_UNARY, P_POST, P_ATOM = 1, 2, 3, 5, 6, 7, 9, 10, 11, 14, 15
 _UNARY_FUNCS = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "log", "log10", "log2",

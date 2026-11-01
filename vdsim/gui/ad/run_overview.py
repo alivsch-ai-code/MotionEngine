@@ -8,7 +8,7 @@ import json
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .style import CAT, MUTED, EVENT_STYLE, fmt, make_plot, set_bars
+from .style import CAT, EVENT_STYLE, MUTED, fmt, make_plot, set_bars
 
 
 def kpi_meta(key):

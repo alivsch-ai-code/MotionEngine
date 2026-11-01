@@ -39,8 +39,9 @@ def list_scenarios():
 
 
 def default_stack():
-    from ..ad.stack import DEFAULT_STACK
     import copy
+
+    from ..ad.stack import DEFAULT_STACK
     return copy.deepcopy(DEFAULT_STACK)
 
 
@@ -61,17 +62,20 @@ def run_batch(jobs, workers=0):
 
 
 def sweep(base_job, grid, workers=0):
-    from ..research import parameter_sweep, run_batch as _batch
+    from ..research import parameter_sweep
+    from ..research import run_batch as _batch
     return _batch(parameter_sweep(base_job, grid), workers)
 
 
 def monte_carlo(base_job, distributions, n, seed=0, workers=0):
-    from ..research import monte_carlo as _mc, run_batch as _batch
+    from ..research import monte_carlo as _mc
+    from ..research import run_batch as _batch
     return _batch(_mc(base_job, distributions, n, seed), workers)
 
 
 def compare(base_job, layer, variants, workers=0):
-    from ..research import compare_components, run_batch as _batch
+    from ..research import compare_components
+    from ..research import run_batch as _batch
     return _batch(compare_components(base_job, layer, variants), workers)
 
 

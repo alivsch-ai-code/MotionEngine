@@ -7,7 +7,7 @@ known analytical results.
 import numpy as np
 import pytest
 
-from vdsim.geometry.reference_line import FrenetState, ReferenceLine, wrap_angle
+from vdsim.geometry.reference_line import ReferenceLine, wrap_angle
 
 
 class TestWrapAngle:

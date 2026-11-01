@@ -437,7 +437,6 @@ def candidates(ax, dbg, frenet=False):
 
 def result_lane_change():
     import lane_change
-
     from vdsim.geometry import ReferenceLine
 
     log, _ = lane_change.run(ReferenceLine.straight(400.0, ds=0.5))
@@ -644,8 +643,12 @@ def result_gust():
 
     from vdsim.core.parameters import load_vehicle_preset
     from vdsim.stabilization.simulate import run_closed_loop
-    from vdsim.stabilization.trajectories import (SpeedProfile, build_trajectory, path_from_lateral_offset,
-                                                  replan_from_prediction)
+    from vdsim.stabilization.trajectories import (
+        SpeedProfile,
+        build_trajectory,
+        path_from_lateral_offset,
+        replan_from_prediction,
+    )
 
     cfg = load_vehicle_preset("mid_size_sedan")
     path = path_from_lateral_offset([(60, 50, 3.5), (140, 50, -3.5)], 450)

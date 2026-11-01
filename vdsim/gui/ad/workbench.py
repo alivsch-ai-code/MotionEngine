@@ -507,8 +507,8 @@ class LiveRunner:
     """Drives an Executor step-by-step for live visualization."""
 
     def __init__(self, scenario, stack, seed, duration, vehicle=None):
-        from ...ad.runner import _spec_dict, _road_geometry, _Recorder, _apply_kicks
         from ...ad.results import ADResult
+        from ...ad.runner import _apply_kicks, _Recorder, _road_geometry, _spec_dict
         from ...ad.stack import build_graph, merge_stack
         from ...core.parameters import load_vehicle_preset
         from ...framework.context import RunContext

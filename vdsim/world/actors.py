@@ -23,13 +23,13 @@ from __future__ import annotations
 
 import copy
 from bisect import bisect_left, bisect_right
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 
 import numpy as np
 
 from ..framework.types import ObjectState
 from ..geometry.reference_line import wrap_angle
-from .traffic_models import IDMParams, MOBILParams, idm, mobil_incentive, smoothstep5, smoothstep5_d
+from .traffic_models import IDMParams, idm, mobil_incentive, smoothstep5, smoothstep5_d
 
 EGO_ID = 0
 

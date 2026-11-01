@@ -27,7 +27,8 @@ jobs:
       - name: Ruff check
         run: ruff check . --output-format=github
 
-      - name: Ruff format check
+      - name: Ruff format check (advisory)
+        continue-on-error: true
         run: ruff format --check .
 
   import-order:

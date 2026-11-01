@@ -7,11 +7,17 @@ The scenarios follow the test drives of Werling (2011), section 5.3, where appli
 
 from __future__ import annotations
 
-import numpy as np
-
 from .actors import Cyclist, LaneVehicle, Pedestrian, StaticObstacle, Truck
-from .road_builders import (build_highway, build_intersection, build_parking_street, build_ring_road,
-                            build_roundabout, build_rural_road, build_urban_street, ring_route)
+from .road_builders import (
+    build_highway,
+    build_intersection,
+    build_parking_street,
+    build_ring_road,
+    build_roundabout,
+    build_rural_road,
+    build_urban_street,
+    ring_route,
+)
 from .scenario import scenario_type
 from .traffic_models import IDMParams, MOBILParams, idm_equilibrium_speed
 

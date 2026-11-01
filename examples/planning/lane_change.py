@@ -8,8 +8,8 @@ beschleunigung und Geschwindigkeit; Bild in examples/planning/output/lane_change
 import common  # noqa: F401  (path setup, Agg backend)
 import matplotlib.pyplot as plt
 import numpy as np
-
 from common import draw_candidates, save, status_legend
+
 from vdsim.framework.types import BehaviorCommand, EgoState, LongitudinalMode
 from vdsim.geometry import ReferenceLine
 from vdsim.planning import WerlingPlanner

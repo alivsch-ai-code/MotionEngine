@@ -22,6 +22,7 @@ def test_gui_smoke():
     pytest.importorskip("PySide6")
     pytest.importorskip("pyqtgraph")
     from PySide6 import QtWidgets
+
     from vdsim.gui.main_window import MainWindow
     from vdsim.gui.theme import apply_theme
 

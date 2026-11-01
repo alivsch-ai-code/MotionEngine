@@ -20,8 +20,14 @@ Importing the package registers all components.
 """
 
 from . import collision, constraints, cost  # noqa: F401  (plugin registration)
-from .analysis import (continuous_solution, estimate_sampling_horizon, lock_in_check, lock_in_distance,
-                       optimal_end_time, transversality_residual)
+from .analysis import (
+                       continuous_solution,
+                       estimate_sampling_horizon,
+                       lock_in_check,
+                       lock_in_distance,
+                       optimal_end_time,
+                       transversality_residual,
+)
 from .baselines import FrenetNaivePlanner, SequentialPlanner
 from .collision import CircleCollisionChecker, CollisionChecker, CollisionResult, CollisionSettings
 from .combination import CandidateEvaluator, PlanningContext, TrajectoryBatch

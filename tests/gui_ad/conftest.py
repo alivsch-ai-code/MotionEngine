@@ -10,6 +10,7 @@ if os.name == "nt":
 @pytest.fixture(scope="session")
 def qapp():
     from PySide6 import QtGui, QtWidgets
+
     from vdsim.gui.theme import apply_theme
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     apply_theme(app)

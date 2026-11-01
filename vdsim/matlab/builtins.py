@@ -22,8 +22,20 @@ from dataclasses import dataclass
 import numpy as np
 
 from .errors import MatlabRuntimeError
-from .pyruntime import (COLON, m_arr, m_cat, m_colon, m_get, m_mod, m_norm, m_rem, m_round, m_sign,
-                        m_sprintf, m_wrap_to_pi)
+from .pyruntime import (
+    COLON,
+    m_arr,
+    m_cat,
+    m_colon,
+    m_get,
+    m_mod,
+    m_norm,
+    m_rem,
+    m_round,
+    m_sign,
+    m_sprintf,
+    m_wrap_to_pi,
+)
 
 
 @dataclass

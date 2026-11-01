@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import sys
 from pathlib import Path
@@ -9,6 +10,8 @@ matplotlib.use("Agg")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+# GUI tests import PySide6 at module level; it is an optional extra
+collect_ignore_glob = [] if importlib.util.find_spec("PySide6") else ["gui_ad/*"]
 
 from vdsim.core.parameters import load_vehicle_preset  # noqa: E402
 from vdsim.simulation.scenario import Scenario  # noqa: E402

@@ -29,8 +29,6 @@ from __future__ import annotations
 import struct
 from dataclasses import dataclass
 
-import numpy as np
-
 from ..framework.types import ActuatorCommand, ControlCommand, EgoState
 
 

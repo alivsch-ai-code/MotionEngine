@@ -75,17 +75,18 @@ class TestLinearBicycleYawGain:
     """Verify steady-state yaw rate gain against Rajamani (2012) eq. 2.34."""
 
     def test_understeer_gradient(self):
+        from vdsim.analysis import LinearSingleTrackAnalysis
+
         config = load_vehicle_preset("mid_size_sedan")
-        p = config.vehicle
-        L = p.wheelbase
-        m = p.mass
-        lf, lr = p.cg_to_front, p.cg_to_rear
-        cf = 2 * config.tires.cornering_stiffness_front
-        cr = 2 * config.tires.cornering_stiffness_rear
-        K_us = (m / L) * (lf / cr - lr / cf)
+        analysis = LinearSingleTrackAnalysis(config)
+        p, model = config.vehicle, analysis.model
+        length, lf, lr = p.wheelbase, p.cg_to_front, p.cg_to_rear
+        understeer = (p.mass / length) * (lr / model.c_front - lf / model.c_rear)
+        assert understeer > 0
         v = 20.0
-        yaw_gain_analytical = v / (L * (1 + K_us * v**2))
-        assert yaw_gain_analytical > 0
+        A, B = model.state_space(v)
+        _, yaw_rate = -np.linalg.solve(A, B[:, 0])
+        assert yaw_rate == pytest.approx(v / (length + understeer * v**2), rel=1e-9)
 
 
 class TestTireModelSaturation:
@@ -144,24 +145,24 @@ class TestSolverConvergence:
             assert ratio > 12
 
 
-class TestEnergyConservation:
-    """Verify energy is approximately conserved in a free-rolling simulation."""
+class TestSpeedHolding:
+    """Verify the closed loop holds the requested speed through a lane change."""
 
     @pytest.mark.slow
-    def test_kinematic_model_constant_speed(self):
+    def test_kinematic_model_holds_maneuver_speed(self):
         from vdsim.simulation.scenario import Scenario
         from vdsim.simulation.simulator import Simulator
 
         scenario = Scenario(
             name="constant_speed_test",
-            model="kinematic",
+            model="bicycle_kinematic",
+            maneuver_params={"speed_kmh": 72.0},
             initial_speed=20.0,
             duration=5.0,
         )
         sim = Simulator.from_scenario(scenario)
         result = sim.run()
-        speeds = [s.vx for s in result.states]
-        assert all(abs(v - 20.0) < 2.0 for v in speeds)
+        assert np.all(np.abs(np.asarray(result["vx"]) - 20.0) < 0.5)
 
 
 class TestDimensionalConsistency:

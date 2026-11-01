@@ -193,7 +193,7 @@ def m_get(x, *idx):
     # x(i), x(i, j): 1-based, column-major, result shape following MATLAB's rules
     is_str = isinstance(x, str)
     A = np.array(list(x), dtype="<U1").reshape(1, len(x)) if is_str else m_arr(x)
-    if len(idx) > 2 and all(not (i is COLON) and np.all(np.asarray(i) == 1) for i in idx[2:]):
+    if len(idx) > 2 and all(i is not COLON and np.all(np.asarray(i) == 1) for i in idx[2:]):
         idx = idx[:2]
     if len(idx) == 1:
         i = idx[0]
@@ -254,7 +254,7 @@ def m_set(x, idx, value, delete=False):
         if idx[1] is COLON or len(c) == A.shape[1]:
             return m_norm(np.delete(A, r, axis=0))
         raise IndexError("Löschen erfordert ':' in einer Dimension")
-    if len(idx) > 2 and all(not (i is COLON) and np.all(np.asarray(i) == 1) for i in idx[2:]):
+    if len(idx) > 2 and all(i is not COLON and np.all(np.asarray(i) == 1) for i in idx[2:]):
         idx = idx[:2]
     if len(idx) == 1:
         i = idx[0]

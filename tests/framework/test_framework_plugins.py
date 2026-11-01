@@ -6,13 +6,11 @@ from vdsim.framework.plugins import (
     available_components,
     component,
     component_kinds,
-    create_component,
     get_component,
     parse_version,
     split_spec,
     unregister,
     version_matches,
-    versions_of,
 )
 
 

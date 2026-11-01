@@ -44,7 +44,7 @@ def _run(cmd, **kw):
     return subprocess.run(cmd, **kw)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def find_rustc():
     exe = shutil.which("rustc") or _home_cargo_bin("rustc")
     if not exe:
@@ -56,7 +56,7 @@ def find_rustc():
     return Toolchain("rustc", exe, version=version)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def find_cargo():
     exe = shutil.which("cargo") or _home_cargo_bin("cargo")
     if not exe:
@@ -73,7 +73,7 @@ def _home_cargo_bin(name):
     return str(p) if p.exists() else None
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def find_vcvars():
     """Path of vcvars64.bat of the newest Visual Studio with C++ tools (or None)."""
     if os.name != "nt":
@@ -95,7 +95,7 @@ def find_vcvars():
     return None
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def msvc_environment(vcvars):
     """Environment variables after 'call vcvars64.bat' (captured once)."""
     cmd = f'cmd /d /c "call "{vcvars}" >nul 2>&1 && set"'
@@ -110,7 +110,7 @@ def msvc_environment(vcvars):
     return env
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def find_cpp_compiler():
     """C++17 compiler: $VDSIM_CXX, g++ or clang++ on PATH, else MSVC via vswhere/vcvars64."""
     custom = os.environ.get("VDSIM_CXX")
@@ -172,7 +172,7 @@ def compile_rust(source, output, toolchain=None, cwd=None, optimize=True):
     return res
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def msvc_linker():
     """MSVC link.exe (Windows); avoids a foreign 'link' on PATH (e.g. Git's coreutils) when calling rustc."""
     if os.name != "nt":
@@ -200,13 +200,13 @@ def available():
             "vcvars": find_vcvars()}
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def probe_rust_link():
     """(ok, message): can rustc build and link an executable here?"""
     return _probe("rust", 'fn main() { println!("{}", 1.5f64.sin()); }\n')
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def probe_cpp():
     """(ok, message): can the C++ compiler build and link an executable here (e.g. Windows SDK present)?"""
     return _probe("cpp", '#include <cmath>\n#include <cstdio>\nint main() { std::printf("%g", std::sin(1.5)); }\n')

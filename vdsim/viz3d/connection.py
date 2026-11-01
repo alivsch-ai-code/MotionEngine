@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass, field
 
 from ..core.logging_setup import get_logger
@@ -29,7 +28,6 @@ class CARLAConnection:
         return self
 
     def set_synchronous(self, dt=0.01, no_rendering=False):
-        import carla
         settings = self.world.get_settings()
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = dt
@@ -51,7 +49,7 @@ class CARLAConnection:
 
     def load_opendrive(self, xodr_path):
         import carla
-        with open(xodr_path, "r", encoding="utf-8") as f:
+        with open(xodr_path, encoding="utf-8") as f:
             xodr = f.read()
         self.world = self.client.generate_opendrive_world(
             xodr,

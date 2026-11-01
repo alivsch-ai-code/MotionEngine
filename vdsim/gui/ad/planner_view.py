@@ -13,7 +13,7 @@ import numpy as np
 from PySide6 import QtCore, QtWidgets
 
 from .data import ResultData
-from .style import FAIL, MUTED, OK, PANEL, BORDER, WARN, fmt
+from .style import BORDER, FAIL, MUTED, OK, PANEL, WARN, fmt
 from .timeline import Timeline
 from .topview import TopView
 from .views import CommandView, ConstraintView, ControllerView, CostView, FrenetView
