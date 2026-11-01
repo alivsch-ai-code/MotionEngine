@@ -19,7 +19,7 @@
 [![Release](https://img.shields.io/github/v/release/alivsch-ai-code/MotionEngine?include_prereleases&label=release)](https://github.com/alivsch-ai-code/MotionEngine/releases)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
-[Getting Started](#-quick-start) · [Architecture](#-architecture) · [Documentation](docs/) · [Examples](examples/) · [Contributing](CONTRIBUTING.md)
+[Getting Started](#-quick-start) · [Architecture](#-architecture) · [Documentation](docs/) · [Examples](examples/) · [Agent Reviews](docs/AGENT_REVIEWS.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -203,7 +203,7 @@ for kpi in evaluate(result):
 
 ```bash
 pytest                           # All tests
-pytest -m "not slow"             # Fast tests only
+pytest -m "not slow"             # All tests except tests marked slow
 pytest tests/planning/           # Planning tests only
 ```
 

@@ -104,6 +104,11 @@ Agent definitions are plain Markdown and work with any tool. Ask your assistant 
 
 > Act as the Physics Agent from `agents/physics-agent.md`. Review the diff of this branch and report in the format from `AGENTS.md`.
 
+For local, advisory reviews on every commit, install the pre-commit hook and
+configure Copilot CLI as described in [docs/AGENT_REVIEWS.md](docs/AGENT_REVIEWS.md).
+The hook reviews staged changes only, selects applicable roles from the table
+above, and never blocks a commit when an AI review cannot run.
+
 | Tool | Entry point in this repository |
 |---|---|
 | Claude Code | `CLAUDE.md` |

@@ -5,3 +5,13 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: motionengine-agent-review
+        name: MotionEngine agent review (advisory)
+        entry: python scripts/review_agents.py
+        language: system
+        always_run: true
+        pass_filenames: false
+        verbose: true

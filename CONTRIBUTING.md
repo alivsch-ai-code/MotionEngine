@@ -12,6 +12,7 @@ python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 # .venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -e ".[dev,gui]"
+pre-commit install
 ```
 
 3. Run the tests to verify your setup:
@@ -34,6 +35,11 @@ pytest -x
 ```
 
 5. Open a pull request against `main`
+
+The installed pre-commit hook runs Ruff and, when GitHub Copilot CLI is
+installed and authenticated, advisory reviews from the applicable project
+agents. See [Using the project agents](docs/AGENT_REVIEWS.md) for setup,
+privacy details, and ways to run or skip the AI review.
 
 ## Code Style
 
