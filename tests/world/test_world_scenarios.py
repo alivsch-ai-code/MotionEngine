@@ -5,7 +5,13 @@ matplotlib.use("Agg")
 
 from vdsim.framework import RunContext, create_component  # noqa: E402
 from vdsim.framework.types import EgoState  # noqa: E402
-from vdsim.world import ADScenario, build_scenario, list_ad_scenarios, list_scenario_types, load_ad_scenario  # noqa: E402
+from vdsim.world import (  # noqa: E402
+    ADScenario,
+    build_scenario,
+    list_ad_scenarios,
+    list_scenario_types,
+    load_ad_scenario,
+)
 from vdsim.world.render import render_scenario  # noqa: E402
 
 NAMES = [s["name"] for s in list_ad_scenarios()]
