@@ -1,0 +1,236 @@
+id: controllers
+title: Regler, Fahrerassistenz und Fahrwerksregelsysteme
+summary: Bahnführung (Stanley, Pure Pursuit, MPC), Längsführung (PI, ACC, AEB), Spurhalteassistent, Rückkanal-Schätzer sowie ABS, ASR, ESP, Torque Vectoring, Hinterachslenkung und aktives Fahrwerk.
+purpose: |
+  Das Paket enthält alle Regler des klassischen Simulators. Querregler setzen eine Referenzbahn in einen
+  Radlenkwinkel um, Längsregler in eine Beschleunigungsanforderung, Fahrwerksregelsysteme verändern die
+  Stellgrößen (`ControlInput`) radindividuell. Damit lassen sich Bahnführungsverfahren, Assistenzfunktionen
+  und Fahrdynamikregelsysteme im geschlossenen Kreis mit allen Fahrzeugmodellen vergleichen.
+architecture: |
+  - Querregler (`LateralController.steer`): `stanley_controller`, `pure_pursuit`, `mpc_controller`,
+    `open_loop` (Lenktabelle, Krümmungsvorsteuerung), `lane_keeping` (LKA mit Fahrermodell).
+  - Längsregler (`LongitudinalController.acceleration`): `speed_controller` (PI + Vorsteuerung, ACC, AEB).
+  - Regelsysteme (`ChassisSystem.apply`): `slip_control` (ABS, ASR), `esp_controller` (ESP, Referenzgierrate,
+    Eigenlenkgradient), `torque_vectoring`, `rear_axle_steering`, `active_suspension` (Wankstabilisierung, Skyhook).
+  - `chassis_systems.enabled_systems()` legt fest, welche Systeme aktiv sind und in welcher Reihenfolge sie wirken.
+  - `curvature_feedback.CurvatureCorrection`: Rückkanal-Schätzer des Aktuatorfehlers (genutzt vom Lenkaktor).
+  - `path_tracking.py`: Hilfsfunktionen (Winkel wickeln, Achspunkt, Lenkwinkelbegrenzung).
+design_decisions:
+  - decision: Stanley mit Kurswinkelfehler (Gierwinkel plus Schwimmwinkel) und Vorsteuerung L kappa + EG v² kappa
+    reason: stationäre Kurvenfahrt ohne bleibende Querablage auch bei großem Schwimmwinkel
+    alternatives: klassischer Stanley mit Gierwinkelfehler (bleibende Ablage in engen Kurven)
+  - decision: Lineare MPC auf der Fehlerdynamik mit exakter ZOH-Diskretisierung und Box-Restriktionen über BVLS
+    reason: kleine, gut konditionierte Kleinste-Quadrate-Aufgabe ohne QP-Solver-Abhängigkeit
+    alternatives: allgemeiner QP-Solver (OSQP), nichtlineare MPC
+  - decision: Schlupfregelung über Modulationsfaktor mit Hysterese
+    reason: bildet die Druckabbau-/Druckaufbau-Logik realer ABS-Hydraulik qualitativ nach und ist robust
+    alternatives: kontinuierliche Schlupfregelung (PI), Sliding Mode
+  - decision: Referenzgierrate aus dem linearen Einspurmodell, begrenzt auf 0,85 mu g / v
+    reason: gängiger Ansatz der ESP-Literatur; Ziel ist ein lineares, beherrschbares Fahrverhalten
+implementation:
+  - "Alle Regler protokollieren ihre internen Größen in `self.signals`; der Simulator zeichnet sie automatisch auf."
+  - "Pfadprojektionen nutzen einen Suchhinweis (`_hint`) je Regler, damit geschlossene Strecken und Schleifen eindeutig bleiben."
+  - "Die MPC rechnet nur alle `update_period` neu und speichert die Prädiktionsmatrizen, solange sich die Geschwindigkeit um weniger als 0,5 m/s ändert."
+configuration:
+  - name: lateral_controller, lateral_params
+    description: Querregler und dessen Konstruktorparameter im Szenario
+  - name: longitudinal_controller, longitudinal_params
+    description: Längsregler und dessen Parameter
+  - name: systems.*
+    description: Schalter und Parameter der Regelsysteme (VehicleConfig.systems)
+examples:
+  - run_scenario.py
+limitations:
+  - Die MPC rechnet mit linearen Reifen; am Haftlimit ist Stanley robuster.
+  - Die Regler sehen den wahren Fahrzeugzustand (keine Sensormodelle, kein Rauschen).
+  - ABS/ASR benötigen ein Modell mit Raddynamik (double_track, multibody).
+  - ESP greift nur an einem Rad gleichzeitig ein und reduziert das Antriebsmoment pauschal um 30 %.
+  - Der Krümmungsschätzer kennt die Latenz der Wirkkette; in der Praxis muss sie geschätzt werden.
+validation:
+  - test: tests/test_controllers_and_systems.py
+    shows: Bahnfolge im Doppelspurwechsel, keine stationäre Ablage von Stanley, ACC-Zeitlücke 1,8 s, AEB ohne Kollision, LKA verhindert Spurverlassen, Wirkung von TV, Wankstabilisierung, Hinterachslenkung und ESP, Rückkanal-Schätzung des Aktuatorfehlers
+  - test: tests/test_vehicle_models.py
+    shows: ABS hält den Schlupf, ohne ABS blockieren die Räder
+references: [snider2009, hoffmann2007, thrun2006, coulter1992, rajamani2012, borrelli2017, stark1995, vanzanten1995, reif2010, karnopp1974, ljung1999]
+concepts: [stanley_controller, pure_pursuit, path_mpc, speed_control, acc_aeb, lane_keeping_assist, wheel_slip_control, esp_yaw_control, torque_vectoring, rear_axle_steering, active_suspension, curvature_feedback_correction]
+related_modules: [simulation, actuators, trajectory, vehicle_models, analysis]
+extension_points:
+  - Neuer Querregler als LateralController mit "@register('lateral_controller', name)"; Signale über self.signals
+  - Neues Regelsystem als ChassisSystem; Schalter in ControlSystemsParameters, Eintrag in SYSTEM_FLAGS und in der Reihenfolge von enabled_systems
+components:
+  lateral_controller/stanley:
+    summary: Stanley-Bahnregler mit Kurswinkelfehler, Querablage an der Vorderachse, Krümmungsvorsteuerung und Gierdämpfung.
+    concepts: [stanley_controller]
+    references: [hoffmann2007, thrun2006, snider2009]
+    assumptions: [Vorwärtsfahrt, Referenzbahn mit Krümmung]
+    limitations: [Bei sehr kleiner Geschwindigkeit begrenzt nur die Softening-Konstante die Verstärkung]
+    parameters:
+      gain: {unit: "-", description: Verstärkung der Querablage k}
+      softening: {unit: m/s, description: Softening-Geschwindigkeit im Nenner}
+      yaw_damping: {unit: s, description: Gewicht der Gierratenabweichung}
+      feedforward: {description: Krümmungsvorsteuerung ein/aus}
+  lateral_controller/pure_pursuit:
+    summary: Geometrischer Pure-Pursuit-Regler mit Hinterachs-Referenz und geschwindigkeitsabhängiger Vorausschau.
+    concepts: [pure_pursuit]
+    references: [coulter1992, snider2009]
+    limitations: [Schneidet Kurven bei großer Vorausschau, kein Schwimmwinkel berücksichtigt]
+    parameters:
+      lookahead_gain: {unit: s, description: Vorausschauzeit (l_d = k v)}
+      lookahead_min: {unit: m, description: minimale Vorausschaudistanz}
+  lateral_controller/mpc:
+    summary: Lineare modellprädiktive Bahnregelung auf der Fehlerdynamik des Einspurmodells mit Krümmungsvorschau und Lenkwinkelgrenzen.
+    concepts: [path_mpc, linear_bicycle]
+    references: [rajamani2012, borrelli2017, stark1995]
+    limitations: [Lineare Reifen im Vorhersagemodell, konstante Geschwindigkeit über den Horizont]
+    parameters:
+      horizon: {unit: "-", description: Horizontlänge N in Schritten}
+      dt: {unit: s, description: Diskretisierung des Vorhersagemodells}
+      q_lateral: {unit: 1/m², description: Gewicht der Querablage}
+      q_heading: {unit: 1/rad², description: Gewicht des Kurswinkelfehlers}
+      r_steer: {unit: 1/rad², description: Gewicht des Lenkwinkels}
+      r_rate: {unit: 1/rad², description: Gewicht der Lenkwinkeländerung je Schritt}
+      update_period: {unit: s, description: Neuberechnungsperiode}
+  lateral_controller/open_loop:
+    summary: Lenkung nach Zeittabelle des Manövers (ISO-Lenkmanöver ohne Rückführung).
+    references: [iso7401, iso4138, fmvss126]
+  lateral_controller/curvature_feedforward:
+    summary: Reine Krümmungsvorsteuerung delta = atan(L kappa) ohne Rückführung.
+    concepts: [kinematic_bicycle]
+  lateral_controller/lane_keeping:
+    summary: Spurhalteassistent mit unaufmerksamem Fahrermodell (Pure Pursuit plus Lenkdrift) und begrenztem Lenkeingriff.
+    concepts: [lane_keeping_assist, pure_pursuit]
+    parameters:
+      lane_width: {unit: m}
+      activation_margin: {unit: m, description: Abstand zur Markierung, ab dem der Assistent eingreift}
+      drift_start: {unit: s, description: Beginn der Unaufmerksamkeit}
+      drift_bias_deg: {unit: °, description: Lenkdrift des Fahrers}
+      gain: {unit: "-", description: Verstärkung der Querablage}
+      heading_gain: {unit: "-", description: Verstärkung des Kurswinkelfehlers}
+      max_overlay_deg: {unit: °, description: maximaler Zusatzlenkwinkel}
+      enabled: {description: Assistent aktiv}
+  longitudinal_controller/speed_pi:
+    summary: PI-Geschwindigkeitsregler mit Vorsteuerung aus dem Geschwindigkeitsprofil und Anti-Windup.
+    concepts: [speed_control]
+    parameters:
+      kp: {unit: 1/s}
+      ki: {unit: 1/s²}
+      a_max: {unit: m/s²}
+      a_min: {unit: m/s²}
+      preview: {unit: s, description: Vorausschauzeit der Vorsteuerung}
+  longitudinal_controller/acc:
+    summary: Abstandsregeltempomat mit konstanter Zeitlücke.
+    concepts: [acc_aeb]
+    references: [rajamani2012]
+    parameters:
+      time_gap: {unit: s}
+      standstill_gap: {unit: m}
+      k_gap: {unit: 1/s²}
+      k_speed: {unit: 1/s}
+      a_max: {unit: m/s²}
+      a_min: {unit: m/s²}
+  longitudinal_controller/aeb:
+    summary: Notbremsassistent mit TTC-gestufter Bremsung auf einem Basis-Längsregler.
+    concepts: [acc_aeb]
+    parameters:
+      ttc_warning: {unit: s}
+      ttc_partial: {unit: s}
+      ttc_full: {unit: s}
+      partial_decel: {unit: m/s²}
+      full_decel: {unit: m/s²}
+  chassis_system/abs:
+    summary: Antiblockiersystem über radindividuellen Modulationsfaktor des Bremsmoments.
+    concepts: [wheel_slip_control]
+    references: [reif2010]
+    config_fields: [systems.abs_*]
+  chassis_system/tcs:
+    summary: Antriebsschlupfregelung über Modulationsfaktor des Antriebsmoments.
+    concepts: [wheel_slip_control]
+    references: [reif2010]
+    config_fields: [systems.tcs_*]
+  chassis_system/esp:
+    summary: Gierratenregelung durch Einzelradbremsung (Übersteuern kurvenäußeres Vorderrad, Untersteuern kurveninneres Hinterrad).
+    concepts: [esp_yaw_control, understeer_gradient]
+    references: [vanzanten1995, rajamani2012, reif2010]
+    config_fields: [systems.esp_*]
+  chassis_system/torque_vectoring:
+    summary: Giermoment durch Links-rechts-Differenz des Antriebsmoments mit einstellbarem Ziel-Eigenlenkverhalten.
+    concepts: [torque_vectoring]
+    references: [rajamani2012]
+    config_fields: [systems.torque_vectoring_*, powertrain.torque_vectoring_max_torque]
+  chassis_system/rear_steering:
+    summary: Geschwindigkeitsabhängige Hinterachslenkung (gegensinnig langsam, gleichsinnig schnell).
+    concepts: [rear_axle_steering]
+    references: [mitschke2014]
+    config_fields: [systems.rear_steering_*]
+  chassis_system/active_roll:
+    summary: Aktive Wankstabilisierung, die das Wankmoment der Querbeschleunigung kompensiert.
+    concepts: [active_suspension]
+    config_fields: [systems.active_roll_*]
+  chassis_system/active_damping:
+    summary: Skyhook-Dämpfung proportional zur absoluten Aufbaugeschwindigkeit je Ecke.
+    concepts: [active_suspension]
+    references: [karnopp1974]
+    config_fields: [systems.active_damping_enabled, systems.skyhook_gain]
+traceability:
+  - implementation: vdsim.controllers.stanley_controller.StanleyController.steer
+    concept: stanley_controller
+    source: hoffmann2007
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.pure_pursuit.PurePursuitController.steer
+    concept: pure_pursuit
+    source: coulter1992
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.mpc_controller.MPCController._matrices
+    concept: path_mpc
+    source: rajamani2012
+    section: "2.5"
+  - implementation: vdsim.controllers.mpc_controller.MPCController.steer
+    concept: path_mpc
+    source: borrelli2017
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.speed_controller.SpeedController.acceleration
+    concept: speed_control
+  - implementation: vdsim.controllers.speed_controller.AdaptiveCruiseControl.acceleration
+    concept: acc_aeb
+    source: rajamani2012
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.speed_controller.EmergencyBrakeAssist.acceleration
+    concept: acc_aeb
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.lane_keeping.LaneKeepingAssist.steer
+    concept: lane_keeping_assist
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.slip_control.AntiLockBraking.apply
+    concept: wheel_slip_control
+    source: reif2010
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.controllers.slip_control.TractionControl.apply
+    concept: wheel_slip_control
+    source: reif2010
+  - implementation: vdsim.controllers.esp_controller.reference_yaw_rate
+    concept: esp_yaw_control
+    source: rajamani2012
+  - implementation: vdsim.controllers.esp_controller.ElectronicStabilityProgram.apply
+    concept: esp_yaw_control
+    source: vanzanten1995
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.esp_controller.understeer_gradient
+    concept: understeer_gradient
+    source: mitschke2014
+  - implementation: vdsim.controllers.torque_vectoring.TorqueVectoring.apply
+    concept: torque_vectoring
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.rear_axle_steering.RearAxleSteering.apply
+    concept: rear_axle_steering
+    source: mitschke2014
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.active_suspension.ActiveRollStabilization.apply
+    concept: active_suspension
+    tests: [tests/test_controllers_and_systems.py]
+  - implementation: vdsim.controllers.active_suspension.SkyhookDamping.apply
+    concept: active_suspension
+    source: karnopp1974
+  - implementation: vdsim.controllers.curvature_feedback.CurvatureCorrection.update
+    concept: curvature_feedback_correction
+    source: ljung1999
+    tests: [tests/test_controllers_and_systems.py, tests/test_lane_change_study_and_gui.py]

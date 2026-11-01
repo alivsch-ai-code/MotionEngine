@@ -1,0 +1,13 @@
+{
+  "name": "notausweichen_hindernis",
+  "type": "emergency_evasion",
+  "description": "Liegengebliebenes Fahrzeug wird erst 60 m vorher sichtbar; Ausweichen auf die freie linke Spur.",
+  "params": {},
+  "seed": 10,
+  "duration": 25,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

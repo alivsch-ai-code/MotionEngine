@@ -1,0 +1,62 @@
+id: core
+title: Kern – Konventionen, Parameter, Schnittstellen, Registry
+summary: Gemeinsame Grundlage aller Fahrdynamik-Pakete – Einheiten und Vorzeichen, Parametersätze mit Metadaten, abstrakte Schnittstellen und die klassische Plugin-Registry.
+purpose: |
+  Ohne verbindliche Konventionen sind Fahrzeugmodelle, Reifenmodelle, Regler und Auswertung nicht
+  austauschbar. `vdsim.core` legt deshalb ein einziges Einheiten- und Vorzeichensystem (ISO 8855) fest,
+  beschreibt alle Fahrzeugparameter als Datenklassen mit Bezeichnung, Einheit und Grenzen und definiert die
+  Schnittstellen `TireModel`, `VehicleModel`, `LateralController`, `LongitudinalController`, `ChassisSystem`
+  und `Sensor`. Szenarien, Kommandozeile und GUI wählen Komponenten nur über Namen aus der Registry.
+architecture: |
+  - `conventions.py`: Radreihenfolge FL/FR/RL/RR, Erdbeschleunigung `G`, Luftdichte; Vorzeichen im Docstring.
+  - `parameters.py`: `param()` erzeugt Datenklassen-Felder mit Metadaten (`unit`, `label`, `min`, `max`).
+    `VehicleConfig` bündelt `VehicleParameters`, `TireParameters`, `ChassisParameters`,
+    `PowertrainParameters`, `BrakeParameters` und `ControlSystemsParameters`; JSON-Import/-Export und Presets
+    aus `configs/vehicles/`.
+  - `interfaces.py`: abstrakte Basisklassen der Schichten (siehe docs/ARCHITECTURE.md, Abschnitt 4).
+  - `registry.py`: `register(kind, name)`, `get`, `create`, `available`; die eingebauten Plugins werden beim
+    ersten Zugriff durch Import von `controllers`, `tire_models`, `trajectory` und `vehicle_models` registriert.
+  - `logging_setup.py`: Konsole und rotierende Logdatei `logs/vdsim.log`.
+  Der Kern hängt von keinem anderen vdsim-Paket ab (ausgenommen der verzögerte Import der Plugins).
+design_decisions:
+  - decision: SI-Einheiten intern, Grad und km/h nur an GUI und Bericht
+    reason: vermeidet Umrechnungsfehler zwischen Modellen; jede Gleichung im Code ist direkt in SI lesbar
+    alternatives: gemischte Einheiten je Modul (fehleranfällig)
+  - decision: Parameter-Metadaten im Datenklassen-Feld (param())
+    reason: GUI-Masken, JSON, Bericht und generierte Doku entstehen aus einer einzigen Quelle
+    alternatives: separate Schema-Dateien (laufen auseinander)
+  - decision: Registry über Namen statt direkter Importe
+    reason: Szenarien (JSON) und GUI kennen nur Strings; neue Modelle brauchen keine Änderung am Simulator
+    alternatives: Fabrikfunktionen mit if/else-Kaskaden
+implementation:
+  - "`from_dict` baut verschachtelte Datenklassen aus JSON auf, unbekannte Schlüssel erzeugen eine Warnung statt eines Fehlers."
+  - "`param()` legt Listen-Defaults über `default_factory` an, damit Instanzen sich keine Listen teilen."
+  - "Die klassische Registry (`vdsim.core.registry`) ist unversioniert; versionierte Komponenten der AD-Plattform nutzen `vdsim.framework.plugins`."
+configuration:
+  - name: configs/vehicles/*.json
+    description: Fahrzeug-Presets (Mittelklasse-Limousine, Elektro-Limousine, Sportwagen, SUV) im Format von VehicleConfig.to_dict()
+  - name: VehicleConfig.vehicle / tires / chassis / powertrain / brakes / systems
+    description: Parametergruppen; Einheiten und Grenzen stehen in configuration.md des Pakets
+examples:
+  - run_scenario.py
+limitations:
+  - Die klassische Registry kennt keine Versionen; zwei Plugins mit gleichem Namen überschreiben sich stillschweigend.
+  - Grenzen (min/max) in den Parametern sind GUI-Hinweise und werden beim Laden aus JSON nicht erzwungen.
+  - Die Konventionen gelten für den klassischen Simulator; die AD-Plattform nutzt zusätzlich die erdfesten Konventionen aus docs/specs/contracts.md (x Osten, y Norden).
+validation:
+  - test: tests/test_simulation_and_reporting.py
+    shows: JSON-Roundtrip der Fahrzeugkonfiguration und aller Szenarien
+references: [iso8855]
+concepts: [iso8855_conventions, parameter_schema]
+related_modules: [framework, vehicle_models, tire_models, simulation]
+extension_points:
+  - Neues Plugin mit "@register(kind, name)" für die Arten vehicle_model, tire_model, lateral_controller, longitudinal_controller, chassis_system, maneuver, trajectory_loader
+  - Neuer Parameter als Feld "param(default, unit, label, min=, max=)" in der passenden Datenklasse; erscheint automatisch in GUI, JSON, Bericht und generierter Doku
+traceability:
+  - implementation: vdsim.core.parameters.param
+    concept: parameter_schema
+  - implementation: vdsim.core.registry.register
+    concept: parameter_schema
+  - implementation: vdsim.core.parameters.VehicleParameters.static_axle_loads
+    concept: iso8855_conventions
+    source: mitschke2014

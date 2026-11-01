@@ -1,0 +1,40 @@
+# Referenzen des Pakets vdsim.planning.
+# Die Werling-Einträge (werling2011, werling2010icra, werling2012ijrr, werling2010tro) stehen in
+# docs/references/werling.yaml und werden hier nur über ihre IDs verwendet.
+ziegler2010iv:
+  type: paper
+  authors: [Julius Ziegler, Christoph Stiller]
+  title: Fast collision checking for intelligent vehicle motion planning
+  year: 2010
+  venue: IEEE Intelligent Vehicles Symposium (IV), San Diego, 518-522
+  doi: 10.1109/IVS.2010.5547976
+  notes: Kreisapproximation der Fahrzeugumrisse; Grundlage von collision_checker/circles (Werling 3.5.4, Ref. [93])
+bellman1957:
+  type: book
+  authors: [Richard Bellman]
+  title: Dynamic Programming
+  year: 1957
+  publisher: Princeton University Press
+  notes: Optimalitätsprinzip, Grundlage der zeitlichen Konsistenz (Werling 3.2)
+bryson1975:
+  type: book
+  authors: [Arthur E. Bryson, Yu-Chi Ho]
+  title: Applied Optimal Control. Optimization, Estimation, and Control
+  year: 1975
+  publisher: Hemisphere Publishing
+  notes: Transversalitätsbedingungen bei freier Endzeit und Zielmannigfaltigkeit ((3.11), (3.13); Werling Ref. [23])
+kamm1936:
+  type: book
+  authors: [Wunibald Kamm]
+  title: Das Kraftfahrzeug. Betriebsgrundlagen, Berechnung, Gestaltung und Versuch
+  year: 1936
+  publisher: Springer
+  notes: Kammscher Kreis (Reibungskreis) der Reifenkraft, Restriktion tire_force
+mitschke2004:
+  type: book
+  authors: [Manfred Mitschke, Henning Wallentowitz]
+  title: Dynamik der Kraftfahrzeuge
+  year: 2004
+  publisher: Springer (4. Auflage)
+  isbn: 978-3-540-42011-1
+  notes: lineares Einspurmodell, stationärer Schwimmwinkel; Restriktion vehicle_stability

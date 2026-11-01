@@ -1,0 +1,13 @@
+{
+  "name": "innerorts_werling",
+  "type": "urban_driving",
+  "description": "Innerortsstraße nach Werling 5.3.1 mit 30 km/h: parkende Autos, zwei Fußgänger treten spät sichtbar zwischen parkenden Autos auf die Fahrbahn, Linksabbieger-Fehler des Gegenverkehrs an der Einmündung, zwei Radfahrer am Fahrbahnrand.",
+  "params": {},
+  "seed": 3,
+  "duration": 75,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

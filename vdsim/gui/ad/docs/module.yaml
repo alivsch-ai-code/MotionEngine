@@ -1,0 +1,96 @@
+id: gui.ad
+title: AD-Workbench (GUI für automatisierte Fahrfunktionen)
+summary: >
+  Desktop-Werkbank zur Entwicklung und Analyse automatisierter Fahrfunktionen nach Werling:
+  Planer- und Reglervisualisierung mit interaktiver Zeitleiste, Lauf-Kennwerte und Forschungs-Dashboard.
+purpose: >
+  Die Plattform erzeugt pro Lauf ein ADResult mit Signalen (100 Hz), Planer-Snapshots (10 Hz),
+  Objekten, Straße, Ereignissen, KPIs und Laufzeitprofil. Die Workbench macht diese Daten
+  nachvollziehbar: Für jeden Planungszyklus sieht man Kandidaten, Kosten, Restriktionen,
+  Kollisionsräume und Prädiktionen, synchron dazu die Zustände der Folgeregelung und die Stellgrößen.
+  Im Forschungsmodus werden Varianten (Regler, Planer, Parameter, Zufallsstichproben, Szenarien)
+  per Batch verglichen.
+architecture: |
+  **GUI-Konzept**
+
+  - `workbench.ADWorkbench` (QMainWindow): Toolbar (Szenario, Seed, Dauer, Start/Abbrechen mit
+    Fortschrittsbalken, Ergebnis laden/speichern, Demo), Stack-Toolbar (je Ebene Komponente aus
+    `available_components(kind)` plus Parameterdialog aus `describe()["params"]`), zentrale Tabs.
+  - Tab-Registry `TABS`: Liste von `"modul:Klasse"`-Strings, die lazy importiert werden. Fehlt ein
+    Modul (z. B. Architektur-Editor, MATLAB-Panel, Wissensbrowser), erscheint ein Platzhalter-Tab.
+    Protokoll (Duck Typing, alles optional): `set_result(result)`, `set_stack(stack)`,
+    Signale `result_loaded(obj)`, `time_requested(float)`, `stack_changed(dict)`, Attribut `job_provider`.
+  - Simulation in einem QThread (`SimWorker`); `progress(t, t_end)` des Runners treibt den
+    Fortschrittsbalken, Abbruch über eine Ausnahme im Fortschritts-Callback.
+  - `planner_view.PlannerView`: Info-Leiste, Draufsicht (`topview.TopView`), Analyse-Tabs
+    (Frenet, Kosten, Restriktionen; `views.py`), Scope-Tabs (Reglerzustände, Stellgrößen) und die
+    Zeitleiste (`timeline.Timeline`). Alle Ansichten folgen `set_time(t)`; Snapshot-abhängige
+    Ansichten werden nur beim Wechsel des Planungszyklus neu berechnet.
+  - `run_overview.RunOverview`: KPI-Tabelle, Ereignisliste (Klick springt in der Zeitleiste),
+    Laufzeitprofil, Metadaten/Provenienz eines Laufs.
+  - `research_panel.ResearchPanel`: Experiment-Formular, Ausführung über `vdsim.research.run_batch`
+    im QThread, KPI-Dashboard, Export, Laden gespeicherter Läufe.
+  - `data.ResultData`: tolerante Zugriffe auf das ADResult (alle Felder optional), Zeitindex,
+    Objektinterpolation, Frenet-Projektion auf die Fahrspur-Mittellinie.
+  - `demo.py`: synthetische ADResult- und BatchResult-Daten (Entwicklung und Tests ohne Runner).
+
+  **Bedienung**
+
+  - Start (F5) simuliert das gewählte Szenario mit dem Stack der Stack-Toolbar; „Demo (synthetisch)“
+    funktioniert ohne Runner. Ergebnisse lassen sich als .npz/.json speichern und laden
+    (`python -m vdsim.gui.ad ergebnis.npz` bzw. `--demo`).
+  - Zeitleiste: Slider, Wiedergabe/Pause (Leertaste), 0,25×–4×, Einzelschritt (ein Planungszyklus),
+    Sprung zum vorigen/nächsten Ereignis, Ereignisfilter; Ereignismarken unter dem Slider.
+  - Draufsicht: „Kamera folgt Ego“ mit Sichtbreite, „Gesamtansicht“, Menü „Ebenen“ (Fahrspuren,
+    Referenzpfad, Infrastruktur, Kandidaten, gewählte Trajektorie, Envelope, Kollisionskreise,
+    Objekte, Prädiktion, Ego, gefahrene Spur, Sollposition, MPC-Horizont), Legende ein/aus.
+  - Forschung: Experimenttyp wählen, Varianten/Parameter eintragen, „Experiment starten“;
+    Klick auf einen gespeicherten Lauf öffnet ihn in „Planer & Regler“.
+design_decisions:
+  - decision: Tab-Registry mit "modul:Klasse"-Strings und Platzhaltern
+    reason: mehrere Agenten liefern Tabs unabhängig; ein fehlendes oder fehlerhaftes Modul darf die Workbench nicht blockieren
+    alternatives: feste Imports (bricht bei fehlenden Modulen), Plugin-Entry-Points (zu schwergewichtig)
+  - decision: Kandidaten je Kostenklasse in einem PlotDataItem mit NaN-Trennung
+    reason: hunderte Kandidaten pro Zyklus bei flüssiger Wiedergabe (≈10 ms je Zeitschritt)
+    alternatives: ein Item je Kandidat (zu langsam)
+  - decision: Kostenfarben sequentiell gelb→rot nach Quantilen (Minimum bis p90), ungültig grau, beste grün
+    reason: robuste Spreizung trotz schiefer Kostenverteilungen; Status- und Kostenfarben bleiben getrennt
+    alternatives: Rang-basierte Färbung (verliert Abstände), lineare Min-Max-Skala (Ausreißer dominieren)
+  - decision: Data-Viz-Regeln (feste kategoriale Reihenfolge, eine y-Achse je Diagramm, Legende im Titel ab zwei Serien, Statusfarben nur für Zustände)
+    reason: einheitliche, verwechslungsfreie Darstellung; Legenden überdecken keine Daten
+    alternatives: pyqtgraph-Standardlegenden im Plot (verdecken Kurven in kleinen Scopes)
+  - decision: Achsen ohne automatische SI-Präfixe
+    reason: Werte bleiben in der Einheit des Datenvertrags (m, s, rad bzw. ° in der Anzeige)
+implementation:
+  - Zeitleiste in Millisekunden-Ticks; Einzelschritt rastet auf das Raster der Planungszyklen ein.
+  - Wiedergabe über QTimer (40 ms) mit Echtzeit-Skalierung durch die gewählte Geschwindigkeit.
+  - Snapshot-Suche per searchsorted auf den Snapshot-Zeiten; Objekte werden auf die Zeit interpoliert.
+  - Frenet-Hindernisse werden auf die Mittellinie der Spur behavior.lane_id projiziert (Polylinie).
+  - Laufbezeichnungen im Forschungsmodus werden dateinamenstauglich gemacht (kein ".", keine Sonderzeichen), da ADResult.save die Endung per with_suffix setzt.
+configuration:
+  - name: workbench.TABS
+    description: Reihenfolge und Module der zentralen Tabs ("modul:Klasse")
+  - name: workbench.LAYER_KINDS
+    description: Zuordnung Stack-Ebene → Komponenten-KIND für die Stack-Auswahl
+  - name: style.CAT / style.COST_RAMP / style.EVENT_STYLE
+    description: kategoriale Farben, Kostenskala, Ereignisfarben
+examples:
+  - python -m vdsim.gui.ad --demo
+limitations:
+  - Frenet-Projektion der Hindernisse nutzt die Mittellinie der Fahrspur aus result.road; weicht die Referenzlinie des Planers davon ab, sind die Hindernis-Frenet-Koordinaten Näherungen.
+  - Ego-Kollisionskreise werden an der aktuellen Pose gezeichnet (Offsets entlang der Gierrichtung ab dem Schwerpunkt); die zeitliche Rampe des Sicherheitsabstands (ramp_time) wird nicht animiert.
+  - Abbruch einer Simulation wirkt erst beim nächsten progress-Aufruf des Runners; Batch-Experimente sind nicht abbrechbar.
+  - Der Parameterdialog kennt Metadaten (Label, Einheit, Grenzen) nur für die oberste Ebene; verschachtelte Gruppen zeigen Feldnamen.
+validation:
+  - test: tests/gui_ad/test_gui_ad_workbench.py
+    shows: Workbench mit synthetischem Ergebnis, Zeitleiste, Ereignissprünge, alle Tabs, Thread, Speichern/Laden, Parameterdialog, fehlende Felder
+  - test: tests/gui_ad/test_gui_ad_research.py
+    shows: Forschungs-Dashboard für alle Experimenttypen mit synthetischem BatchResult, Jobs, Export, Laden in die Planer-Ansicht
+  - test: tests/gui_ad/test_gui_ad_run.py
+    shows: echter Lauf über vdsim.ad.run_scenario (übersprungen, solange der Runner fehlt)
+references: [werling2011]
+concepts: [frenet_frame, bellman_principle, monte_carlo, full_factorial_design]
+related_modules: [ad, research, planning, stabilization, gui]
+extension_points:
+  - Neue Tabs über einen Eintrag in workbench.TABS (Klasse mit optionalem set_result / set_stack / Signalen)
+  - Weitere Draufsicht-Ebenen über TopView.items / LAYERS

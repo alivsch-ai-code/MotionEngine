@@ -1,0 +1,13 @@
+{
+  "name": "einscherer",
+  "type": "cut_in",
+  "description": "Ein langsameres Fahrzeug schert 22 m vor dem Ego von links ein.",
+  "params": {},
+  "seed": 11,
+  "duration": 25,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

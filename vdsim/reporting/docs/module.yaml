@@ -1,0 +1,69 @@
+id: reporting
+title: Auswertung und Berichte
+summary: Automatische Kennwerte (Fahrdynamik, Bahnführung, Komfort nach ISO 2631, Energie, Normtest-Kriterien), Laufvergleich, PDF-Bericht und Engineering Summary.
+purpose: |
+  Ein Simulationslauf ist erst mit objektiven Kennwerten bewertbar. `KPIEvaluator` erkennt das Manöver aus
+  den Trajektorien-Metadaten und berechnet neben allgemeinen Kennwerten die Kriterien der jeweiligen Norm
+  (ISO 3888, ISO 4138, ISO 7401, FMVSS 126, Bremsweg/MFDD). Berichte fassen Läufe für Menschen zusammen.
+architecture: |
+  - `kpi_evaluator.py`: `KPI` (Schlüssel, Bezeichnung, Wert, Einheit, Gruppe, Bewertung ok/warn/fail),
+    `KPIEvaluator.evaluate(result)` mit allgemeinen, Komfort-, Energie- und manöverspezifischen Kennwerten,
+    `iso2631_weighted_rms`, `iso2631_rating`, `compare(results)`.
+  - `report_generator.py`: PDF (matplotlib PdfPages) mit Titelseite, KPI-Tabellen und Diagrammen;
+    Markdown-Engineering-Summary mit automatischen Befunden.
+design_decisions:
+  - decision: Manöverspezifische Kennwerte über die Metadaten der Trajektorie (maneuver) auswählen
+    reason: neue Manöver bringen ihre Auswertung über den Namen mit; der Simulator bleibt unabhängig
+  - decision: Bewertung je KPI (ok, warn, fail) mit festen, normnahen Grenzen
+    reason: schneller Überblick im KPI-Dashboard und im Bericht
+implementation:
+  - "Querruck aus der Querbeschleunigung nach gleitendem Mittel über 0,1 s (etwa 4-Hz-Tiefpass), dann numerisch differenziert."
+  - "Kegeltreffer über die vier Fahrzeugecken gegen die Gassen (oder, ohne Gassen, Pylone im Fahrzeugrechteck)."
+  - "Die Engineering Summary enthält einen Zeitstempel im Kopf (nicht deterministisch, bewusst für Berichte)."
+configuration:
+  - name: Bewertungsgrenzen
+    description: fest im Code (z. B. Schwimmwinkel > 5° Hinweis, Bahnabweichung > 0,5 m Hinweis, a_w < 0,63 m/s² ok)
+examples:
+  - run_scenario.py
+limitations:
+  - Die ISO-2631-Bewertung nutzt nur die Vertikalbeschleunigung des Aufbauschwerpunkts (kein Sitz, keine Mehrachsenbewertung) und lässt die Bandbegrenzung bei 100 Hz weg.
+  - Die Komfortskala ist als nicht überlappende Stufen vereinfacht (die Norm nennt überlappende Bereiche).
+  - Normtests werden nach den Hauptkriterien bewertet, nicht nach allen Durchführungsbestimmungen (z. B. Einfahrgeschwindigkeitstoleranz, Wiederholungen).
+validation:
+  - test: tests/test_simulation_and_reporting.py
+    shows: Manöver-KPIs, ISO-2631-Wk-Bewertung gegen Normwerte, PDF-Bericht und Laufvergleich
+references: [iso2631_1, iso3888_1, iso3888_2, iso4138, iso7401, iso7975, fmvss126, unece_r13h, welch1967]
+concepts: [iso2631_comfort, iso_test_kpis, frequency_response_estimation, friction_utilization]
+related_modules: [simulation, analysis, visualization, gui]
+extension_points:
+  - Neuer Kennwert als Methode in KPIEvaluator und Eintrag in der Manöver-Zuordnung von evaluate()
+traceability:
+  - implementation: vdsim.reporting.kpi_evaluator.iso2631_weighted_rms
+    concept: iso2631_comfort
+    source: iso2631_1
+    tests: [tests/test_simulation_and_reporting.py]
+  - implementation: vdsim.reporting.kpi_evaluator.iso2631_rating
+    concept: iso2631_comfort
+    source: iso2631_1
+  - implementation: vdsim.reporting.kpi_evaluator.KPIEvaluator._understeer
+    concept: iso_test_kpis
+    source: iso4138
+    tests: [tests/test_simulation_and_reporting.py]
+  - implementation: vdsim.reporting.kpi_evaluator.KPIEvaluator._step_steer
+    concept: iso_test_kpis
+    source: iso7401
+  - implementation: vdsim.reporting.kpi_evaluator.KPIEvaluator._sine_dwell
+    concept: iso_test_kpis
+    source: fmvss126
+  - implementation: vdsim.reporting.kpi_evaluator.KPIEvaluator._cone_test
+    concept: iso_test_kpis
+    source: iso3888_1
+  - implementation: vdsim.reporting.kpi_evaluator.KPIEvaluator._braking
+    concept: iso_test_kpis
+    source: unece_r13h
+  - implementation: vdsim.reporting.kpi_evaluator.KPIEvaluator._frequency_response
+    concept: frequency_response_estimation
+    source: welch1967
+  - implementation: vdsim.reporting.kpi_evaluator.KPIEvaluator._general
+    concept: friction_utilization
+    source: milliken1995

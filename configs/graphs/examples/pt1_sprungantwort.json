@@ -1,0 +1,16 @@
+{
+  "format_version": 1,
+  "name": "pt1_sprungantwort",
+  "base_dt": 0.01,
+  "nodes": [
+    {"id": "sprung", "component": "node/step", "params": {"t_step": 0.5, "final": 1.0}, "period": null, "position": [80, 100], "label": "Sprung"},
+    {"id": "pt1", "component": "node/lowpass", "params": {"T": 0.4, "K": 2.0}, "period": null, "position": [280, 100], "label": "PT1"},
+    {"id": "scope", "component": "node/scope", "params": {"n": 2}, "period": null, "position": [480, 100], "label": "Scope"}
+  ],
+  "connections": [
+    {"from": "sprung.y", "to": "pt1.u"},
+    {"from": "sprung.y", "to": "scope.u1"},
+    {"from": "pt1.y", "to": "scope.u2"}
+  ],
+  "metadata": {"description": "Sprungantwort eines PT1-Glieds (K = 2, T = 0,4 s)", "t_end": 3.0}
+}

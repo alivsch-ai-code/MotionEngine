@@ -1,0 +1,22 @@
+{
+  "name": "Bremsen in der Kurve",
+  "description": "ISO 7975, R = 100 m, 80 km/h, -4 m/s²",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {},
+  "model": "double_track",
+  "maneuver": "brake_in_turn",
+  "maneuver_params": {},
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "stanley",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {},
+  "duration": 0.0,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

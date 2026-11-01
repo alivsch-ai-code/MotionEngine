@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#161b22;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sensorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#58a6ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1f6feb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="planGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7ee787;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3fb950;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ctrlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d2a8ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a371f7;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dynGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffa657;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d29922;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="simGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff7b72;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f85149;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="620" rx="12" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="450" y="45" text-anchor="middle" fill="#f0f6fc" font-size="22" font-weight="700">MotionEngine — System Architecture</text>
+  <text x="450" y="68" text-anchor="middle" fill="#8b949e" font-size="13">Layered pipeline from perception to vehicle actuation</text>
+
+  <!-- Perception / Sensors -->
+  <rect x="60" y="95" width="170" height="110" rx="10" fill="url(#sensorGrad)" filter="url(#shadow)" opacity="0.92"/>
+  <text x="145" y="125" text-anchor="middle" fill="#0d1117" font-size="14" font-weight="700">Perception</text>
+  <text x="145" y="148" text-anchor="middle" fill="#0d1117" font-size="11">Ground Truth</text>
+  <text x="145" y="165" text-anchor="middle" fill="#0d1117" font-size="11">Object Sensor</text>
+  <text x="145" y="182" text-anchor="middle" fill="#0d1117" font-size="11">Ego State</text>
+
+  <!-- Prediction -->
+  <rect x="280" y="95" width="170" height="110" rx="10" fill="url(#sensorGrad)" filter="url(#shadow)" opacity="0.92"/>
+  <text x="365" y="125" text-anchor="middle" fill="#0d1117" font-size="14" font-weight="700">Prediction</text>
+  <text x="365" y="148" text-anchor="middle" fill="#0d1117" font-size="11">Constant Velocity</text>
+  <text x="365" y="165" text-anchor="middle" fill="#0d1117" font-size="11">Constant Acceleration</text>
+  <text x="365" y="182" text-anchor="middle" fill="#0d1117" font-size="11">Lane Following</text>
+
+  <!-- Behavior -->
+  <rect x="500" y="95" width="170" height="110" rx="10" fill="url(#sensorGrad)" filter="url(#shadow)" opacity="0.92"/>
+  <text x="585" y="125" text-anchor="middle" fill="#0d1117" font-size="14" font-weight="700">Behavior</text>
+  <text x="585" y="148" text-anchor="middle" fill="#0d1117" font-size="11">Rule-Based Planner</text>
+  <text x="585" y="165" text-anchor="middle" fill="#0d1117" font-size="11">Lane Selection</text>
+  <text x="585" y="182" text-anchor="middle" fill="#0d1117" font-size="11">Maneuver Decision</text>
+
+  <!-- Planning (center row) -->
+  <rect x="60" y="245" width="390" height="130" rx="10" fill="url(#planGrad)" filter="url(#shadow)" opacity="0.92"/>
+  <text x="255" y="278" text-anchor="middle" fill="#0d1117" font-size="16" font-weight="700">Motion Planning</text>
+  <text x="140" y="302" text-anchor="middle" fill="#0d1117" font-size="11">Werling (Frenet)</text>
+  <text x="255" y="302" text-anchor="middle" fill="#0d1117" font-size="11">Sequential</text>
+  <text x="370" y="302" text-anchor="middle" fill="#0d1117" font-size="11">Collision Check</text>
+  <text x="140" y="322" text-anchor="middle" fill="#0d1117" font-size="11">Cost Functions</text>
+  <text x="255" y="322" text-anchor="middle" fill="#0d1117" font-size="11">Constraints</text>
+  <text x="370" y="322" text-anchor="middle" fill="#0d1117" font-size="11">Trajectory Stitching</text>
+  <text x="140" y="342" text-anchor="middle" fill="#0d1117" font-size="11">Lateral Sampling</text>
+  <text x="255" y="342" text-anchor="middle" fill="#0d1117" font-size="11">Longitudinal Opt.</text>
+  <text x="370" y="342" text-anchor="middle" fill="#0d1117" font-size="11">Path Optimization</text>
+
+  <!-- Stabilization -->
+  <rect x="500" y="245" width="340" height="130" rx="10" fill="url(#ctrlGrad)" filter="url(#shadow)" opacity="0.92"/>
+  <text x="670" y="278" text-anchor="middle" fill="#0d1117" font-size="16" font-weight="700">Stabilization &amp; Control</text>
+  <text x="580" y="302" text-anchor="middle" fill="#0d1117" font-size="11">Stanley</text>
+  <text x="670" y="302" text-anchor="middle" fill="#0d1117" font-size="11">Pure Pursuit</text>
+  <text x="760" y="302" text-anchor="middle" fill="#0d1117" font-size="11">MPC</text>
+  <text x="580" y="322" text-anchor="middle" fill="#0d1117" font-size="11">ACC / AEB</text>
+  <text x="670" y="322" text-anchor="middle" fill="#0d1117" font-size="11">LKA</text>
+  <text x="760" y="322" text-anchor="middle" fill="#0d1117" font-size="11">Speed PI</text>
+  <text x="580" y="342" text-anchor="middle" fill="#0d1117" font-size="11">ESP / ABS</text>
+  <text x="670" y="342" text-anchor="middle" fill="#0d1117" font-size="11">Torque Vec.</text>
+  <text x="760" y="342" text-anchor="middle" fill="#0d1117" font-size="11">Active Susp.</text>
+
+  <!-- Vehicle Dynamics -->
+  <rect x="60" y="415" width="500" height="110" rx="10" fill="url(#dynGrad)" filter="url(#shadow)" opacity="0.92"/>
+  <text x="310" y="448" text-anchor="middle" fill="#0d1117" font-size="16" font-weight="700">Vehicle Dynamics</text>
+  <text x="140" y="475" text-anchor="middle" fill="#0d1117" font-size="11">Bicycle (Kin/Lin/NL)</text>
+  <text x="310" y="475" text-anchor="middle" fill="#0d1117" font-size="11">Double-Track (12 DOF)</text>
+  <text x="460" y="475" text-anchor="middle" fill="#0d1117" font-size="11">Multibody (24 DOF)</text>
+  <text x="140" y="498" text-anchor="middle" fill="#0d1117" font-size="11">Linear Tire</text>
+  <text x="310" y="498" text-anchor="middle" fill="#0d1117" font-size="11">Pacejka MF</text>
+  <text x="460" y="498" text-anchor="middle" fill="#0d1117" font-size="11">Brush Model</text>
+
+  <!-- Simulation Core -->
+  <rect x="610" y="415" width="230" height="110" rx="10" fill="url(#simGrad)" filter="url(#shadow)" opacity="0.92"/>
+  <text x="725" y="448" text-anchor="middle" fill="#0d1117" font-size="16" font-weight="700">Simulation</text>
+  <text x="725" y="475" text-anchor="middle" fill="#0d1117" font-size="11">RK4 / Heun / Euler</text>
+  <text x="725" y="498" text-anchor="middle" fill="#0d1117" font-size="11">Environment &amp; Scenarios</text>
+
+  <!-- Core bar -->
+  <rect x="60" y="560" width="780" height="40" rx="8" fill="#21262d" stroke="#30363d" stroke-width="1" filter="url(#shadow)"/>
+  <text x="450" y="585" text-anchor="middle" fill="#8b949e" font-size="13" font-weight="600">Core: Interfaces · Registry · Parameters · Conventions (ISO 8855) · Logging</text>
+
+  <!-- Arrows -->
+  <defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#484f58"/></marker></defs>
+
+  <!-- Perception → Prediction -->
+  <line x1="230" y1="150" x2="275" y2="150" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Prediction → Behavior -->
+  <line x1="450" y1="150" x2="495" y2="150" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Perception → Planning -->
+  <line x1="145" y1="205" x2="145" y2="240" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Behavior → Planning -->
+  <line x1="585" y1="205" x2="450" y2="248" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Planning → Stabilization -->
+  <line x1="450" y1="310" x2="495" y2="310" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Stabilization → Vehicle Dynamics -->
+  <line x1="670" y1="375" x2="500" y2="415" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Planning → Vehicle Dynamics -->
+  <line x1="255" y1="375" x2="255" y2="410" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Vehicle Dynamics ↔ Simulation -->
+  <line x1="560" y1="470" x2="605" y2="470" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Version label -->
+  <text x="840" y="612" text-anchor="end" fill="#484f58" font-size="10">v0.1.0</text>
+</svg>

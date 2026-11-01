@@ -1,0 +1,59 @@
+id: geometry
+title: Geometrie – Referenzkurven und Frenet-Koordinaten
+summary: Glatte Referenzkurve r(s) mit Projektion und geschlossener Frenet-Transformation nach Werling (2011), Anhang A.
+purpose: |
+  Trajektorienplanung, Trackingregelung und Szenario-Engine beschreiben Bewegungen relativ zu einer
+  Referenzkurve (Bahnkoordinaten s, d). Die Planung nach Werling verlangt dafür eine Kurve mit stetiger
+  Krümmungsableitung (Bemerkung 4, Abschn. 3.5.3) und eine Transformation ohne numerisches Differenzieren.
+  `ReferenceLine` liefert beides und wird von planning, stabilization, world und behavior genutzt.
+architecture: |
+  - `ReferenceLine`: Stützstellen (s, x, y, theta, kappa, dkappa); kubische Hermite-Interpolation von x, y mit
+    exakten Tangenten, von theta mit kappa und von kappa mit dkappa.
+  - Projektion (A.2): Suche der nächsten Stützstelle, Sekantenverfahren auf linear interpolierten [x, y, theta],
+    Newton-Verfeinerung auf der Hermite-Kurve; `project_many()` vektorisiert.
+  - Frenet-Transformation (A.1): `to_frenet()` und `to_cartesian()` in geschlossener Form, `time_to_arc()` / `arc_to_time()`.
+  - Abgeleitete Kurven: `offset()` (Parallelkurve), `segment()`, `reversed()`, `resample()`.
+  - Konstruktoren: `from_curvature()`, `from_segments()` (Smoothstep-Krümmungsübergänge), `from_points()` (quintischer Glättungsspline), `straight()`, `circle()`.
+design_decisions:
+  - decision: Hermite-Interpolation mit exakten Ableitungen statt linearer Interpolation
+    reason: Position, Kurswinkel und Krümmung sind zwischen den Stützstellen glatt; Werling Bemerkung 4 verlangt stetiges dkappa
+    alternatives: lineare Interpolation (Krümmungssprünge), globale Splines (teurer bei Änderungen)
+  - decision: Sekantenverfahren nach Werling A.2 plus Newton-Schritte
+    reason: robuster Startwert aus der Polylinie, dann quadratische Konvergenz auf der glatten Kurve
+  - decision: Gerade Fortsetzung außerhalb der Kurve
+    reason: Projektionen bleiben auch hinter Anfang und Ende definiert
+implementation:
+  - "Gleichmäßige Abtastung wird erkannt; der Segmentindex wird dann ohne Suche berechnet."
+  - "Geschlossene Kurven wickeln s modulo Länge; die Projektion sucht zyklisch um den Hinweisindex."
+  - "Smoothstep-Rampen 3u² − 2u³ für Krümmungsübergänge, zentriert auf die Segmentgrenzen, damit jeder Bogen exakt den Winkel kappa · L hat."
+configuration:
+  - name: ds
+    unit: m
+    description: Stützstellenabstand der Konstruktoren (Standard 0,25 m bzw. 0,5 m)
+  - name: transition
+    unit: m
+    description: Länge der Krümmungsübergänge in from_segments (Standard 10 m)
+examples: []
+limitations:
+  - Die Transformation ist singulär für 1 − kappa_r d = 0 (Punkt im Krümmungsmittelpunkt) und für Kurswinkelfehler ±90°.
+  - Die Projektion ist lokal; ohne Suchhinweis wird global gesucht, bei Kurven mit Selbstannäherung kann der falsche Ast gewählt werden.
+  - offset() wirft einen Fehler, wenn der Versatz den Krümmungsradius erreicht.
+validation: []
+references: [werling2011, werling2010icra, deboor2001]
+concepts: [frenet_transformation, curve_projection, hermite_reference_curve, smooth_curvature_profile]
+related_modules: [framework, trajectory]
+extension_points:
+  - Weitere Konstruktoren (z. B. aus OpenDRIVE-Fahrstreifen) als Klassenmethoden, die (s, x, y, theta, kappa, dkappa) liefern
+traceability:
+  - implementation: vdsim.geometry.reference_line.ReferenceLine.evaluate
+    concept: hermite_reference_curve
+    source: deboor2001
+  - implementation: vdsim.geometry.reference_line.curvature_profile
+    concept: smooth_curvature_profile
+    source: werling2011
+    section: "3.5.3"
+    note: Bemerkung 4 – stetige Krümmungsableitung der Referenzkurve
+  - implementation: vdsim.geometry.reference_line.ReferenceLine.from_points
+    concept: smooth_curvature_profile
+    source: werling2011
+    section: "3.5.3"

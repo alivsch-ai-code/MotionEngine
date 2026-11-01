@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="100%" style="stop-color:#161b22"/>
+    </linearGradient>
+    <filter id="sh4">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="900" height="320" rx="12" fill="url(#bg4)"/>
+  <text x="450" y="35" text-anchor="middle" fill="#f0f6fc" font-size="18" font-weight="700">Trajectory Planning Pipeline</text>
+
+  <!-- Stage 1: Sampling -->
+  <rect x="30" y="70" width="120" height="90" rx="8" fill="#1f6feb" filter="url(#sh4)"/>
+  <text x="90" y="100" text-anchor="middle" fill="#f0f6fc" font-size="12" font-weight="700">Sampling</text>
+  <text x="90" y="118" text-anchor="middle" fill="#c9d1d9" font-size="10">Lateral: d targets</text>
+  <text x="90" y="133" text-anchor="middle" fill="#c9d1d9" font-size="10">Long: v/s targets</text>
+  <text x="90" y="148" text-anchor="middle" fill="#c9d1d9" font-size="10">T horizons</text>
+
+  <!-- Arrow -->
+  <line x1="155" y1="115" x2="178" y2="115" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Stage 2: Polynomial Generation -->
+  <rect x="185" y="70" width="120" height="90" rx="8" fill="#3fb950" filter="url(#sh4)"/>
+  <text x="245" y="100" text-anchor="middle" fill="#0d1117" font-size="12" font-weight="700">Polynomials</text>
+  <text x="245" y="118" text-anchor="middle" fill="#0d1117" font-size="10">Quintic lateral</text>
+  <text x="245" y="133" text-anchor="middle" fill="#0d1117" font-size="10">Quartic/quintic long</text>
+  <text x="245" y="148" text-anchor="middle" fill="#0d1117" font-size="10">Jerk-optimal</text>
+
+  <!-- Arrow -->
+  <line x1="310" y1="115" x2="333" y2="115" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Stage 3: Combination -->
+  <rect x="340" y="70" width="120" height="90" rx="8" fill="#a371f7" filter="url(#sh4)"/>
+  <text x="400" y="100" text-anchor="middle" fill="#f0f6fc" font-size="12" font-weight="700">Combination</text>
+  <text x="400" y="118" text-anchor="middle" fill="#f0f6fc" font-size="10">Frenet → Cartesian</text>
+  <text x="400" y="133" text-anchor="middle" fill="#f0f6fc" font-size="10">Kinematics check</text>
+  <text x="400" y="148" text-anchor="middle" fill="#f0f6fc" font-size="10">Trajectory stitching</text>
+
+  <!-- Arrow -->
+  <line x1="465" y1="115" x2="488" y2="115" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Stage 4: Constraint Check -->
+  <rect x="495" y="70" width="120" height="90" rx="8" fill="#d29922" filter="url(#sh4)"/>
+  <text x="555" y="100" text-anchor="middle" fill="#0d1117" font-size="12" font-weight="700">Constraints</text>
+  <text x="555" y="118" text-anchor="middle" fill="#0d1117" font-size="10">Curvature limit</text>
+  <text x="555" y="133" text-anchor="middle" fill="#0d1117" font-size="10">Accel/jerk bounds</text>
+  <text x="555" y="148" text-anchor="middle" fill="#0d1117" font-size="10">Stability checks</text>
+
+  <!-- Arrow -->
+  <line x1="620" y1="115" x2="643" y2="115" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Stage 5: Collision + Cost -->
+  <rect x="650" y="70" width="120" height="90" rx="8" fill="#f85149" filter="url(#sh4)"/>
+  <text x="710" y="100" text-anchor="middle" fill="#f0f6fc" font-size="12" font-weight="700">Evaluation</text>
+  <text x="710" y="118" text-anchor="middle" fill="#f0f6fc" font-size="10">Collision check</text>
+  <text x="710" y="133" text-anchor="middle" fill="#f0f6fc" font-size="10">Cost function</text>
+  <text x="710" y="148" text-anchor="middle" fill="#f0f6fc" font-size="10">Best selection</text>
+
+  <!-- Arrow to output -->
+  <line x1="775" y1="115" x2="798" y2="115" stroke="#484f58" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Output -->
+  <rect x="805" y="85" width="70" height="60" rx="8" fill="#21262d" stroke="#7ee787" stroke-width="2"/>
+  <text x="840" y="112" text-anchor="middle" fill="#7ee787" font-size="11" font-weight="700">Optimal</text>
+  <text x="840" y="128" text-anchor="middle" fill="#7ee787" font-size="11" font-weight="700">Trajectory</text>
+
+  <!-- Bottom: Candidate count flow -->
+  <rect x="30" y="200" width="840" height="100" rx="8" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+  <text x="450" y="225" text-anchor="middle" fill="#f0f6fc" font-size="13" font-weight="700">Candidate Reduction Pipeline</text>
+
+  <text x="90" y="260" text-anchor="middle" fill="#58a6ff" font-size="24" font-weight="700">~5000</text>
+  <text x="90" y="278" text-anchor="middle" fill="#8b949e" font-size="10">samples</text>
+
+  <text x="50" y="260" fill="#484f58" font-size="16">→</text>
+
+  <text x="245" y="260" text-anchor="middle" fill="#7ee787" font-size="24" font-weight="700">~5000</text>
+  <text x="245" y="278" text-anchor="middle" fill="#8b949e" font-size="10">trajectories</text>
+
+  <text x="205" y="260" fill="#484f58" font-size="16">→</text>
+
+  <text x="400" y="260" text-anchor="middle" fill="#d2a8ff" font-size="24" font-weight="700">~3000</text>
+  <text x="400" y="278" text-anchor="middle" fill="#8b949e" font-size="10">feasible</text>
+
+  <text x="360" y="260" fill="#484f58" font-size="16">→</text>
+
+  <text x="555" y="260" text-anchor="middle" fill="#ffa657" font-size="24" font-weight="700">~1500</text>
+  <text x="555" y="278" text-anchor="middle" fill="#8b949e" font-size="10">within limits</text>
+
+  <text x="515" y="260" fill="#484f58" font-size="16">→</text>
+
+  <text x="710" y="260" text-anchor="middle" fill="#ff7b72" font-size="24" font-weight="700">~800</text>
+  <text x="710" y="278" text-anchor="middle" fill="#8b949e" font-size="10">collision-free</text>
+
+  <text x="670" y="260" fill="#484f58" font-size="16">→</text>
+
+  <text x="840" y="260" text-anchor="middle" fill="#7ee787" font-size="28" font-weight="700">1</text>
+  <text x="840" y="278" text-anchor="middle" fill="#7ee787" font-size="10" font-weight="600">optimal</text>
+</svg>

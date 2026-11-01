@@ -1,0 +1,15 @@
+{
+  "name": "sporty",
+  "description": "Sportlich: schnellere Manöver (größeres k_tau), höhere Grenzen, kleinere Sicherheitsabstände. Nur konsistente Kostenterme.",
+  "component": "trajectory_planner/werling@^1",
+  "params": {
+    "sampling": {"lat_tau_max": 4.5},
+    "cost": {"terminal_time": {"k_tau_lat": 15.0, "k_tau_lon": 6.0},
+             "terminal_deviation": {"k_delta": 400.0, "k_sigma": 80.0, "k_nu": 40.0}},
+    "constraints": {"max_lateral_acceleration": {"a_max": 8.0},
+                    "max_longitudinal_acceleration": {"a_accel_max": 4.5, "a_decel_max": 9.0},
+                    "max_jerk": {"j_max": 40.0}, "max_steering_velocity": {"rate_max": 1.0},
+                    "tire_force": {"eta": 0.95}},
+    "collision": {"margin_car": 0.3, "margin_truck": 0.5, "margin_ramp": 0.6}
+  }
+}

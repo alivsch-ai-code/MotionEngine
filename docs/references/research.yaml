@@ -1,0 +1,60 @@
+vogel2003:
+  type: paper
+  authors: [Katja Vogel]
+  title: A comparison of headway and time to collision as safety indicators
+  year: 2003
+  venue: Accident Analysis & Prevention 35(3), 427-433
+  doi: 10.1016/S0001-4575(02)00022-2
+hayward1972:
+  type: paper
+  authors: [John C. Hayward]
+  title: Near-miss determination through use of a scale of danger
+  year: 1972
+  venue: Highway Research Record 384, 24-34
+allen1978:
+  type: paper
+  authors: [Brian L. Allen, B. Tom Shin, Peter J. Cooper]
+  title: Analysis of traffic conflicts and collisions
+  year: 1978
+  venue: Transportation Research Record 667, 67-74
+ericson2004:
+  type: book
+  authors: [Christer Ericson]
+  title: Real-Time Collision Detection
+  year: 2004
+  publisher: Morgan Kaufmann
+  isbn: 978-1-55860-732-3
+saltelli2008:
+  type: book
+  authors: [Andrea Saltelli, Marco Ratto, Terry Andres, Francesca Campolongo, Jessica Cariboni, Debora Gatelli, Michaela Saisana, Stefano Tarantola]
+  title: Global Sensitivity Analysis. The Primer
+  year: 2008
+  publisher: Wiley
+  isbn: 978-0-470-05997-5
+montgomery2017:
+  type: book
+  authors: [Douglas C. Montgomery]
+  title: Design and Analysis of Experiments
+  year: 2017
+  publisher: Wiley (9. Auflage)
+  isbn: 978-1-119-11347-8
+fielding2000:
+  type: thesis
+  authors: [Roy T. Fielding]
+  title: Architectural Styles and the Design of Network-based Software Architectures
+  year: 2000
+  publisher: University of California, Irvine
+  url: https://ics.uci.edu/~fielding/pubs/dissertation/top.htm
+martin2017:
+  type: book
+  authors: [Robert C. Martin]
+  title: "Clean Architecture: A Craftsman's Guide to Software Structure and Design"
+  year: 2017
+  publisher: Prentice Hall
+  isbn: 978-0-13-449416-6
+openapi31:
+  type: documentation
+  authors: [OpenAPI Initiative]
+  title: OpenAPI Specification 3.1.0
+  year: 2021
+  url: https://spec.openapis.org/oas/v3.1.0

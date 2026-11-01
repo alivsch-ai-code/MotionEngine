@@ -1,0 +1,6 @@
+{
+  "component": "tracking_controller/werling_dynamic@^1",
+  "description": "Exakt E/A-linearisierender Regler für Autobahnfahrt, Dämpfungsgrad der Nulldynamik zeta = 1.0 (4.70).",
+  "params": {"zeta": 1.0, "lam_max": 20.0, "pole_n1": -1.18, "pole_n2": -3.82, "pole_t1": -0.29, "pole_t2": -1.71,
+             "k_delta": 10.0, "reference_transform": "dynamic"}
+}

@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="yes"?>
+<OpenDRIVE>
+  <header revMajor="1" revMinor="6" name="vdsim Beispielstrasse"/>
+  <road name="Landstrasse" length="420.0000" id="1" junction="-1">
+    <type s="0.0" type="rural"><speed max="80" unit="km/h"/></type>
+    <planView>
+      <geometry s="0.0000" x="0.0000" y="0.0000" hdg="0.000000" length="100.0000"><line/></geometry>
+      <geometry s="100.0000" x="100.0000" y="0.0000" hdg="0.000000" length="40.0000"><spiral curvStart="0.0" curvEnd="0.01"/></geometry>
+      <geometry s="140.0000" x="139.8403" y="2.6591" hdg="0.200000" length="140.0000"><arc curvature="0.01"/></geometry>
+      <geometry s="280.0000" x="219.9307" y="103.5857" hdg="1.600000" length="40.0000"><spiral curvStart="0.01" curvEnd="0.0"/></geometry>
+      <geometry s="320.0000" x="213.4684" y="142.9882" hdg="1.800000" length="100.0000"><line/></geometry>
+    </planView>
+    <lanes>
+      <laneSection s="0.0">
+        <left><lane id="1" type="driving"><width sOffset="0.0" a="3.5" b="0" c="0" d="0"/></lane></left>
+        <center><lane id="0" type="none"/></center>
+        <right><lane id="-1" type="driving"><width sOffset="0.0" a="3.5" b="0" c="0" d="0"/></lane></right>
+      </laneSection>
+    </lanes>
+  </road>
+</OpenDRIVE>

@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bannerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="30%" style="stop-color:#161b22"/>
+      <stop offset="100%" style="stop-color:#0d1117"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#58a6ff"/>
+      <stop offset="50%" style="stop-color:#7ee787"/>
+      <stop offset="100%" style="stop-color:#d2a8ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#bannerBg)"/>
+
+  <!-- Decorative trajectory curves -->
+  <path d="M0,250 Q200,200 400,180 T800,150 T1200,180" stroke="#1f6feb" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <path d="M0,260 Q200,210 400,190 T800,160 T1200,190" stroke="#3fb950" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <path d="M0,240 Q200,190 400,170 T800,140 T1200,170" stroke="#a371f7" stroke-width="1.5" fill="none" opacity="0.2"/>
+
+  <!-- Grid dots -->
+  <g opacity="0.08" fill="#f0f6fc">
+    <circle cx="100" cy="50" r="1.5"/><circle cx="200" cy="50" r="1.5"/><circle cx="300" cy="50" r="1.5"/>
+    <circle cx="400" cy="50" r="1.5"/><circle cx="500" cy="50" r="1.5"/><circle cx="600" cy="50" r="1.5"/>
+    <circle cx="700" cy="50" r="1.5"/><circle cx="800" cy="50" r="1.5"/><circle cx="900" cy="50" r="1.5"/>
+    <circle cx="1000" cy="50" r="1.5"/><circle cx="1100" cy="50" r="1.5"/>
+    <circle cx="100" cy="100" r="1.5"/><circle cx="200" cy="100" r="1.5"/><circle cx="300" cy="100" r="1.5"/>
+    <circle cx="400" cy="100" r="1.5"/><circle cx="500" cy="100" r="1.5"/><circle cx="600" cy="100" r="1.5"/>
+    <circle cx="700" cy="100" r="1.5"/><circle cx="800" cy="100" r="1.5"/><circle cx="900" cy="100" r="1.5"/>
+    <circle cx="1000" cy="100" r="1.5"/><circle cx="1100" cy="100" r="1.5"/>
+  </g>
+
+  <!-- Logo icon: stylized trajectory with vehicle -->
+  <g transform="translate(160, 90)">
+    <path d="M0,80 C30,60 60,30 90,25 C120,20 150,35 180,20" stroke="url(#accentGrad)" stroke-width="3" fill="none"/>
+    <path d="M0,80 C30,70 60,50 90,50 C120,50 150,55 180,45" stroke="#484f58" stroke-width="1.5" fill="none" stroke-dasharray="6,4"/>
+    <rect x="80" y="16" width="22" height="11" rx="3" fill="#7ee787" opacity="0.9"/>
+    <circle cx="91" cy="22" r="2" fill="#0d1117"/>
+  </g>
+
+  <!-- Title -->
+  <text x="420" y="115" fill="#f0f6fc" font-size="56" font-weight="800" letter-spacing="-1">MotionEngine</text>
+
+  <!-- Accent line -->
+  <rect x="420" y="130" width="180" height="3" rx="1.5" fill="url(#accentGrad)"/>
+
+  <!-- Tagline -->
+  <text x="420" y="165" fill="#8b949e" font-size="18" font-weight="400">Motion Planning &amp; Trajectory Optimization</text>
+  <text x="420" y="190" fill="#8b949e" font-size="18" font-weight="400">for Autonomous Driving Research</text>
+
+  <!-- Feature pills -->
+  <g transform="translate(420, 215)">
+    <rect x="0" y="0" width="105" height="26" rx="13" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="52" y="18" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="600">Werling Planner</text>
+
+    <rect x="115" y="0" width="60" height="26" rx="13" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="145" y="18" text-anchor="middle" fill="#7ee787" font-size="11" font-weight="600">MPC</text>
+
+    <rect x="185" y="0" width="115" height="26" rx="13" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="242" y="18" text-anchor="middle" fill="#d2a8ff" font-size="11" font-weight="600">Vehicle Dynamics</text>
+
+    <rect x="310" y="0" width="60" height="26" rx="13" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="340" y="18" text-anchor="middle" fill="#ffa657" font-size="11" font-weight="600">ADAS</text>
+
+    <rect x="380" y="0" width="95" height="26" rx="13" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="427" y="18" text-anchor="middle" fill="#ff7b72" font-size="11" font-weight="600">Simulation</text>
+
+    <rect x="485" y="0" width="55" height="26" rx="13" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="512" y="18" text-anchor="middle" fill="#f0f6fc" font-size="11" font-weight="600">GUI</text>
+  </g>
+
+  <!-- Version -->
+  <text x="1160" y="280" text-anchor="end" fill="#484f58" font-size="12">v0.1.0</text>
+</svg>

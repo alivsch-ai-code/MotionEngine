@@ -1,0 +1,72 @@
+id: matlab
+title: MATLAB-Integration (Import, Interpreter, Analyse, Konvertierung)
+summary: Importiert MATLAB-Regler- und Simulationscode, führt die originale Logik ohne MATLAB aus, analysiert die Regelstruktur und übersetzt nach Python, C++17 und Rust.
+purpose: |
+  Bestehende Regler liegen oft als MATLAB-Skripte vor, z. B. der Lyapunov-Trackingregler aus
+  Werling 2011, Anh. A.5. Das Modul macht diese Logik in der Plattform nutzbar. Sie lässt sich
+  als Komponente im Graphen verwenden, als Datenfluss und LaTeX darstellen und in Zielsprachen
+  für Echtzeit- und Steuergeräte übertragen. Die Übereinstimmung mit dem Original wird
+  rückverfolgbar verifiziert.
+architecture: |
+  `lexer` → `parser` (rekursiver Abstieg) → AST (`nodes`) bildet die Kette vom Quelltext zum Syntaxbaum.
+  Auf dem AST arbeiten mehrere Bausteine:
+  - `interpreter` mit `builtins` und `pyruntime`, der MATLAB-Semantik auf numpy
+  - `typeinfer`: Skalar/Bool/Matrix mit Größen
+  - `analysis`: Datenfluss, Aufrufgraph, Gleichungen, Regelstruktur, JSON/DOT, mit `latex` als Formelausgabe
+  - `codegen` (`python`, `cpp`, `rust` über die gemeinsame Basis `native`) mit Diagnoseliste
+  - `component`: Loader `matlab:` und Komponente
+  - `convert` und die CLI (`__main__`)
+  - `toolchains` und `verify` für Compiler-Erkennung und Back-to-Back-Test
+design_decisions:
+  - decision: Gemeinsame Laufzeitfunktionen (pyruntime) für Interpreter und generierten Python-Code
+    reason: Gleiche Implementierung von Indizierung, Colon-Operator, mod, round und sprintf liefert bitgleiche Ergebnisse
+    alternatives: getrennte Implementierungen (Abweichungen in Randfällen)
+  - decision: Skalare im Interpreter als Python-float über math-Funktionen
+    reason: identische Rechenwege wie der generierte Code, schneller als 1x1-Arrays
+    alternatives: alles als numpy-Array (langsamer, Rundungsunterschiede durch SIMD-Pfade)
+  - decision: Nicht übersetzbare Konstrukte erzeugen Diagnosen (Fehler mit Zeile und Spalte)
+    reason: keine stille Fehlübersetzung; Dateien werden bei Fehlern nicht geschrieben (außer --force)
+    alternatives: Best-Effort-Übersetzung
+  - decision: Persistente Variablen als expliziter Zustand (SimpleNamespace / Struct mit optional / Option)
+    reason: Rücksetzbar (reset), Hot Reload, mehrere Instanzen möglich
+    alternatives: statische Variablen (nicht rücksetzbar)
+  - decision: Kleine generierte Matrixklasse Mat (spaltenweise, 1-basierte Zugriffe) statt Eigen/nalgebra
+    reason: nur Standardbibliothek, keine Abhängigkeiten
+    alternatives: Eigen (C++), nalgebra (Rust)
+implementation:
+  - Kontextabhängiger Lexer, der ' als Transpose oder String erkennt, im Matrixliteral Kommas einfügt und `end` im Index markiert
+  - Funktionsdateien mit oder ohne end; der Stil wird über die Zählung von Blocköffnern und end bestimmt
+  - Kommentare werden Anweisungen zugeordnet; eine reine Gleichungsnummer in eigener Zeile gehört zur Anweisung darüber
+  - Typinferenz flussunabhängig mit Fixpunkt und interprozedural pro Argumentsignatur; Hinweise per input_types oder Kommentar `%#type x: vector(3)`
+  - Built-in-Registry (`register_builtin`) für eigene Funktionen
+configuration:
+  - name: backend
+    description: interpreter (Originallogik) oder python (generierter Code) beim Laden als Komponente
+  - name: params
+    description: Eingänge der MATLAB-Funktion, die als konstante Komponentenparameter gesetzt werden
+  - name: input_types
+    description: Typhinweise für Eingänge (scalar, vector, row, matrix)
+  - name: VDSIM_CXX
+    description: Umgebungsvariable mit dem Pfad zu einem C++-Compiler
+examples:
+  - examples/matlab/kin_tracking_with_orientation_stab.m
+  - examples/matlab/README.md
+limitations:
+  - Keine Klassen (classdef), kein eval, keine Struct-Arrays, Zellen nur eindimensional (Python), keine Ganzzahltypen (int32 usw.), keine N-D-Arrays (> 2 Dimensionen)
+  - C++/Rust nur Skalare, logische Skalare und reelle Matrizen; keine Strings außer Literalen in fprintf/disp/error, keine Zellen/Structs/globale Variablen/try-catch/verschachtelten Funktionen, keine Bereichs- oder logische Indizierung, kein Wachsen von Arrays
+  - Komplexe Zahlen nur im Interpreter
+  - "Python-Ziel: Division durch 0 sowie Definitionsbereichsfehler (sqrt/log negativ) lösen Ausnahmen aus, wo MATLAB Inf/NaN bzw. komplexe Werte liefert"
+validation:
+  - test: tests/matlab/test_matlab_codegen.py
+    shows: Generiertes Python ist auf A.5 und allen Fixtures bitgleich zum Interpreter; Rust wird typgeprüft; Rust und C++ werden numerisch verglichen, wenn die Toolchain linken kann
+  - test: tests/matlab/test_matlab_component.py
+    shows: A.5 stimmt mit der Python-Referenz vdsim.stabilization.werling_kinematic überein; Komponente, Loader und CLI
+  - test: tests/matlab/test_matlab_analysis.py
+    shows: Gleichungen, Abhängigkeiten, Rückführung und Vorsteuerung von A.5, PID-Erkennung
+references: [mathworks_matlab, mathworks_precedence, aho2006, iso_cpp17, rust_reference, ieee754_2019, werling2011]
+concepts: [matlab_parser, matlab_interpreter, matlab_type_inference, matlab_analysis, matlab_control_structure, matlab_codegen, matlab_codegen_verification, matlab_import]
+related_modules: [framework, stabilization]
+extension_points:
+  - Eigene Built-ins über vdsim.matlab.register_builtin(name, func, multi=, ctx=)
+  - Weitere Zielsprachen als Unterklasse von codegen.base.BaseGenerator (statisch typisiert über codegen.native.NativeGenerator)
+  - Typregeln für eigene Built-ins in typeinfer.builtin_type

@@ -1,0 +1,128 @@
+id: vehicle_models
+title: Fahrzeugmodelle
+summary: Bewegungsgleichungen vom kinematischen Einspurmodell bis zum Mehrkörpermodell mit 24 Zuständen.
+purpose: |
+  Je nach Fragestellung braucht man unterschiedlich detaillierte Modelle: Bahnplanung und Latenzstudien
+  kommen mit Kinematik aus, Reglerauslegung mit dem linearen Einspurmodell, Grenzbereich und
+  Fahrdynamikregelsysteme brauchen Radlastverlagerung und Raddrehung, Komfortbewertung braucht
+  Vertikaldynamik. Alle Modelle implementieren `vdsim.core.interfaces.VehicleModel` und sind über die
+  Registry (`vehicle_model`) austauschbar.
+architecture: |
+  - `bicycle_model.py`: `KinematicBicycleModel` (4 Zustände), `LinearBicycleModel` (6, Zustandsraum A, B),
+    `NonlinearBicycleModel` (6, Reifenmodell je Achse, Längslastverlagerung, Reibellipse).
+  - `double_track_model.DoubleTrackModel`: 12 Zustände mit Wanken und vier Raddrehzahlen.
+  - `multibody_model.MultibodyModel`: 24 Zustände mit Hub, Wanken, Nicken, vier ungefederten Massen und Raddrehung.
+  - `common.py`: Luftwiderstand, Rollwiderstand, Längskraft aus Radmomenten, Achs-Schräglaufsteifigkeit.
+  Jedes Modell liefert `derivatives(t, x, u, env, with_outputs)` und `vehicle_state()`; Modelle mit Raddynamik
+  zusätzlich `stable_dt()` für die Teilschrittwahl des Simulators.
+data_flow: |
+  `ControlInput` (Lenkwinkel vorn/hinten, Antriebs- und Bremsmoment je Rad, aktives Wankmoment, aktive
+  Dämpferkräfte) und `Environment` (Reibwert je Aufstandspunkt, Fahrbahnhöhe, Wind) → Zustandsableitung
+  und Ausgangsgrößen (Kräfte, Schlupf, Radlasten) → `VehicleState`.
+design_decisions:
+  - decision: Quasistatische Lastverlagerung aus geschätzten Beschleunigungen (a_x aus Momentenanforderung, a_y = v r)
+    reason: vermeidet algebraische Schleifen zwischen Reifenkräften und Radlasten
+    alternatives: iterative Lösung je Zeitschritt (teurer), zusätzliche Zustände mit Filter
+  - decision: Mindestgeschwindigkeit im Schlupfnenner (slip_speed_floor = 3 m/s) und tanh-Glättung des Bremsmoments
+    reason: verhindert die Singularität bei Stillstand und begrenzt die Steifigkeit der Raddrehdynamik
+    alternatives: Schlupfmodell mit Relaxationslänge (Ausbaustufe)
+  - decision: Achs-Schräglaufsteifigkeit des linearen Modells numerisch aus dem eingestellten Reifenmodell
+    reason: lineares und nichtlineares Modell stimmen im linearen Bereich exakt überein
+implementation:
+  - "Alle Kräfte werden radindividuell vektorisiert (numpy-Arrays der Länge 4) berechnet."
+  - "Der Reibwert je Rad kommt aus `env.mu_at(x, y)` an der Aufstandspunktposition (Split-µ, Reibwertinseln)."
+  - "`with_outputs=True` liefert zusätzlich alle Zwischengrößen für Logging und KPIs, ohne einen zweiten Rechenweg."
+configuration:
+  - name: model
+    description: "Szenario-Feld: bicycle_kinematic, bicycle_linear, bicycle_nonlinear, double_track, multibody"
+  - name: vehicle.*, chassis.*
+    description: Masse, Geometrie, Trägheiten, Federn, Dämpferkennlinien, Stabilisatoren, Rollzentren, Sturz, Rolllenken, Anti-Dive/-Squat
+examples:
+  - run_scenario.py
+limitations:
+  - Kein Rückwärtsfahren; unter etwa 3 m/s wird der Schlupf mit einer Mindestgeschwindigkeit gebildet.
+  - Lastverlagerung über geschätzte Beschleunigungen; bei schnellen Transienten leicht phasenverschoben.
+  - Fahrbahnprofil links und rechts gleich (keine Wankanregung durch die Straße).
+  - Keine Elastokinematik-Kennfelder (K&C), keine Lenkungsdynamik, keine Aerodynamik mit Abtrieb.
+validation:
+  - test: tests/test_vehicle_models.py
+    shows: lineares Modell gleich analytischer Gierverstärkung, nichtlineare Modelle innerhalb 15 %, Wankgradient und Radlasten des Zweispurmodells gegen quasi-statische Analyse, statisches Gleichgewicht des Mehrkörpermodells, kinematischer Kreis, Radblockieren ohne ABS
+references: [rajamani2012, mitschke2014, schramm2018, pacejka2012]
+concepts: [kinematic_bicycle, linear_bicycle, nonlinear_bicycle, double_track, multibody, driving_resistances]
+related_modules: [tire_models, simulation, analysis, controllers, powertrain]
+extension_points:
+  - Neues Modell als Unterklasse von VehicleModel mit initial_state, derivatives, vehicle_state, optional stable_dt; "@register('vehicle_model', name)" und Eintrag in MODEL_LABELS
+components:
+  vehicle_model/bicycle_kinematic:
+    summary: Kinematisches Einspurmodell ohne Reifenschlupf mit Vorder- und Hinterachslenkung.
+    purpose: Bahnplanung, Latenzstudien und niedrige Querbeschleunigung.
+    concepts: [kinematic_bicycle, driving_resistances]
+    references: [rajamani2012]
+    assumptions: [Kein Schräglauf, Ackermann-Geometrie, Längskraft auf mu m g begrenzt]
+    limitations: [Ungültig bei hoher Querbeschleunigung (etwa über 4 m/s²)]
+  vehicle_model/bicycle_linear:
+    summary: Lineares Einspurmodell (6 Zustände) mit Zustandsraumdarstellung für Analyse und Reglerentwurf.
+    concepts: [linear_bicycle, driving_resistances]
+    references: [rajamani2012, mitschke2014]
+    assumptions: [Kleine Winkel, lineare Achs-Seitenkräfte, statische Achslasten]
+    limitations: [Keine Sättigung der Seitenkräfte]
+    validation: [Gierverstärkung exakt wie LinearSingleTrackAnalysis (tests/test_vehicle_models.py)]
+  vehicle_model/bicycle_nonlinear:
+    summary: Nichtlineares Einspurmodell mit Reifenmodell je Achse, Längslastverlagerung und Reibellipse.
+    concepts: [nonlinear_bicycle, driving_resistances]
+    references: [mitschke2014, pacejka2012]
+    assumptions: [Keine Wankdynamik, Seitenkraft je Achse aus einem Reifen mit halber Achslast mal zwei]
+  vehicle_model/double_track:
+    summary: Zweispurmodell mit 12 Zuständen – Wanken, Raddrehung, radindividuelle Lasten, Sturz und Rolllenken.
+    concepts: [double_track, driving_resistances]
+    references: [schramm2018, mitschke2014]
+    assumptions: [Wanken um eine feste Rollachse, Längslastverlagerung quasistatisch]
+    limitations: [Kein Nicken und keine Hubbewegung]
+    validation: [Wankgradient und Radlasten innerhalb 2–3 % der quasi-statischen Analyse]
+  vehicle_model/multibody:
+    summary: Mehrkörpermodell mit 24 Zuständen – Aufbau mit Hub, Wanken, Nicken, vier ungefederte Massen, Raddrehung, Fahrbahnanregung.
+    concepts: [multibody, driving_resistances]
+    references: [schramm2018, mitschke2014]
+    assumptions: [Kleine Aufbauwinkel, lineare Feder- und Reifensteifigkeiten, Dämpferkennlinien als Tabellen]
+    limitations: [Fahrbahnprofil links und rechts gleich, Reifen als Punktkontakt]
+traceability:
+  - implementation: vdsim.vehicle_models.bicycle_model.KinematicBicycleModel.derivatives
+    concept: kinematic_bicycle
+    source: rajamani2012
+    section: "2"
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.vehicle_models.bicycle_model.LinearBicycleModel.state_space
+    concept: linear_bicycle
+    source: rajamani2012
+    section: "2"
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.vehicle_models.bicycle_model.LinearBicycleModel.understeer_gradient
+    concept: understeer_gradient
+    source: mitschke2014
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.vehicle_models.bicycle_model.NonlinearBicycleModel.derivatives
+    concept: nonlinear_bicycle
+    source: mitschke2014
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.vehicle_models.double_track_model.DoubleTrackModel.derivatives
+    concept: double_track
+    source: schramm2018
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.vehicle_models.double_track_model.DoubleTrackModel.stable_dt
+    concept: stable_substeps
+    source: hairer1996
+  - implementation: vdsim.vehicle_models.multibody_model.MultibodyModel.derivatives
+    concept: multibody
+    source: schramm2018
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.vehicle_models.multibody_model.MultibodyModel.stable_dt
+    concept: stable_substeps
+    source: hairer1996
+  - implementation: vdsim.vehicle_models.common.aero_drag
+    concept: driving_resistances
+    source: mitschke2014
+  - implementation: vdsim.vehicle_models.common.rolling_resistance
+    concept: driving_resistances
+    source: mitschke2014
+  - implementation: vdsim.vehicle_models.common.axle_cornering_stiffness
+    concept: linear_bicycle

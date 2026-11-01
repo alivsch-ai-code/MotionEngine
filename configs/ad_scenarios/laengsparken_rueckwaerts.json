@@ -1,0 +1,13 @@
+{
+  "name": "laengsparken_rueckwaerts",
+  "type": "parking",
+  "description": "Rückwärts-Längsparken in eine 8,5 m lange Lücke: vorwärts neben die Lücke, Halt, Richtungswechsel im Stand, rückwärts bis zur Lückenmitte.",
+  "params": {},
+  "seed": 8,
+  "duration": 50,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

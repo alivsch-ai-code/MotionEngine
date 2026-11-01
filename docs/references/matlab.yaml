@@ -1,0 +1,44 @@
+mathworks_matlab:
+  type: documentation
+  authors: [The MathWorks, Inc.]
+  title: MATLAB Language Fundamentals (Operators and Elementary Operations, Operator Precedence, Matrix Indexing, Functions)
+  year: 2024
+  publisher: The MathWorks, Inc.
+  url: https://www.mathworks.com/help/matlab/language-fundamentals.html
+  notes: Referenz für Syntax, Operatorrangfolge, Indizierung (1-basiert, spaltenweise), Colon-Operator und Built-ins von vdsim.matlab
+mathworks_precedence:
+  type: documentation
+  authors: [The MathWorks, Inc.]
+  title: Operator Precedence
+  year: 2024
+  url: https://www.mathworks.com/help/matlab/matlab_prog/operator-precedence.html
+  notes: Rangfolge der Operatoren, wie sie der Parser umsetzt
+aho2006:
+  type: book
+  authors: [Alfred V. Aho, Monica S. Lam, Ravi Sethi, Jeffrey D. Ullman]
+  title: "Compilers: Principles, Techniques, and Tools"
+  edition: 2
+  year: 2006
+  publisher: Addison-Wesley
+  isbn: 978-0-321-48681-3
+  notes: Lexikalische Analyse, rekursiver Abstieg (Kap. 4), Typprüfung (Kap. 6), syntaxgesteuerte Übersetzung (Kap. 5, 8), Datenflussanalyse (Kap. 9)
+iso_cpp17:
+  type: standard
+  authors: [ISO/IEC JTC1/SC22/WG21]
+  title: ISO/IEC 14882:2017 Programming languages — C++
+  year: 2017
+  notes: Zielsprache des C++-Generators (std::optional, Aggregat-Initialisierung)
+rust_reference:
+  type: documentation
+  authors: [The Rust Project Developers]
+  title: The Rust Reference
+  year: 2024
+  url: https://doc.rust-lang.org/reference/
+  notes: Zielsprache des Rust-Generators (f64, Destrukturierende Zuweisung, Edition 2021)
+ieee754_2019:
+  type: standard
+  authors: [IEEE]
+  title: IEEE Standard for Floating-Point Arithmetic (IEEE 754-2019)
+  year: 2019
+  doi: 10.1109/IEEESTD.2019.8766229
+  notes: Grundlage der Bitgleichheits-Aussagen zwischen Interpreter und generiertem Code

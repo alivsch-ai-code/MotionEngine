@@ -1,0 +1,266 @@
+# Quellen der Fahrdynamik-Plattform (bestehende Pakete) und des Wissenssystems.
+# Format: docs/templates/MODULE_DOCS.md. Unsichere Details (Seitenzahlen, ISBN) sind bewusst weggelassen.
+
+# ---------------------------------------------------------------- Fachbücher Fahrdynamik
+mitschke2014:
+  type: book
+  authors: [Manfred Mitschke, Henning Wallentowitz]
+  title: Dynamik der Kraftfahrzeuge
+  year: 2014
+  edition: 5. Auflage
+  publisher: Springer Vieweg
+  notes: Standardwerk zu Längs-, Quer- und Vertikaldynamik, Einspurmodell, Eigenlenkverhalten, Bremskraftverteilung, Fahrkomfort.
+schramm2018:
+  type: book
+  authors: [Dieter Schramm, Manfred Hiller, Roberto Bardini]
+  title: Modellbildung und Simulation der Dynamik von Kraftfahrzeugen
+  year: 2018
+  publisher: Springer Vieweg
+  notes: Mehrkörpermodellierung, Zweispur- und Gesamtfahrzeugmodelle, Reifen- und Fahrbahnmodelle.
+milliken1995:
+  type: book
+  authors: [William F. Milliken, Douglas L. Milliken]
+  title: Race Car Vehicle Dynamics
+  year: 1995
+  publisher: SAE International
+  notes: g-g-Diagramm (GGV), Reibkreis, Eigenlenkverhalten, Radlastverlagerung.
+reif2010:
+  type: book
+  authors: [Konrad Reif]
+  title: Bremsen und Bremsregelsysteme
+  year: 2010
+  publisher: Vieweg+Teubner (Bosch Fachinformation Automobil)
+  notes: Herausgeberwerk. Bremsanlage, Bremskraftverteilung, ABS, ASR, ESP.
+
+# ---------------------------------------------------------------- Numerik
+hairer1993:
+  type: book
+  authors: [Ernst Hairer, Syvert P. Nørsett, Gerhard Wanner]
+  title: "Solving Ordinary Differential Equations I: Nonstiff Problems"
+  year: 1993
+  edition: 2nd revised edition
+  publisher: Springer (Springer Series in Computational Mathematics 8)
+  notes: Runge-Kutta-Verfahren, Ordnung, Fehlerabschätzung, Schrittweitensteuerung.
+hairer1996:
+  type: book
+  authors: [Ernst Hairer, Gerhard Wanner]
+  title: "Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems"
+  year: 1996
+  edition: 2nd revised edition
+  publisher: Springer (Springer Series in Computational Mathematics 14)
+  notes: Steifheit und Stabilitätsgebiete expliziter Verfahren (Grundlage für stable_dt).
+butcher2016:
+  type: book
+  authors: [John C. Butcher]
+  title: Numerical Methods for Ordinary Differential Equations
+  year: 2016
+  edition: 3rd edition
+  publisher: Wiley
+  notes: Runge-Kutta-Theorie, Butcher-Tableau, lineare Stabilität.
+virtanen2020:
+  type: paper
+  authors: [Pauli Virtanen, Ralf Gommers, Travis E. Oliphant, et al.]
+  title: "SciPy 1.0: fundamental algorithms for scientific computing in Python"
+  year: 2020
+  venue: Nature Methods 17
+  doi: 10.1038/s41592-019-0686-2
+  notes: solve_ivp (adaptiver Löser), lsq_linear (MPC, Ideallinie), Signalverarbeitung (ISO-2631-Filter, Welch).
+stark1995:
+  type: paper
+  authors: [Philip B. Stark, Robert L. Parker]
+  title: "Bounded-Variable Least-Squares: an Algorithm and Applications"
+  year: 1995
+  venue: Computational Statistics 10
+  notes: BVLS-Verfahren, das scipy.optimize.lsq_linear(method="bvls") umsetzt.
+deboor2001:
+  type: book
+  authors: [Carl de Boor]
+  title: A Practical Guide to Splines
+  year: 2001
+  edition: revised edition
+  publisher: Springer (Applied Mathematical Sciences 27)
+  notes: Hermite-Interpolation und Splines (Referenzkurve in vdsim.geometry).
+
+# ---------------------------------------------------------------- Bahnführung und Regelung
+thrun2006:
+  type: paper
+  authors: [Sebastian Thrun, Mike Montemerlo, Hendrik Dahlkamp, et al.]
+  title: "Stanley: The Robot that Won the DARPA Grand Challenge"
+  year: 2006
+  venue: Journal of Field Robotics 23(9)
+  doi: 10.1002/rob.20147
+  notes: Ursprung des Stanley-Lenkgesetzes.
+ljung1999:
+  type: book
+  authors: [Lennart Ljung]
+  title: "System Identification: Theory for the User"
+  year: 1999
+  edition: 2nd edition
+  publisher: Prentice Hall
+  notes: Rekursive Kleinste-Quadrate-Schätzung mit Vergessensfaktor (Rückkanal-Schätzer).
+smith1957:
+  type: paper
+  authors: [Otto J. M. Smith]
+  title: Closer Control of Loops with Dead Time
+  year: 1957
+  venue: Chemical Engineering Progress 53(5)
+  notes: Smith-Prädiktor; Idee eines internen Totzeitmodells zur zeitlichen Ausrichtung.
+vanzanten1995:
+  type: paper
+  authors: [Anton T. van Zanten, Rainer Erhardt, Georg Pfaff]
+  title: "VDC, The Vehicle Dynamics Control System of Bosch"
+  year: 1995
+  venue: SAE Technical Paper 950759
+  notes: Gierratenregelung durch radindividuelle Bremseingriffe (ESP).
+karnopp1974:
+  type: paper
+  authors: [Dean Karnopp, Michael J. Crosby, R. A. Harwood]
+  title: Vibration Control Using Semi-Active Force Generators
+  year: 1974
+  venue: Journal of Engineering for Industry 96(2)
+  notes: Skyhook-Dämpfung.
+braghin2008:
+  type: paper
+  authors: [Francesco Braghin, Federico Cheli, Stefano Melzi, Edoardo Sabbioni]
+  title: Race driver model
+  year: 2008
+  venue: Computers & Structures 86(13-14)
+  notes: Ideallinie als Kompromiss aus minimaler Krümmung und kürzestem Weg.
+kapania2016:
+  type: paper
+  authors: [Nitin R. Kapania, John Subosits, J. Christian Gerdes]
+  title: A Sequential Two-Step Algorithm for Fast Generation of Vehicle Racing Trajectories
+  year: 2016
+  venue: Journal of Dynamic Systems, Measurement, and Control 138(9)
+  notes: Vorwärts-Rückwärts-Integration des Geschwindigkeitsprofils unter Reibungsgrenzen.
+welch1967:
+  type: paper
+  authors: [Peter D. Welch]
+  title: "The use of fast Fourier transform for the estimation of power spectra: A method based on time averaging over short, modified periodograms"
+  year: 1967
+  venue: IEEE Transactions on Audio and Electroacoustics 15(2)
+  notes: Welch-Schätzer für Leistungs- und Kreuzspektren (Frequenzgang aus dem Sinus-Sweep).
+
+# ---------------------------------------------------------------- Normen und Prüfverfahren
+iso8855:
+  type: norm
+  number: ISO 8855:2011
+  title: Road vehicles — Vehicle dynamics and road-holding ability — Vocabulary
+  year: 2011
+  organization: International Organization for Standardization
+  notes: Koordinatensysteme und Vorzeichenkonventionen.
+iso2631_1:
+  type: norm
+  number: ISO 2631-1:1997
+  title: Mechanical vibration and shock — Evaluation of human exposure to whole-body vibration — Part 1 General requirements
+  year: 1997
+  organization: International Organization for Standardization
+  notes: Frequenzbewertung Wk, bewerteter Effektivwert a_w, Komfortskala (Anhang C).
+iso3888_1:
+  type: norm
+  number: ISO 3888-1:2018
+  title: Passenger cars — Test track for a severe lane-change manoeuvre — Part 1 Double lane-change
+  year: 2018
+  organization: International Organization for Standardization
+iso3888_2:
+  type: norm
+  number: ISO 3888-2:2011
+  title: Passenger cars — Test track for a severe lane-change manoeuvre — Part 2 Obstacle avoidance
+  year: 2011
+  organization: International Organization for Standardization
+iso4138:
+  type: norm
+  number: ISO 4138:2021
+  title: Passenger cars — Steady-state circular driving behaviour — Open-loop test methods
+  year: 2021
+  organization: International Organization for Standardization
+iso7401:
+  type: norm
+  number: ISO 7401:2011
+  title: Road vehicles — Lateral transient response test methods — Open-loop test methods
+  year: 2011
+  organization: International Organization for Standardization
+iso7975:
+  type: norm
+  number: ISO 7975:2019
+  title: Passenger cars — Braking in a turn — Open-loop test method
+  year: 2019
+  organization: International Organization for Standardization
+iso8608:
+  type: norm
+  number: ISO 8608:2016
+  title: Mechanical vibration — Road surface profiles — Reporting of measured data
+  year: 2016
+  organization: International Organization for Standardization
+  notes: Fahrbahnklassen A–H über die Unebenheitsdichte G_d(n0) bei n0 = 0,1 1/m.
+fmvss126:
+  type: standard
+  number: FMVSS No. 126 (49 CFR 571.126)
+  title: Electronic Stability Control Systems for Light Vehicles
+  year: 2007
+  organization: National Highway Traffic Safety Administration (NHTSA)
+  notes: Sinus mit Haltezeit, Gierraten- und Querversatzkriterien.
+unece_r13h:
+  type: standard
+  number: UN-ECE-Regelung Nr. 13-H
+  title: Einheitliche Bedingungen für die Genehmigung von Personenkraftwagen hinsichtlich der Bremsen
+  organization: United Nations Economic Commission for Europe (UNECE)
+  notes: Definition der mittleren Vollverzögerung (MFDD) zwischen 0,8 v0 und 0,1 v0.
+asam_opendrive:
+  type: standard
+  number: ASAM OpenDRIVE
+  title: ASAM OpenDRIVE – Format zur Beschreibung von Straßennetzen
+  organization: ASAM e.V.
+  url: https://www.asam.net/standards/detail/opendrive/
+  notes: Referenzlinie aus line, arc, spiral, poly3, paramPoly3; Fahrstreifen mit Breitenpolynomen.
+
+# ---------------------------------------------------------------- Software und Dokumentation
+openpilot:
+  type: software
+  title: openpilot – Open-Source-Fahrerassistenzsystem
+  organization: comma.ai
+  url: https://github.com/commaai/openpilot
+  notes: Größenordnung der Lenkaktor-Latenz (steerActuatorDelay) als Plausibilisierung der Latenzfälle.
+matplotlib_mathtext:
+  type: documentation
+  title: "Matplotlib: Writing mathematical expressions (mathtext)"
+  organization: Matplotlib Development Team
+  url: https://matplotlib.org/stable/users/explain/text/mathtext.html
+  notes: Unterstützter LaTeX-Umfang der Formeldarstellung im Wissensbrowser.
+semver2:
+  type: documentation
+  authors: [Tom Preston-Werner]
+  title: Semantic Versioning 2.0.0
+  url: https://semver.org/spec/v2.0.0.html
+  notes: Versionsschema der Komponenten (MAJOR.MINOR.PATCH) und Bereichsangaben ^, ~.
+fowler2004:
+  type: documentation
+  authors: [Martin Fowler]
+  title: Inversion of Control Containers and the Dependency Injection pattern
+  year: 2004
+  url: https://martinfowler.com/articles/injection.html
+  notes: Dependency-Injection-Container (vdsim.framework.container).
+
+# ---------------------------------------------------------------- Wissensgraph und Rückverfolgbarkeit
+fruchterman1991:
+  type: paper
+  authors: [Thomas M. J. Fruchterman, Edward M. Reingold]
+  title: Graph Drawing by Force-directed Placement
+  year: 1991
+  venue: "Software: Practice and Experience 21(11)"
+  doi: 10.1002/spe.4380211102
+  notes: Kräftebasiertes Layout des Wissensgraphen.
+gotel1994:
+  type: paper
+  authors: [Orlena C. Z. Gotel, Anthony C. W. Finkelstein]
+  title: An Analysis of the Requirements Traceability Problem
+  year: 1994
+  venue: Proceedings of the IEEE International Conference on Requirements Engineering
+  notes: Begriffe Vorwärts-/Rückwärts-Rückverfolgbarkeit.
+iso26262:
+  type: norm
+  number: ISO 26262:2018
+  title: Road vehicles — Functional safety
+  year: 2018
+  organization: International Organization for Standardization
+  notes: Fordert u. a. Rückverfolgbarkeit zwischen Anforderungen, Entwurf, Implementierung und Verifikation.

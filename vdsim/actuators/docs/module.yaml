@@ -1,0 +1,96 @@
+id: actuators
+title: Aktorik – Latenzkette, Lenkaktor, Kennlinienfehler
+summary: Bildet die Wirkkette zwischen Planer und Fahrzeug nach – Totzeiten, PT1-Verzögerung, verfälschte Aktuator-Kennlinie, Ratenbegrenzung und Rückkanal-Korrektur.
+purpose: |
+  Reale Lenkanforderungen erreichen das Fahrzeug verzögert (Gateway, Aktuator) und verfälscht (Kennlinie),
+  und der Planer sieht die Wirkung erst nach dem Rückkanal (Odometrie, Gateway). Das Paket macht diese
+  Effekte für jedes Szenario einstellbar und ist die Plattform-Umsetzung der ursprünglichen
+  Spurwechsel-Latenzstudie (Paket lane_change).
+architecture: |
+  - `latency.py`: `DeadTime` (Ringpuffer), `PT1` (Verzögerung erster Ordnung), `LatencyChain`
+    (Stellpfad Totzeit + PT1, Rückkanal Totzeit) und die vordefinierten Fälle `LATENCY_CASES`.
+  - `steering_characteristic.py`: `steering_characteristic()` (quadratisch ansteigender Krümmungsfehler bis
+    Volleinschlag) und `correction_factor()` (theoretische Inverse).
+  - `steering_actuator.py`: `SteeringActuator` und `SteeringActuatorParameters`; Kette
+    Anforderung → Korrektur → Latenz → Kennlinie → Ratenbegrenzung.
+data_flow: |
+  delta_req → kappa = tan(delta)/L → kappa_sent = kappa/g_hat → Totzeit, PT1 → Kennlinie → delta = atan(kappa L)
+  → Ratenbegrenzung → Fahrzeug. Rückkanal: kappa_mess = r/v → Totzeit → Schätzer.
+design_decisions:
+  - decision: Kennlinie und Korrektur auf der Krümmung statt auf dem Lenkwinkel
+    reason: identisch zur Spurwechsel-Studie; die Krümmung ist die Schnittstelle zwischen Planer und Aktor
+    alternatives: Lenkwinkel- oder Lenkmomentschnittstelle
+  - decision: Totzeit als ganzzahliges Vielfaches des Reglertakts (Ringpuffer)
+    reason: exakt, deterministisch, ohne Interpolation
+    alternatives: Padé-Approximation (verfälscht den Frequenzgang), Interpolation zwischen Abtastwerten
+implementation:
+  - "Die PT1 ist mit dem impliziten Euler-Verfahren diskretisiert (alpha = dt/(tau + dt)); tau = 0 ergibt Durchgriff."
+  - "Der Lenkaktor führt ein zweites, identisches LatencyChain-Objekt als internes Modell für die zeitliche Ausrichtung des Schätzers."
+configuration:
+  - name: steering_actuator.dead_time
+    unit: s
+    description: Totzeit Stellpfad (Gateway + Aktuator)
+    default: 0.0
+  - name: steering_actuator.tau
+    unit: s
+    description: PT1-Zeitkonstante Aktuator + Fahrzeug
+    default: 0.0
+  - name: steering_actuator.sensor_delay
+    unit: s
+    description: Totzeit Rückkanal (Odometrie + Gateway)
+    default: 0.0
+  - name: steering_actuator.rate_limit
+    unit: rad/s
+    description: Lenkratenbegrenzung, 0 = unbegrenzt
+    default: 0.0
+  - name: steering_actuator.characteristic_error
+    description: verfälschte Kennlinie ein/aus
+    default: false
+  - name: steering_actuator.k_full_lock
+    unit: 1/m
+    description: tatsächliche Krümmung bei Volleinschlag
+    default: 0.3
+  - name: steering_actuator.k_full_lock_assumed
+    unit: 1/m
+    description: Krümmung, die der Planer für Volleinschlag annimmt
+    default: 0.2
+  - name: steering_actuator.error_at_zero
+    description: relativer Fehler bei kleiner Krümmung
+    default: 0.1
+  - name: steering_actuator.feedback_correction
+    description: Rückkanal-Korrektur ein/aus
+    default: false
+examples:
+  - run_lane_change.py
+limitations:
+  - Totzeiten müssen Vielfache des Reglertakts sein (es wird gerundet).
+  - Die Latenz ist dem Schätzer bekannt (internes Modell = reales System).
+  - Die Kennlinie ist symmetrisch und zeitinvariant; Hysterese, Spiel und Reibung im Lenkstrang fehlen.
+  - Nur die Lenkung hat eine Latenzkette; Antrieb und Bremse wirken verzögerungsfrei.
+validation:
+  - test: tests/test_controllers_and_systems.py
+    shows: Szenario mit Latenzkette schätzt den Aktuatorfehler (Fehlerfaktor nahe 1,1)
+  - test: tests/test_lane_change_study_and_gui.py
+    shows: Ergebnisse der Spurwechsel-Latenzstudie unverändert (Regression)
+references: [smith1957, ljung1999, openpilot]
+concepts: [latency_chain, steering_characteristic_error, steering_actuator_chain]
+related_modules: [controllers, lane_change, simulation]
+extension_points:
+  - Weitere Latenzfälle in LATENCY_CASES
+  - Eigene Kennlinie als Funktion kappa -> kappa (Rückgabewert von steering_characteristic ersetzen)
+traceability:
+  - implementation: vdsim.actuators.latency.DeadTime
+    concept: latency_chain
+  - implementation: vdsim.actuators.latency.PT1
+    concept: latency_chain
+  - implementation: vdsim.actuators.latency.LatencyChain
+    concept: latency_chain
+    tests: [tests/test_lane_change_study_and_gui.py]
+  - implementation: vdsim.actuators.steering_characteristic.steering_characteristic
+    concept: steering_characteristic_error
+    tests: [tests/test_lane_change_study_and_gui.py]
+  - implementation: vdsim.actuators.steering_characteristic.correction_factor
+    concept: steering_characteristic_error
+  - implementation: vdsim.actuators.steering_actuator.SteeringActuator.step
+    concept: steering_actuator_chain
+    tests: [tests/test_controllers_and_systems.py]

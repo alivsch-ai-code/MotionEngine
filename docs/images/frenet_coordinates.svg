@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="100%" style="stop-color:#161b22"/>
+    </linearGradient>
+    <marker id="arrowB" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#58a6ff"/>
+    </marker>
+    <marker id="arrowG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#7ee787"/>
+    </marker>
+    <marker id="arrowO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#ffa657"/>
+    </marker>
+    <marker id="arrowP" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#d2a8ff"/>
+    </marker>
+  </defs>
+
+  <rect width="700" height="400" rx="12" fill="url(#bg2)"/>
+
+  <text x="350" y="35" text-anchor="middle" fill="#f0f6fc" font-size="18" font-weight="700">Frenet Coordinate System</text>
+  <text x="350" y="55" text-anchor="middle" fill="#8b949e" font-size="12">Trajectory planning in curvilinear coordinates (Werling, 2011)</text>
+
+  <!-- Reference line (curved path) -->
+  <path d="M80,280 C150,280 180,200 250,180 C320,160 380,190 430,160 C480,130 520,120 600,130" stroke="#484f58" stroke-width="3" fill="none" stroke-dasharray="8,4"/>
+  <text x="610" y="125" fill="#484f58" font-size="12" font-style="italic">reference line</text>
+
+  <!-- s coordinate along path -->
+  <path d="M80,280 C150,280 180,200 250,180" stroke="#7ee787" stroke-width="2.5" fill="none" marker-end="url(#arrowG)"/>
+  <text x="170" y="255" fill="#7ee787" font-size="16" font-weight="700" font-style="italic">s</text>
+  <text x="170" y="272" fill="#7ee787" font-size="11">(arc length)</text>
+
+  <!-- d coordinate perpendicular -->
+  <line x1="250" y1="180" x2="230" y2="110" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arrowB)"/>
+  <text x="215" y="100" fill="#58a6ff" font-size="16" font-weight="700" font-style="italic">d</text>
+  <text x="200" y="85" fill="#58a6ff" font-size="11">(lateral offset)</text>
+
+  <!-- Vehicle on trajectory -->
+  <rect x="218" y="100" width="30" height="16" rx="4" fill="#ffa657" transform="rotate(-25, 233, 108)"/>
+  <text x="260" y="95" fill="#ffa657" font-size="11" font-weight="600">ego</text>
+
+  <!-- Tangent vector at projection point -->
+  <line x1="250" y1="180" x2="310" y2="165" stroke="#ffa657" stroke-width="1.5" marker-end="url(#arrowO)" stroke-dasharray="4,3"/>
+  <text x="315" y="162" fill="#ffa657" font-size="11" font-style="italic">t(s)</text>
+
+  <!-- Normal vector at projection point -->
+  <line x1="250" y1="180" x2="242" y2="130" stroke="#d2a8ff" stroke-width="1.5" marker-end="url(#arrowP)" stroke-dasharray="4,3"/>
+  <text x="228" y="135" fill="#d2a8ff" font-size="11" font-style="italic">n(s)</text>
+
+  <!-- Projection point -->
+  <circle cx="250" cy="180" r="5" fill="#f0f6fc"/>
+  <text x="258" y="195" fill="#f0f6fc" font-size="11">projection</text>
+
+  <!-- Planned trajectories -->
+  <path d="M250,180 C280,170 310,130 340,115 C370,100 400,100 430,105" stroke="#7ee787" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M250,180 C280,175 310,155 340,145 C370,135 400,130 430,130" stroke="#7ee787" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M250,180 C280,178 310,175 340,172 C370,170 400,168 430,163" stroke="#7ee787" stroke-width="2" fill="none"/>
+  <path d="M250,180 C280,185 310,200 340,205 C370,210 400,210 430,205" stroke="#7ee787" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M250,180 C280,190 310,220 340,230 C370,235 400,235 430,230" stroke="#7ee787" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <text x="440" y="165" fill="#7ee787" font-size="11" font-weight="600">optimal</text>
+  <text x="440" y="120" fill="#7ee787" font-size="10" opacity="0.6">candidates</text>
+
+  <!-- Equations -->
+  <rect x="430" y="230" width="240" height="140" rx="8" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+  <text x="550" y="255" text-anchor="middle" fill="#f0f6fc" font-size="12" font-weight="700">Frenet Transform</text>
+  <text x="450" y="280" fill="#8b949e" font-size="12" font-family="monospace">x = x_r(s) + d·cos(θ+π/2)</text>
+  <text x="450" y="300" fill="#8b949e" font-size="12" font-family="monospace">y = y_r(s) + d·sin(θ+π/2)</text>
+  <text x="450" y="325" fill="#8b949e" font-size="12" font-family="monospace">ṡ = v·cos(Δθ)/(1−d·κ)</text>
+  <text x="450" y="345" fill="#8b949e" font-size="12" font-family="monospace">ḋ = v·sin(Δθ)</text>
+
+  <!-- Origin label -->
+  <circle cx="80" cy="280" r="4" fill="#f0f6fc"/>
+  <text x="70" y="300" fill="#f0f6fc" font-size="11">s = 0</text>
+</svg>

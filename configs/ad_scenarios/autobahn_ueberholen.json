@@ -1,0 +1,13 @@
+{
+  "name": "autobahn_ueberholen",
+  "type": "highway_driving",
+  "description": "Dreispurige Autobahn: langsameres Fahrzeug auf der rechten Spur wird links überholt, danach Rückkehr nach rechts (Rechtsfahrgebot).",
+  "params": {},
+  "seed": 1,
+  "duration": 40,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

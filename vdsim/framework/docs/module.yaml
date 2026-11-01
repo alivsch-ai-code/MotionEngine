@@ -1,0 +1,79 @@
+id: framework
+title: Komponenten-Framework der AD-Plattform
+summary: Komponentenmodell mit typisierten Ports, versionierte Plugin-Registry, Dependency Injection, Laufzeitkontext, Signaltypen mit Codecs und Rückverfolgbarkeits-Metadaten.
+purpose: |
+  Die Plattform für automatisierte Fahrfunktionen besteht aus austauschbaren Komponenten derselben
+  Wirkkettenebene (Perception … Vehicle Plant). Das Framework legt dafür den gemeinsamen Vertrag fest
+  (docs/specs/contracts.md): Ports und Typen, Parameter mit Einheiten, Versionen, Lebenszyklus und
+  Dokumentationsmetadaten. Es hängt weder von der GUI noch von konkreten Algorithmen ab (Clean Architecture).
+architecture: |
+  - `component.py`: `Component` (KIND, NAME, VERSION, INPUTS, OUTPUTS, PARAMS, PERIOD, DOC; reset, step,
+    output/update, get_state/set_state, describe), `Port`, Parameterhilfen (`params_schema`, `set_param`).
+  - `layers.py`: Basisklassen der Ebenen mit festen Ports, `LAYER_ORDER`.
+  - `plugins.py`: `@component`, `get_component`, `create_component`, `available_components`, Spec-Strings
+    `kind/name@constraint`, Loader für `python:`, `cpp:`, `rust:`, `matlab:`; `BUILTIN_MODULES`.
+  - `container.py`: Dependency-Injection-Container mit Singletons und Scopes.
+  - `context.py`: `RunContext` (dt, seed, vehicle, road, scenario, rng(name), service()).
+  - `types.py`: Signaltypen (`EgoState`, `PlannedTrajectory`, …), `TYPES`, `compatible()`, `encode/decode`.
+  - `knowledge.py`: `ComponentDoc`, `@trace`, `TRACES` – Grundlage des Wissenssystems (vdsim.knowledge).
+  - `provenance.py`: Reproduzierbarkeits-Manifest (Versionen, Konfigurations-Hash, Git-Commit).
+design_decisions:
+  - decision: Ports und Typen als Klassenattribute statt Laufzeitregistrierung
+    reason: Editor, Typprüfung und Dokumentation lesen sie ohne Instanz (describe())
+    alternatives: Ports erst im Konstruktor (nicht statisch auswertbar)
+  - decision: Mehrere Versionen einer Komponente parallel, SemVer-Bereiche in Spec-Strings
+    reason: Ergebnisse speichern die exakte Version; ältere Graphen bleiben lauffähig
+    alternatives: nur eine Version je Name
+  - decision: Zufall ausschließlich über context.rng(name) mit SHA-256-Seed
+    reason: bitgenau reproduzierbar, unabhängig von PYTHONHASHSEED und Aufrufreihenfolge
+  - decision: Komponenten ohne Durchgriff (output/update) und Rückführungs-Ports
+    reason: bricht algebraische Schleifen wie in Simulink; Bi-level-Rückführung Regler → Planer (Werling 2.3)
+implementation:
+  - "describe() liefert ein JSON-fähiges Dict inklusive Parameter-Schema und ComponentDoc; das Wissenssystem liest genau dieses."
+  - "load_builtins() importiert BUILTIN_MODULES einmal; fehlende optionale Pakete werden übersprungen, defekte protokolliert."
+  - "set_param() unterstützt verschachtelte Parameter per Punktnotation (z. B. cost.k_jerk) und konvertiert Typen."
+configuration:
+  - name: Spec-String
+    description: "kind/name, kind/name@1.2.0, kind/name@^1, kind/name@~1.2, kind/name@>=1.0; python:datei.py:Klasse, cpp:, rust:, matlab:"
+  - name: PERIOD
+    unit: s
+    description: Aufrufperiode einer Komponente, None = jeder Executor-Schritt
+examples: []
+limitations:
+  - Die Versionsauflösung kennt nur MAJOR.MINOR.PATCH (keine Vorabversionen wie 1.0.0-rc1).
+  - Der DI-Container erkennt Zyklen, aber keine Lebensdauerkonflikte zwischen Scopes.
+  - compatible() prüft nur Typnamen; float und Vector gelten als kompatibel.
+validation: []
+references: [werling2011, martin2017, fowler2004, semver2]
+concepts: [component_model, plugin_registry, dependency_injection, deterministic_seeding, signal_type_system]
+related_modules: [knowledge, core, geometry]
+extension_points:
+  - Neue Komponente "@component class X(<Ebene>Base)" mit DOC = ComponentDoc(...) und @trace an Gleichungsfunktionen
+  - Neuer Signaltyp mit register_type(name, py_type, description, color) und Codec in encode/decode
+  - Neuer Loader für Custom Nodes mit register_loader(prefix, loader)
+traceability:
+  - implementation: vdsim.framework.component.Component.describe
+    concept: component_model
+  - implementation: vdsim.framework.component.params_schema
+    concept: component_model
+  - implementation: vdsim.framework.plugins.version_matches
+    concept: plugin_registry
+    source: semver2
+  - implementation: vdsim.framework.plugins.get_component
+    concept: plugin_registry
+  - implementation: vdsim.framework.container.Container.resolve
+    concept: dependency_injection
+    source: fowler2004
+  - implementation: vdsim.framework.context.stable_seed
+    concept: deterministic_seeding
+  - implementation: vdsim.framework.context.RunContext.rng
+    concept: deterministic_seeding
+  - implementation: vdsim.framework.provenance.manifest
+    concept: deterministic_seeding
+  - implementation: vdsim.framework.types.compatible
+    concept: signal_type_system
+  - implementation: vdsim.framework.types.encode
+    concept: signal_type_system
+  - implementation: vdsim.framework.knowledge.trace
+    concept: traceability_model
+    source: gotel1994

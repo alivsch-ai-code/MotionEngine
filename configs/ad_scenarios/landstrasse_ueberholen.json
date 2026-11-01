@@ -1,0 +1,13 @@
+{
+  "name": "landstrasse_ueberholen",
+  "type": "overtaking",
+  "description": "Landstraße mit langsamem Lkw und Gegenverkehr: Überholen über die Gegenfahrbahn nur bei ausreichender Lücke; Überholverbot im Abschnitt mit durchgezogener Mittellinie.",
+  "params": {},
+  "seed": 9,
+  "duration": 60,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

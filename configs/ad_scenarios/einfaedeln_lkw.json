@@ -1,0 +1,13 @@
+{
+  "name": "einfaedeln_lkw",
+  "type": "highway_merge",
+  "description": "Autobahnauffahrt nach Werling 5.3.2: Einfädeln vom Beschleunigungsstreifen in die Lücke zwischen zwei Lkw.",
+  "params": {},
+  "seed": 6,
+  "duration": 35,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

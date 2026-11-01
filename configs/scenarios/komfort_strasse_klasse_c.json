@@ -1,0 +1,30 @@
+{
+  "name": "Komfort Straße Klasse C",
+  "description": "Mehrkörpermodell, ISO-8608-Klasse C, 80 km/h",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {},
+  "model": "multibody",
+  "maneuver": "straight",
+  "maneuver_params": {
+    "speed_kmh": 80,
+    "length": 600
+  },
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "stanley",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {
+    "road": {
+      "roughness_class": "C",
+      "length": 1000
+    }
+  },
+  "duration": 0.0,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

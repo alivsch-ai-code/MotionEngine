@@ -1,0 +1,30 @@
+werling2011:
+  type: thesis
+  authors: [Moritz Werling]
+  title: Ein neues Konzept für die Trajektoriengenerierung und -stabilisierung in zeitkritischen Verkehrsszenarien
+  year: 2011
+  publisher: KIT Scientific Publishing (Schriftenreihe des Instituts für Angewandte Informatik / Automatisierungstechnik, Band 34)
+  url: https://publikationen.bibliothek.kit.edu/1000021738
+  isbn: 978-3-86644-631-1
+  notes: Dissertation KIT 2010. Grundlage für Trajektorienplanung (Kap. 3), Bi-level-Stabilisierung (Kap. 2) und Trackingregelung (Kap. 4).
+werling2010icra:
+  type: paper
+  authors: [Moritz Werling, Julius Ziegler, Sören Kammel, Sebastian Thrun]
+  title: Optimal Trajectory Generation for Dynamic Street Scenarios in a Frenét Frame
+  year: 2010
+  venue: IEEE International Conference on Robotics and Automation (ICRA)
+  doi: 10.1109/ROBOT.2010.5509799
+werling2012ijrr:
+  type: paper
+  authors: [Moritz Werling, Sören Kammel, Julius Ziegler, Lutz Gröll]
+  title: Optimal trajectories for time-critical street scenarios using discretized terminal manifolds
+  year: 2012
+  venue: The International Journal of Robotics Research 31(3)
+  doi: 10.1177/0278364911423042
+werling2010tro:
+  type: paper
+  authors: [Moritz Werling, Lutz Gröll, Georg Bretthauer]
+  title: Invariant Trajectory Tracking With a Full-Size Autonomous Road Vehicle
+  year: 2010
+  venue: IEEE Transactions on Robotics 26(4)
+  doi: 10.1109/TRO.2010.2052325

@@ -1,0 +1,27 @@
+{
+  "name": "Sinus mit Haltezeit (ESP)",
+  "description": "FMVSS 126, Sportwagen mit ESP",
+  "vehicle": "sports_car",
+  "vehicle_overrides": {
+    "systems.esp_enabled": true
+  },
+  "model": "double_track",
+  "maneuver": "sine_with_dwell",
+  "maneuver_params": {
+    "amplitude_deg": 220,
+    "speed_kmh": 100
+  },
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "stanley",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {},
+  "duration": 0.0,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

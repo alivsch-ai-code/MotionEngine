@@ -1,0 +1,13 @@
+{
+  "name": "autobahn_ausfahrt",
+  "type": "highway_exit",
+  "description": "Ego startet auf der linken Spur, wechselt rechtzeitig zweimal nach rechts und verlässt die Autobahn über den Verzögerungsstreifen.",
+  "params": {},
+  "seed": 7,
+  "duration": 55,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

@@ -1,0 +1,62 @@
+id: lane_change
+title: Spurwechsel-Latenzstudie
+summary: Ursprüngliche Studie – Spurwechsel bei 120 km/h mit kinematischem Einspurmodell, verfälschter Aktuator-Kennlinie, Latenzkette und Rückkanal-Korrektur der Soll-Krümmung.
+purpose: |
+  Die Studie beantwortet, wann ein Planer einen Kennlinienfehler des Lenkaktors frühestens bemerken kann,
+  wie groß der dadurch aufgebaute Querversatz ist und wie gut eine Rückkanal-Korrektur ihn reduziert.
+  Latenzkette, Kennlinie und Korrektur sind heute Plattformmodule (vdsim.actuators,
+  vdsim.controllers.curvature_feedback); das Paket enthält Szenario, Simulationsschleife und Plots.
+architecture: |
+  - `profiles.lane_change_curvature()`: sinusförmige Soll-Krümmung des Spurwechsels.
+  - `simulation.simulate()`: Schleife Planer (Soll-Krümmung, Korrektur) → Gateway/Aktuator (Latenz, Kennlinie)
+    → Fahrzeug (Euler-Schritt des kinematischen Modells) → Odometrie/Gateway (Latenz, Rauschen) → Schätzer.
+  - `vehicle_model.vehicle_step()`: kinematisches Einspurmodell mit Krümmung als Eingang.
+  - `latency.py`, `steering.py`, `correction.py`: Re-Exporte der Plattformmodule.
+  - `plotting.py`: Übersicht, Kennlinie, Signale, Latenzvergleich.
+  Einstieg: `run_lane_change.py`.
+design_decisions:
+  - decision: Krümmung als Schnittstelle zwischen Planer und Aktor
+    reason: entspricht der Systemarchitektur der Studie (Planer sendet Soll-Krümmung)
+  - decision: Schätzer kennt die Latenz (internes Modell der Wirkkette)
+    reason: trennt den Effekt der Korrektur vom Problem der Latenzschätzung; in der Praxis z. B. per Kreuzkorrelation
+  - decision: Simulationsschritt 5 ms
+    reason: alle Latenzen der Fälle sind Vielfache davon
+implementation:
+  - "Gierratenrauschen 0,1 °/s wird als Krümmungsrauschen r/v auf die gemessene Krümmung addiert (Seed 0)."
+  - "Der Fehlerfaktor wird je Schritt als characteristic(k_sent)/k_sent protokolliert."
+configuration:
+  - name: V, LANE_WIDTH, DURATION, T_START, T_END, DT
+    description: Szenarioparameter in run_lane_change.py (120 km/h, 3,5 m, 6 s, 1 s, 10 s, 5 ms)
+  - name: K_FULL_LOCK, K_FULL_LOCK_DISTORTED, ERROR_AT_ZERO
+    description: Kennlinie (0,3 1/m, 0,2 1/m, 10 %)
+  - name: LATENCY_CASES
+    description: none, system (45 + 45 ms), typical, high – definiert in vdsim/actuators/latency.py
+examples:
+  - run_lane_change.py
+limitations:
+  - Kinematisches Fahrzeugmodell ohne Schräglauf und mit konstanter Geschwindigkeit.
+  - Latenz dem Schätzer bekannt; keine Jitter.
+  - Nur ein Manöver (Spurwechsel), keine Regelung der Querablage (reine Vorsteuerung der Krümmung).
+validation:
+  - test: tests/test_lane_change_study_and_gui.py
+    shows: Regression der Studienergebnisse (y_end ideal 3,500 m, ohne Korrektur 3,849 m, mit Korrektur 3,627 m, geschätzter Fehlerfaktor 1,088)
+references: [ljung1999, smith1957, openpilot]
+concepts: [lane_change_curvature_profile, latency_round_trip, lane_change_correction_study, latency_chain, steering_characteristic_error, curvature_feedback_correction]
+related_modules: [actuators, controllers]
+extension_points:
+  - Weitere Latenzfälle in vdsim/actuators/latency.py, andere Manöver als Krümmungsprofil in profiles.py
+traceability:
+  - implementation: lane_change.profiles.lane_change_curvature
+    concept: lane_change_curvature_profile
+    tests: [tests/test_lane_change_study_and_gui.py]
+  - implementation: lane_change.vehicle_model.vehicle_step
+    concept: kinematic_bicycle
+    source: rajamani2012
+    tests: [tests/test_lane_change_study_and_gui.py]
+  - implementation: lane_change.simulation.simulate
+    concept: latency_round_trip
+    tests: [tests/test_lane_change_study_and_gui.py]
+  - implementation: lane_change.simulation.simulate
+    concept: lane_change_correction_study
+    source: ljung1999
+    tests: [tests/test_lane_change_study_and_gui.py]

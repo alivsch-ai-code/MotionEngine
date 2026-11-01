@@ -1,0 +1,82 @@
+id: simulation
+title: Simulationskern – Löser, Regelkreis, Szenarien, Ergebnisse
+summary: Schließt den Regelkreis Referenz → Regler → Aktorik → Regelsysteme → Fahrzeugmodell, integriert die Bewegungsgleichungen und zeichnet alle Signale auf.
+purpose: |
+  Der Simulator verbindet die austauschbaren Komponenten zu einem geschlossenen Regelkreis mit festem
+  Reglertakt und stabilitätsabhängigen Teilschritten des Fahrzeugmodells. Szenarien beschreiben einen
+  Versuch vollständig als JSON (Fahrzeug, Modell, Manöver, Regler, Aktorik, Umgebung, Löser), Ergebnisse
+  lassen sich exportieren, vergleichen und auswerten.
+architecture: |
+  - `solver.py`: `EulerSolver`, `HeunSolver`, `RK4Solver` mit Teilschritten, `AdaptiveSolver` (scipy solve_ivp).
+  - `simulator.Simulator`: ein Reglerschritt = Querregler, Längsregler, Längsaktuierung, Lenkaktor,
+    Regelsysteme, Integration, Ausgangsgrößen, Logging, Abbruchprüfung. `from_scenario()` baut alles über
+    die Registry auf.
+  - `scenario.Scenario` / `ScenarioManager`: JSON-Szenarien in `configs/scenarios/`.
+  - `environment.py`: Reibwertkarte (Flächen, Gitter, Split-µ), Fahrbahnprofil (Bodenwellen, ISO 8608), Wind, vorausfahrendes Fahrzeug.
+  - `results.SimulationResult`: Zeitreihen und Metadaten, Export CSV/JSON/NPZ.
+  - `vehicle_state.py`: `VehicleState` (modellunabhängige Sicht) und `ControlInput` (Stellgrößen).
+design_decisions:
+  - decision: Fester Reglertakt dt_control, Fahrzeugmodell mit n = ceil(dt_control / dt_model) Teilschritten
+    reason: Regler arbeiten wie im Steuergerät zeitdiskret; das Modell bleibt numerisch stabil
+    alternatives: gemeinsamer adaptiver Löser für alles (Regler müssten zeitkontinuierlich formuliert sein)
+  - decision: Schrittweite des Modells aus stable_dt() des Modells
+    reason: Die Raddrehdynamik ist bei kleiner Geschwindigkeit steif; bei Autobahntempo genügen 2 ms
+    alternatives: implizite Löser (aufwendiger, Jacobi-Matrix nötig)
+  - decision: Alle Signale der Komponenten über deren signals-Dict automatisch protokollieren
+    reason: neue Regler erscheinen ohne Änderung am Simulator in Plots und KPIs
+implementation:
+  - "Die Lenkanforderung läuft durch den `SteeringActuator` (Kennlinie, Latenz, Rückkanal-Korrektur); als gemessene Krümmung dient r / max(v_x, 1)."
+  - "Abbruch bei NaN, Ende der Dauer, Ende der Trajektorie, Stillstand nach Bremsung, Zielgeschwindigkeit, Kollision mit dem vorausfahrenden Fahrzeug oder Instabilität (|β| > 60°, |φ| > 0,35 rad)."
+  - "Die Dauer wird ohne Angabe aus Trajektorienlänge und mittlerer Sollgeschwindigkeit geschätzt (Faktor 1,2 plus 5 s, höchstens 1200 s)."
+configuration:
+  - name: dt_control
+    description: Reglertakt in s (Standard 0,01)
+    unit: s
+    default: 0.01
+  - name: dt_model
+    description: Schrittweite des Fahrzeugmodells, 0 = recommended_dt des Modells (2 ms), zusätzlich begrenzt durch stable_dt
+    unit: s
+  - name: solver
+    description: euler, heun, rk4 oder adaptive
+    default: rk4
+  - name: environment
+    description: "friction (base, patches, grid), wind_speed, road (bumps, roughness_class A–E, seed), lead_vehicle (initial_gap, time, speed)"
+examples:
+  - run_scenario.py
+limitations:
+  - Reglertakt und Modellschritt sind fest gekoppelt; Multi-Rate-Komponenten der AD-Plattform laufen über vdsim.runtime.
+  - Das vorausfahrende Fahrzeug fährt auf derselben Bahn (eindimensional entlang s).
+  - Das Fahrbahnprofil hängt nur von x ab (nicht von y, keine Wankanregung).
+validation:
+  - test: tests/test_simulation_and_reporting.py
+    shows: Szenario-Bibliothek baut, Szenario-Roundtrip, Löser stimmen überein, Ergebnis-Export/-Import, Manöver-KPIs
+  - test: tests/test_controllers_and_systems.py
+    shows: geschlossene Regelkreise aller Regler und Regelsysteme
+references: [hairer1993, hairer1996, butcher2016, virtanen2020, iso8608]
+concepts: [runge_kutta, stable_substeps, simulation_loop, iso8608_road_profile]
+related_modules: [vehicle_models, controllers, actuators, powertrain, reporting, trajectory]
+extension_points:
+  - Neuer Löser als Unterklasse von Solver mit _single_step, Eintrag in SOLVERS
+  - Neue Umgebungsgröße als Feld in Environment (to_dict/from_dict ergänzen)
+traceability:
+  - implementation: vdsim.simulation.solver.RK4Solver
+    concept: runge_kutta
+    source: hairer1993
+    tests: [tests/test_simulation_and_reporting.py]
+  - implementation: vdsim.simulation.solver.HeunSolver
+    concept: runge_kutta
+    source: butcher2016
+  - implementation: vdsim.simulation.solver.EulerSolver
+    concept: runge_kutta
+    source: butcher2016
+  - implementation: vdsim.simulation.solver.AdaptiveSolver
+    concept: runge_kutta
+    source: virtanen2020
+  - implementation: vdsim.simulation.simulator.Simulator.step
+    concept: simulation_loop
+  - implementation: vdsim.simulation.simulator.Simulator._substeps
+    concept: stable_substeps
+    source: hairer1996
+  - implementation: vdsim.simulation.environment.iso8608_profile
+    concept: iso8608_road_profile
+    source: iso8608

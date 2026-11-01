@@ -1,0 +1,16 @@
+{
+  "name": "kreuzung_ampel_geradeaus",
+  "type": "intersection",
+  "description": "Ampelkreuzung: Ego nähert sich bei Rot, hält an der Haltelinie, fährt bei Grün geradeaus; Querverkehr fährt während der Rotphase des Ego.",
+  "params": {
+    "control": "traffic_light",
+    "maneuver": "straight"
+  },
+  "seed": 2,
+  "duration": 45,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

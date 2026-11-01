@@ -1,0 +1,8 @@
+# Verknüpfungen Referenz -> Ziel (package:, module:, component:, concept:, class:, function:)
+links:
+- reference: rajamani2012
+  target: package:vehicle_models
+  note: Einspurmodelle
+- reference: werling2011
+  target: package:geometry
+  note: Anhang A (Frenet-Transformation, Projektion)

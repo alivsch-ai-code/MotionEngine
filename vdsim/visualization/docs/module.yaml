@@ -1,0 +1,33 @@
+id: visualization
+title: Visualisierung
+summary: matplotlib-Diagramme (Pfad, Zustandsgrößen, Reifen, Pacejka-Kurven, GGV, Bode, Heatmaps, Energie, Vergleich), Echtzeit-Widgets (Draufsicht, Signal-Scope, Kacheln, 3D) und Draufsicht-Animation.
+purpose: |
+  Ergebnisse und Modelleigenschaften müssen schnell erfassbar sein. Das Paket bündelt alle Diagramme für
+  GUI, PDF-Bericht und Skripte und die Echtzeit-Widgets der Live-Ansicht.
+architecture: |
+  - `plotter.py`: Diagrammfunktionen auf matplotlib-Achsen bzw. -Figuren; feste kategoriale Farbpalette
+    (Fahrzeug, Referenz, Räder FL/FR/RL/RR); `plot_tire_curves` wertet das eingestellte Reifenmodell aus,
+    `plot_bode` die lineare Analyse, `plot_ggv` das g-g-Diagramm.
+  - `dashboard.py`: pyqtgraph/PySide6-Widgets `VehicleTopView`, `SignalScope`, `KPITile`, `GaugeRow`, `Vehicle3DView`.
+  - `animation.py`: Draufsicht-Animation als GIF/MP4 (matplotlib.animation).
+design_decisions:
+  - decision: Feste Farbzuordnung je Entität (Fahrzeug, Referenz, Rad)
+    reason: dieselbe Größe hat in allen Diagrammen dieselbe Farbe
+  - decision: Diagrammfunktionen nehmen Achsen entgegen
+    reason: wiederverwendbar in GUI, Bericht und eigenen Skripten
+implementation:
+  - "Plots lesen ausschließlich SimulationResult und Metadaten; keine Abhängigkeit vom Simulator-Zustand."
+configuration: []
+examples:
+  - run_scenario.py
+limitations:
+  - Die 3D-Ansicht ist eine vereinfachte Quaderdarstellung mit Rädern und Kraftpfeilen.
+  - MP4-Export benötigt ffmpeg im Pfad.
+validation:
+  - test: tests/test_simulation_and_reporting.py
+    shows: Diagramme im PDF-Bericht werden erzeugt
+references: [milliken1995, pacejka2012]
+concepts: []
+related_modules: [reporting, analysis, tire_models, gui]
+extension_points:
+  - Neues Diagramm als Funktion in plotter.py und Eintrag in PLOTS des Analyse-Panels

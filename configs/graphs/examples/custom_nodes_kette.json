@@ -1,0 +1,33 @@
+{
+  "format_version": 1,
+  "name": "custom_nodes_kette",
+  "base_dt": 0.01,
+  "nodes": [
+    {"id": "world", "component": "node/typed_default", "params": {"type_name": "WorldState"}, "period": null, "position": [40, 60], "label": "Welt (Platzhalter)"},
+    {"id": "prediction", "component": "node/typed_default", "params": {"type_name": "Prediction"}, "period": null, "position": [40, 200], "label": "Prädiktion (Platzhalter)"},
+    {"id": "perception", "component": "python:examples/custom_nodes/python/my_sensor_fusion_module.py:TwoSensorFusion", "params": {}, "period": null, "position": [220, 60], "label": "Sensorfusion"},
+    {"id": "behavior", "component": "python:examples/custom_nodes/python/my_behavior_planner.py:SimpleBehaviorPlanner", "params": {"target_speed": 15.0}, "period": 0.1, "position": [420, 60], "label": "Verhalten"},
+    {"id": "planner", "component": "python:examples/custom_nodes/python/my_planner_node.py:LaneKeepingPlanner", "params": {}, "period": 0.1, "position": [620, 60], "label": "Planer"},
+    {"id": "controller", "component": "python:examples/custom_nodes/python/my_controller_node.py:PurePursuitController", "params": {}, "period": 0.02, "position": [820, 60], "label": "Regler"},
+    {"id": "actuators", "component": "python:examples/custom_nodes/python/my_vehicle_model.py:CommandToControl", "params": {}, "period": null, "position": [820, 200], "label": "Stellgrößen"},
+    {"id": "plant", "component": "python:examples/custom_nodes/python/my_vehicle_model.py:KinematicBicyclePlant", "params": {"y0": 1.5, "v0": 10.0}, "period": null, "position": [620, 260], "label": "Fahrzeug"}
+  ],
+  "connections": [
+    {"from": "plant.ego", "to": "perception.ego"},
+    {"from": "world.y", "to": "perception.world"},
+    {"from": "perception.ego_estimate", "to": "behavior.ego"},
+    {"from": "perception.objects", "to": "behavior.objects"},
+    {"from": "prediction.y", "to": "behavior.prediction"},
+    {"from": "world.y", "to": "behavior.world"},
+    {"from": "planner.trajectory", "to": "behavior.trajectory"},
+    {"from": "perception.ego_estimate", "to": "planner.ego"},
+    {"from": "behavior.behavior", "to": "planner.behavior"},
+    {"from": "prediction.y", "to": "planner.prediction"},
+    {"from": "controller.status", "to": "planner.status"},
+    {"from": "perception.ego_estimate", "to": "controller.ego"},
+    {"from": "planner.trajectory", "to": "controller.trajectory"},
+    {"from": "controller.command", "to": "actuators.command"},
+    {"from": "actuators.control", "to": "plant.control"}
+  ],
+  "metadata": {"description": "Wirkkette nur aus Python-Custom-Nodes (Beispiele in examples/custom_nodes/python)", "t_end": 10.0}
+}

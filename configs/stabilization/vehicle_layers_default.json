@@ -1,0 +1,9 @@
+{
+  "description": "Standardparameter der Fahrzeugebenen (Vehicle Dynamics, Actuators, Vehicle Plant).",
+  "vehicle_dynamics/split_range": {"k_i": 0.5, "integrator_limit": 0.3, "compensate_resistance": true,
+                                   "gamma_brake": 0.75, "max_decel": 10.0, "regen": false, "systems": []},
+  "actuator/steering_powertrain": {"steering": {"dead_time": 0.0, "tau": 0.0, "rate_limit": 0.0},
+                                   "drive_dead_time": 0.0, "drive_tau": 0.0, "brake_dead_time": 0.0, "brake_tau": 0.0},
+  "actuator/steering_powertrain#latency_system": {"steering": {"dead_time": 0.045, "sensor_delay": 0.045}},
+  "vehicle_plant/vehicle_model": {"model": "werling_desm", "solver": "rk4", "dt_model": 0.0}
+}

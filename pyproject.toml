@@ -1,0 +1,121 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "motion-engine"
+version = "0.1.0"
+description = "Open-source framework for motion planning, trajectory optimization, vehicle dynamics simulation, and autonomous driving research"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Aljoscha Vivien Schmidt"},
+]
+keywords = [
+    "motion-planning",
+    "trajectory-planning",
+    "vehicle-dynamics",
+    "autonomous-driving",
+    "MPC",
+    "path-optimization",
+    "motion-prediction",
+    "ADAS",
+    "robotics",
+    "simulation",
+    "self-driving",
+    "control-systems",
+    "bicycle-model",
+    "Frenet-frame",
+    "Werling-planner",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+gui = [
+    "PySide6>=6.5",
+    "pyqtgraph>=0.13",
+    "PyOpenGL>=3.1",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.8",
+    "pre-commit>=3.5",
+]
+docs = [
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+    "myst-parser>=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/alivsch-ai-code/MotionEngine"
+Documentation = "https://github.com/alivsch-ai-code/MotionEngine/tree/main/docs"
+Repository = "https://github.com/alivsch-ai-code/MotionEngine"
+Issues = "https://github.com/alivsch-ai-code/MotionEngine/issues"
+
+[project.scripts]
+motion-engine = "vdsim.gui.app:main"
+motion-engine-scenario = "run_scenario:main"
+
+[tool.setuptools.packages.find]
+include = ["vdsim*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 99
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "NPY",  # numpy-specific
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B905",  # zip-strict (Python 3.10 compat)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["vdsim"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gui: marks tests that require a display",
+]

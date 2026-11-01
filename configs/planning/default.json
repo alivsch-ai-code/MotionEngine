@@ -1,0 +1,17 @@
+{
+  "name": "default",
+  "description": "Werling-Standardparametrierung: nur konsistente Kostenterme (Bellman-Garantie), absolutes Endzeitraster, Bi-level-Stabilisierung.",
+  "component": "trajectory_planner/werling@^1",
+  "params": {
+    "sampling": {"absolute_grid": true, "lat_tau_step": 0.5, "lat_tau_max": 5.0, "lat_d_step": 0.5, "lat_d_range": 3.5,
+                 "lon_tau_step": 1.0, "lon_tau_max": 8.0, "lon_nu_step": 1.0, "lon_nu_range": 4.0,
+                 "lon_sigma_step": 1.0, "lon_sigma_range": 3.0},
+    "cost": {"k_lat": 1.0, "k_lon": 1.0,
+             "jerk": {"k_lat": 1.0, "k_arc": 1000.0, "k_lon": 1.0},
+             "terminal_time": {"k_tau_lat": 5.0, "k_s_arc": 8.0, "k_tau_lon": 2.0},
+             "terminal_deviation": {"k_delta": 200.0, "k_delta_arc": 600.0, "k_sigma": 30.0, "k_nu": 20.0}},
+    "collision": {"horizon": 3.0, "dt": 0.1, "margin_ramp": 1.0},
+    "timing": {"t_comp": 0.05, "dt_out": 0.05, "output_horizon": 6.0},
+    "stabilization": {"strategy": "bilevel", "v_switch": 3.0, "hysteresis": 0.5}
+  }
+}

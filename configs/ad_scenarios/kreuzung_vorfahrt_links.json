@@ -1,0 +1,17 @@
+{
+  "name": "kreuzung_vorfahrt_links",
+  "type": "intersection",
+  "description": "Kreuzung mit Vorfahrtregelung: Ego kommt aus der untergeordneten Straße, gewährt dem Querverkehr Vorfahrt und biegt links ab.",
+  "params": {
+    "control": "yield",
+    "maneuver": "left",
+    "ego_distance": 50.0
+  },
+  "seed": 4,
+  "duration": 45,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

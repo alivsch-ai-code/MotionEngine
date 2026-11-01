@@ -1,0 +1,33 @@
+{
+  "name": "Spurwechsel mit Latenzkette",
+  "description": "Gateway 40 ms, Aktuator 5 ms, Odometrie 5 ms; Aktuator-Kennlinienfehler (0,2 -> 0,3) mit Rückkanal-Korrektur",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {},
+  "model": "bicycle_kinematic",
+  "maneuver": "lane_change",
+  "maneuver_params": {
+    "speed_kmh": 120
+  },
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "curvature_feedforward",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {
+    "dead_time": 0.045,
+    "tau": 0.0,
+    "sensor_delay": 0.045,
+    "characteristic_error": true,
+    "k_full_lock": 0.3,
+    "k_full_lock_assumed": 0.2,
+    "error_at_zero": 0.1,
+    "feedback_correction": true
+  },
+  "environment": {},
+  "duration": 0.0,
+  "dt_control": 0.005,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

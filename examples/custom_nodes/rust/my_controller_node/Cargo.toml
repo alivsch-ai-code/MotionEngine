@@ -1,0 +1,14 @@
+[package]
+name = "my_controller_node"
+version = "1.0.0"
+edition = "2021"
+description = "Pure-Pursuit tracking controller as vdsim custom node (Rust, std only)"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "unwind"

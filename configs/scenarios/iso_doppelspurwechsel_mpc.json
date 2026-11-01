@@ -1,0 +1,22 @@
+{
+  "name": "ISO-Doppelspurwechsel 80 km/h (MPC)",
+  "description": "ISO 3888-1 mit modellprädiktiver Querregelung",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {},
+  "model": "double_track",
+  "maneuver": "iso_double_lane_change",
+  "maneuver_params": {},
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "mpc",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {},
+  "duration": 0.0,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

@@ -1,0 +1,511 @@
+header:
+  frame_id: map
+poses:
+  - header: {stamp: {secs: 0, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 0.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 2.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 4.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 6.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 8.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 10.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 12.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 14.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 16.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 0, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 18.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 20.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 22.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 24.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 26.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 28.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 30.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 32.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 34.000, y: -0.004, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 36.000, y: -0.055, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 1, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 38.000, y: -0.220, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 40.000, y: -0.499, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 42.000, y: -0.781, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 44.000, y: -0.906, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 46.000, y: -0.781, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 48.000, y: -0.441, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 50.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 52.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 54.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 56.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 2, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 58.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 60.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 62.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 64.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 66.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 68.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 70.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 72.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 74.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 76.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 3, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 78.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 80.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 82.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 84.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 299999999}, frame_id: map}
+    pose:
+      position: {x: 86.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 88.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 90.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 92.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 94.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 96.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 4, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 98.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 100.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 102.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 104.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 106.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 108.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 110.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 112.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 114.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 116.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 5, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 118.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 120.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 122.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 124.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 126.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 128.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 130.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 132.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 134.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 136.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 6, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 138.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 140.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 142.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 144.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 146.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 148.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 150.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 152.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 154.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 156.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 7, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 158.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 160.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 99999999}, frame_id: map}
+    pose:
+      position: {x: 162.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 164.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 166.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 168.000, y: 1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 170.000, y: 1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 599999999}, frame_id: map}
+    pose:
+      position: {x: 172.000, y: 0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 174.000, y: 0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 176.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 8, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 178.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 180.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 99999999}, frame_id: map}
+    pose:
+      position: {x: 182.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 184.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 186.000, y: -1.280, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 188.000, y: -1.126, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 190.000, y: -0.836, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 192.000, y: -0.445, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 194.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 196.000, y: 0.441, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 9, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 198.000, y: 0.781, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 200.000, y: 0.906, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 202.000, y: 0.781, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 204.000, y: 0.499, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 206.000, y: 0.220, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 208.000, y: 0.055, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 210.000, y: 0.004, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 212.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 214.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 216.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 10, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 218.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 220.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 222.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 224.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 226.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 228.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 230.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 232.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 700000000}, frame_id: map}
+    pose:
+      position: {x: 234.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 800000000}, frame_id: map}
+    pose:
+      position: {x: 236.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 11, nsecs: 900000000}, frame_id: map}
+    pose:
+      position: {x: 238.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 12, nsecs: 0}, frame_id: map}
+    pose:
+      position: {x: 240.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 12, nsecs: 100000000}, frame_id: map}
+    pose:
+      position: {x: 242.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 12, nsecs: 200000000}, frame_id: map}
+    pose:
+      position: {x: 244.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 12, nsecs: 300000000}, frame_id: map}
+    pose:
+      position: {x: 246.000, y: 0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 12, nsecs: 400000000}, frame_id: map}
+    pose:
+      position: {x: 248.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 12, nsecs: 500000000}, frame_id: map}
+    pose:
+      position: {x: 250.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - header: {stamp: {secs: 12, nsecs: 600000000}, frame_id: map}
+    pose:
+      position: {x: 252.000, y: -0.000, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}

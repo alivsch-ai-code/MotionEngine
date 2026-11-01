@@ -1,0 +1,22 @@
+{
+  "name": "Autobahn mit Spurhalteassistent",
+  "description": "Abgelenkter Fahrer driftet, LKA korrigiert",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {},
+  "model": "double_track",
+  "maneuver": "highway",
+  "maneuver_params": {},
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "lane_keeping",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {},
+  "duration": 30,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

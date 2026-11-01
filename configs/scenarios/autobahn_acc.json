@@ -1,0 +1,41 @@
+{
+  "name": "Autobahn mit ACC",
+  "description": "Vorausfahrendes Fahrzeug bremst von 100 auf 60 km/h",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {},
+  "model": "bicycle_nonlinear",
+  "maneuver": "straight",
+  "maneuver_params": {
+    "length": 1200,
+    "speed_kmh": 120
+  },
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "stanley",
+  "lateral_params": {},
+  "longitudinal_controller": "acc",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {
+    "lead_vehicle": {
+      "initial_gap": 60.0,
+      "time": [
+        0,
+        8,
+        14,
+        300
+      ],
+      "speed": [
+        27.8,
+        27.8,
+        16.7,
+        16.7
+      ]
+    }
+  },
+  "duration": 30,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

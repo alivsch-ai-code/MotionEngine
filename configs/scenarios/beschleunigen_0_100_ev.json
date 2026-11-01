@@ -1,0 +1,22 @@
+{
+  "name": "Beschleunigung 0-100 km/h (E-Antrieb)",
+  "description": "Elektro-Limousine Allrad",
+  "vehicle": "ev_sedan",
+  "vehicle_overrides": {},
+  "model": "double_track",
+  "maneuver": "acceleration",
+  "maneuver_params": {},
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "stanley",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {},
+  "duration": 0.0,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

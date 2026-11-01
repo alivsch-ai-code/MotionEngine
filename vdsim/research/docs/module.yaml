@@ -1,0 +1,44 @@
+id: research
+title: Forschungsmodus
+summary: Kennwerte, Sicherheitsmetriken, Batch-Simulation, Parameter-Sweeps, Monte Carlo, Controller- und Planer-Vergleiche sowie Laufzeit-Benchmarking.
+purpose: |
+  Algorithmen für automatisiertes Fahren lassen sich nur über viele reproduzierbare Simulationen bewerten.
+  Das Modul macht aus einzelnen Läufen (ADResult) vergleichbare Kennwerte und orchestriert Versuchsreihen.
+  Jeder Job ist ein einfaches dict; deshalb läuft dieselbe Versuchsreihe aus GUI, API und Kommandozeile.
+architecture: |
+  - `metrics.py`: ADResult → Kennwerte (Sicherheit, Komfort, Tracking, Planer, Kosten, Mission)
+  - `experiments.py`: Jobs, Batch (Prozesspool), vollfaktorielle Sweeps, Monte Carlo, Vergleiche, BatchResult mit Statistik und Sensitivität
+  - `benchmark.py`: Laufzeit je Knoten des Ausführungsgraphen, Planungszyklus, Echtzeitfaktor
+design_decisions:
+  - decision: Jobs als JSON-fähige dicts mit Pfad-Overrides ("stack.planner.params.cost.k_jerk")
+    reason: dieselbe Definition für GUI, REST-API, CLI und Prozesspool (picklebar), versionierbar
+    alternatives: Python-Objekte mit Callbacks (nicht serialisierbar)
+  - decision: Seeds sind Teil des Jobs, Monte-Carlo-Seeds werden deterministisch aus Basis-Seed und Laufindex abgeleitet
+    reason: Ergebnisse sind unabhängig von der Anzahl der Worker reproduzierbar
+    alternatives: globaler Zufallsgenerator (Reihenfolgeabhängig)
+  - decision: Konsistenzmaß als Kennwert
+    reason: zeitliche Konsistenz ist die zentrale Eigenschaft der Werling-Planung (Bellman-Prinzip) und muss im Planervergleich sichtbar sein
+    alternatives: nur Endergebnisse vergleichen (Konsistenzverlust bliebe unbemerkt)
+implementation:
+  - Sicherheitsmetriken werden auf der Ego-Zeitbasis mit den interpolierten Objekthistorien berechnet; Abstände über orientierte Rechtecke (SAT + Kantenabstände).
+  - Monte-Carlo-Statistik mit Perzentilen und Kollisionsrate; Sensitivität als standardisierte Regressionskoeffizienten.
+configuration:
+  - name: Job.scenario / scenario_params / stack / seed / duration / snapshots / save_dir
+    description: Definition eines Laufs
+  - name: monte_carlo(distributions)
+    description: "Verteilungen je Pfad: uniform(low, high), normal(mean, std, low?, high?), lognormal, choice, integer"
+examples:
+  - run_ad.py (CLI mit --compare-controllers, --sweep, --monte-carlo, --benchmark)
+limitations:
+  - TTC/Zeitlücke betrachten Objekte im vom Ego überstrichenen Korridor in Fahrzeuglängsrichtung (keine Kurvenprädiktion).
+  - PET wird über die minimale Zeitdifferenz an räumlich nahen Bahnpunkten (Abtastung 0.2 s) bestimmt.
+  - Die Sensitivität ist linear (keine Wechselwirkungen, keine Sobol-Indizes).
+validation:
+  - test: tests/research/test_research_metrics.py
+    shows: Rechteckabstand, TTC/THW/DRAC gegen analytische Folgefahrt, Konsistenzmaß, Kostenanalyse, Speichern/Laden, deterministische Sweeps und Monte Carlo, Sensitivität
+references: [vogel2003, hayward1972, allen1978, ericson2004, montgomery2017, saltelli2008, werling2011]
+concepts: [surrogate_safety_measures, rectangle_distance, bellman_principle, full_factorial_design, monte_carlo]
+related_modules: [ad, planning, stabilization, world, api]
+extension_points:
+  - Neue Kennwerte als Funktion ADResult → dict in metrics.evaluate ergänzen
+  - Neue Versuchspläne (z. B. Latin Hypercube) als Job-Generator neben parameter_sweep/monte_carlo

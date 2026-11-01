@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 450" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="100%" style="stop-color:#161b22"/>
+    </linearGradient>
+    <marker id="arrowW" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#f0f6fc"/>
+    </marker>
+    <marker id="arrowR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#ff7b72"/>
+    </marker>
+    <marker id="arrowBl" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#58a6ff"/>
+    </marker>
+  </defs>
+
+  <rect width="700" height="450" rx="12" fill="url(#bg3)"/>
+  <text x="350" y="35" text-anchor="middle" fill="#f0f6fc" font-size="18" font-weight="700">Single-Track (Bicycle) Model</text>
+  <text x="350" y="55" text-anchor="middle" fill="#8b949e" font-size="12">ISO 8855: x forward, y left, z up</text>
+
+  <!-- Vehicle body -->
+  <rect x="200" y="120" width="60" height="200" rx="12" fill="#21262d" stroke="#484f58" stroke-width="2" transform="rotate(-10, 230, 220)"/>
+
+  <!-- Front wheel (steered) -->
+  <rect x="218" y="115" width="24" height="10" rx="3" fill="#ffa657" transform="rotate(-30, 230, 120)"/>
+
+  <!-- Rear wheel -->
+  <rect x="218" y="305" width="24" height="10" rx="3" fill="#ffa657" transform="rotate(-10, 230, 310)"/>
+
+  <!-- CG marker -->
+  <circle cx="230" cy="220" r="6" fill="#ff7b72" stroke="#f0f6fc" stroke-width="1.5"/>
+  <text x="246" y="224" fill="#ff7b72" font-size="12" font-weight="700">CG</text>
+
+  <!-- Wheelbase line -->
+  <line x1="240" y1="130" x2="240" y2="310" stroke="#484f58" stroke-width="1" stroke-dasharray="4,4" transform="rotate(-10, 230, 220)"/>
+
+  <!-- lf arrow -->
+  <line x1="255" y1="135" x2="255" y2="220" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arrowBl)" transform="rotate(-10, 230, 220)"/>
+  <text x="275" y="175" fill="#58a6ff" font-size="13" font-style="italic" transform="rotate(-10, 230, 220)">l_f</text>
+
+  <!-- lr arrow -->
+  <line x1="255" y1="310" x2="255" y2="225" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arrowBl)" transform="rotate(-10, 230, 220)"/>
+  <text x="275" y="275" fill="#58a6ff" font-size="13" font-style="italic" transform="rotate(-10, 230, 220)">l_r</text>
+
+  <!-- Velocity vector at CG -->
+  <line x1="230" y1="220" x2="300" y2="160" stroke="#7ee787" stroke-width="2.5" marker-end="url(#arrowG)"/>
+  <text x="305" y="158" fill="#7ee787" font-size="14" font-weight="700" font-style="italic">v</text>
+
+  <!-- Heading direction -->
+  <line x1="230" y1="220" x2="215" y2="130" stroke="#f0f6fc" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowW)"/>
+  <text x="195" y="125" fill="#f0f6fc" font-size="12" font-style="italic">x_B</text>
+
+  <!-- Sideslip angle beta -->
+  <path d="M230,180 A40,40 0 0,1 260,180" fill="none" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="260" y="182" fill="#d2a8ff" font-size="14" font-weight="700" font-style="italic">β</text>
+
+  <!-- Steering angle delta -->
+  <path d="M228,118 A20,20 0 0,0 215,110" fill="none" stroke="#ffa657" stroke-width="2"/>
+  <text x="195" y="108" fill="#ffa657" font-size="14" font-weight="700" font-style="italic">δ</text>
+
+  <!-- Yaw rate arrow -->
+  <path d="M185,195 A30,30 0 0,0 195,250" fill="none" stroke="#ff7b72" stroke-width="2" marker-end="url(#arrowR)"/>
+  <text x="165" y="225" fill="#ff7b72" font-size="14" font-weight="700" font-style="italic">r</text>
+
+  <!-- Tire force arrows -->
+  <line x1="230" y1="120" x2="200" y2="105" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrowBl)"/>
+  <text x="182" y="102" fill="#58a6ff" font-size="11">F_yf</text>
+
+  <line x1="230" y1="310" x2="205" y2="300" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrowBl)"/>
+  <text x="182" y="298" fill="#58a6ff" font-size="11">F_yr</text>
+
+  <!-- Equations panel -->
+  <rect x="380" y="90" width="290" height="320" rx="10" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+  <text x="525" y="118" text-anchor="middle" fill="#f0f6fc" font-size="14" font-weight="700">Equations of Motion</text>
+
+  <text x="400" y="148" fill="#7ee787" font-size="12" font-weight="600">Kinematic (4 states)</text>
+  <text x="400" y="168" fill="#8b949e" font-size="11" font-family="monospace">ẋ = v·cos(ψ+β)</text>
+  <text x="400" y="185" fill="#8b949e" font-size="11" font-family="monospace">ẏ = v·sin(ψ+β)</text>
+  <text x="400" y="202" fill="#8b949e" font-size="11" font-family="monospace">ψ̇ = v·cos(β)·κ</text>
+  <text x="400" y="219" fill="#8b949e" font-size="11" font-family="monospace">v̇ = a_x</text>
+
+  <text x="400" y="250" fill="#ffa657" font-size="12" font-weight="600">Linear (6 states)</text>
+  <text x="400" y="270" fill="#8b949e" font-size="11" font-family="monospace">β̇ = −(c_f+c_r)/(mv)·β</text>
+  <text x="400" y="287" fill="#8b949e" font-size="11" font-family="monospace">    + (c_r·l_r−c_f·l_f)/(mv²)·r</text>
+  <text x="400" y="304" fill="#8b949e" font-size="11" font-family="monospace">    − 1)·r + c_f/(mv)·δ</text>
+
+  <text x="400" y="335" fill="#ff7b72" font-size="12" font-weight="600">Nonlinear</text>
+  <text x="400" y="355" fill="#8b949e" font-size="11" font-family="monospace">α_f = δ − atan((v·sin(β)+l_f·r)</text>
+  <text x="400" y="372" fill="#8b949e" font-size="11" font-family="monospace">            / (v·cos(β)))</text>
+  <text x="400" y="389" fill="#8b949e" font-size="11" font-family="monospace">F_y = f(α, κ, F_z, μ)</text>
+
+  <!-- Model hierarchy -->
+  <text x="350" y="440" text-anchor="middle" fill="#484f58" font-size="11">4-state kinematic → 6-state linear → 6-state nonlinear → 12-DOF double-track → 24-DOF multibody</text>
+</svg>

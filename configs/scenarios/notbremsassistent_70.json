@@ -1,0 +1,39 @@
+{
+  "name": "Notbremsassistent 70 km/h",
+  "description": "Stehendes Hindernis, AEB",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {},
+  "model": "double_track",
+  "maneuver": "straight",
+  "maneuver_params": {
+    "length": 400,
+    "speed_kmh": 70
+  },
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "stanley",
+  "lateral_params": {},
+  "longitudinal_controller": "aeb",
+  "longitudinal_params": {
+    "base": "speed_pi"
+  },
+  "steering_actuator": {},
+  "environment": {
+    "lead_vehicle": {
+      "initial_gap": 120.0,
+      "time": [
+        0,
+        300
+      ],
+      "speed": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "duration": 15,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

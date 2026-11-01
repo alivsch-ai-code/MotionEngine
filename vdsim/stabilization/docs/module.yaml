@@ -1,0 +1,79 @@
+id: stabilization
+title: Trajektorienstabilisierung nach Werling und Fahrzeugebenen
+summary: Setzt Solltrajektorien mit den drei Werling-Trackingreglern (Bi-level-Stabilisierung) oder klassischen Reglern in Lenkrate/Lenkwinkel und Längskraft/Beschleunigung um und stellt Vehicle Dynamics, Actuators und Vehicle Plant bereit.
+purpose: |
+  Die Trajektorienplanung (vdsim.planning) liefert eine zeitparametrierte Solltrajektorie. Dieses Paket
+  stabilisiert sie gegen permanente Störungen und Modellfehler (Low-level, Werling Kap. 4) und löst bei
+  Impulsstörungen die Reinitialisierung der Planung aus (High-level, Werling 2.3/4.5). Klassische Regler
+  dienen als Vergleich; die Fahrzeugebenen schließen die Wirkkette bis zum Fahrzeugmodell.
+architecture: |
+  - `werling_kinematic.py`: Satz 4 (Hinterachse, vor-/rückwärts) und Satz 6 (Fahrzeugmitte), A.5-Port
+  - `werling_dynamic.py`: Satz 8 (exakte E/A-Linearisierung), lambda(zeta, v), Nulldynamik-Online-Simulation
+  - `switching.py`: `werling_bilevel` = Umschaltung nach Abb. 4.13 + `reinit.py` (Auslösung, Prädiktion)
+  - `errors.py`: invariante Fehler und Sollgrößentransformation; `common.py`: Vorzeichenkonventionen
+  - `classic_lateral.py`, `classic_longitudinal.py`, `composite.py`: Vergleichsregler
+  - `vehicle_layers.py`: `vehicle_dynamics/split_range`, `actuator/steering_powertrain`; `plant.py`: `vehicle_plant/vehicle_model`
+  - `simulate.py`, `trajectories.py`: schlanke Regelkreis-Simulation und Solltrajektorien für Tests/Beispiele
+  - Streckenmodelle `werling_kesm`, `werling_desm` in `vdsim/vehicle_models/werling_models.py`, isotroper Reifen in `vdsim/tire_models/isotropic.py`
+  Datenfluss: ego + trajectory -> ControlCommand (steer_rate, force) -> ActuatorCommand -> ControlInput -> EgoState.
+design_decisions:
+  - decision: Vorzeichen in (4.31) als + e~n sin e~theta
+    reason: nur so gilt die Kürzung im Lyapunov-Beweis; der gedruckte Ausdruck verletzt V_dot <= 0 für (k1 e_n)^2 > k3 k4 (numerisch im Test gezeigt)
+    alternatives: gedrucktes Vorzeichen (Parameter sign_variant="printed", nur zu Demonstrationszwecken)
+  - decision: (4.60) über die Beschleunigung des Referenzpunkts in Fahrzeugkoordinaten gelöst
+    reason: mathematisch äquivalent zu e~_dd = w~ (Kinematik des mitbewegten Frenet-Rahmens), vermeidet die symbolische zweite Ableitung
+    alternatives: direkte Auswertung von L_f^2 e~ wie in Werling 4.3.3.1
+  - decision: Reifeninversion über den Längsschlupfbetrag statt über F_q
+    reason: äquivalent zu g(F_q) = 0 (4.43), monoton, ohne Wurzelsingularität und ohne Inverse der Kennlinie
+    alternatives: Nullstellensuche in F_q mit inverser Kennlinie
+  - decision: Sättigungsmodifikation (Fußnote 17) nur an der Vorderachse im Regler, Strecke mit Kammschem Kreis
+    reason: invertiert wird nach dem Eingang delta; Sättigung wird über den Modifikationsfaktor erkannt und der Lenkwinkel auf das Querkraftoptimum gesetzt
+    alternatives: Modifikation an beiden Achsen (verfälscht die Hinterachskraft nahe dem Maximum)
+  - decision: DESM-Strecke in vx/vy-Koordinaten mit kinematischer Überblendung unter 1.5 m/s
+    reason: identisch mit Modell 4 für v > 0, aber im Stand definiert (kein Schräglauf bei Stillstand)
+    alternatives: Mindestgeschwindigkeit im Nenner (falsche Kräfte beim Lenken im Stand)
+  - decision: Reglerwahl nach PlannedTrajectory.reference_point und varsigma
+    reason: Trajektorie und Regler bleiben konsistent (contracts.md Abschnitt 7)
+    alternatives: reine Geschwindigkeitsschwelle v_d > v_s
+implementation:
+  - Skalare Hot-Path-Rechnung mit dem math-Modul (Regler 0.1-0.8 ms pro Schritt)
+  - Punktgrößen nach Bemerkung 6/8 aus den Modellgleichungen, nicht numerisch differenziert; nur die Vorsteuerung d delta0/dt und kappa~_d_dot numerisch
+  - Nulldynamik (4.72) mit Euler-Teilschritten <= 5 ms, Start mit den aktuellen Fahrzeugzuständen (Bemerkung 10)
+  - MPC-QP mit eigener dichter ADMM-Iteration (keine Zusatzpakete)
+configuration:
+  - name: werling_bilevel.c_t / c_n
+    description: Schwellwerte des elliptischen Maßes (4.5.1), Standard 1.0 / 0.5 m/s
+  - name: werling_bilevel.dynamic.zeta
+    description: Dämpfungsgrad der Nulldynamik für lambda(zeta, v_d) (4.70)
+  - name: configs/stabilization/*.json
+    description: Parametersätze (Werling-Standard, klassische Regler, Fahrzeugebenen)
+examples:
+  - examples/stabilization/slow_comparison.py
+  - examples/stabilization/reverse_maneuver.py
+  - examples/stabilization/highway_gust.py
+  - examples/stabilization/controller_comparison.py
+limitations:
+  - Stellgrößenbeschränkungen nicht in den Werling-Regelgesetzen (Reserve durch Planung/Reinitialisierung)
+  - Dynamischer Regler nur vorwärts und für v_d >= v_min_dynamic; darunter kinematischer Rückfall
+  - Rückwärtsfahrt nur mit Strecken, die rückwärts fahren können (werling_kesm, bicycle_kinematic; werling_desm nur langsam)
+  - Klassische Regler nur vorwärts
+validation:
+  - test: tests/stabilization/test_stabilization_kinematic.py
+    shows: A.5-Gleichheit, V_dot <= 0 (Satz 4, Satz 6, Vorzeichen 4.31), Nominal- und Konvergenzverhalten, Rückwärtsfahrt, Anhalten ohne Lenksprung, Satz 7
+  - test: tests/stabilization/test_stabilization_dynamic.py
+    shows: (4.70) gegen zeta, Satz 9, e~_dd = w~, Reifeninversion mit Sättigung, Schleppfehler mit/ohne Sollgrößentransformation bei 30 m/s
+  - test: tests/stabilization/test_stabilization_switching.py
+    shows: Umschaltung ohne Sprünge, Reinitialisierung bei Böe/Querimpuls, Prädiktionsgenauigkeit, Robustheit double_track
+  - test: tests/stabilization/test_stabilization_classic.py
+    shows: Stabilität aller klassischen Regler, MPC-Beschränkungen, ACC
+  - test: tests/stabilization/test_stabilization_layers.py
+    shows: Split-Range-Integrator gegen Gegenwind/Steigung, Anti-Windup, Aktor, Strecke
+  - test: tests/stabilization/test_stabilization_models.py
+    shows: Modell 1 (Lagrange), Modell 4, isotroper Reifen, Lauf im alten Simulator
+references: [werling2011, werling2010tro, khalil2002, isidori1995, rajamani2012, pacejka2012, snider2009, hoffmann2007, borrelli2017, stellato2020, astrom2006]
+concepts: [kesm, desm, isotropic_tire, invariant_tracking_error, lyapunov_orientation, backstepping, lyapunov_center, flat_reference_transform, zero_dynamics_kesm, exact_io_linearization, zero_dynamics_desm, dynamic_reference_transform, controller_switching, bilevel_stabilization, reinitialization_trigger, motion_prediction, split_range, anti_windup, pure_pursuit, stanley, lqr_lateral, mpc_lateral]
+related_modules: [planning, geometry, framework, vehicle_models, tire_models, actuators, controllers]
+extension_points:
+  - Neue Trackingregler über @component(kind="tracking_controller") mit Basis TrackingControllerBase
+  - Weitere Strecken über vdsim.core.registry ("vehicle_model"), nutzbar via vehicle_plant/vehicle_model
+  - Fahrdynamiksysteme über split_range.systems (chassis_system-Registry)

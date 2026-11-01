@@ -1,0 +1,21 @@
+{
+  "description": "Parametersätze der klassischen Vergleichsregler (tracking_controller/composite).",
+  "sets": {
+    "pure_pursuit_ffb": {"component": "tracking_controller/composite",
+                         "params": {"lateral": "pure_pursuit", "longitudinal": "ff_fb",
+                                    "lateral_params": {"lookahead_gain": 0.8, "lookahead_min": 4.0}}},
+    "stanley_pid": {"component": "tracking_controller/composite",
+                    "params": {"lateral": "stanley", "longitudinal": "pid",
+                               "lateral_params": {"gain": 1.5, "softening": 1.0, "yaw_damping": 0.08},
+                               "longitudinal_params": {"kp": 1.5, "ki": 0.5, "kd": 0.05}}},
+    "lqr_speed_pi": {"component": "tracking_controller/composite",
+                     "params": {"lateral": "lqr", "longitudinal": "speed_pi",
+                                "lateral_params": {"q_e": 1.0, "q_psi": 1.0, "r_delta": 10.0}}},
+    "mpc_ffb": {"component": "tracking_controller/composite",
+                "params": {"lateral": "mpc", "longitudinal": "ff_fb",
+                           "lateral_params": {"horizon": 20, "dt": 0.05, "max_rate": 0.6}}},
+    "lqr_acc": {"component": "tracking_controller/composite",
+                "params": {"lateral": "lqr", "longitudinal": "acc",
+                           "longitudinal_params": {"time_gap": 1.8, "standstill_gap": 5.0}}}
+  }
+}

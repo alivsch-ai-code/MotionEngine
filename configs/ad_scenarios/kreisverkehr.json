@@ -1,0 +1,13 @@
+{
+  "name": "kreisverkehr",
+  "type": "roundabout",
+  "description": "Einspuriger Kreisverkehr: Einfahrt von Westen mit Wartepflicht gegenüber dem Ringverkehr, Ausfahrt nach Osten.",
+  "params": {},
+  "seed": 5,
+  "duration": 40,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

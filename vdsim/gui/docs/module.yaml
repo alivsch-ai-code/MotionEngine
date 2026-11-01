@@ -1,0 +1,47 @@
+id: gui
+title: Desktop-Anwendung (PySide6)
+summary: Hauptfenster mit andockbaren Panels für Szenario, Fahrzeugparameter, Live-Ansicht, Analyse, Kennwerte, Laufvergleich, Trajektorien-Editor und Protokoll.
+purpose: |
+  Die GUI macht die Plattform ohne Programmierung nutzbar: Szenario aus der Bibliothek laden, Fahrzeug
+  parametrieren, simulieren und live beobachten, Kennwerte bewerten, Läufe vergleichen und Berichte
+  erzeugen. Unterpakete anderer Teams (vdsim.gui.ad: AD-Workbench) und der Wissensbrowser
+  (vdsim.gui.knowledge) sind eigenständige Widgets, die in das Hauptfenster eingebettet werden können.
+architecture: |
+  - `app.main()`: QApplication, Theme, Hauptfenster.
+  - `main_window.MainWindow`: Docks (Szenario, Fahrzeug, Protokoll), zentrale Reiter (Live, Signale, 3D,
+    Analyse, Kennwerte, Vergleich, Trajektorien-Editor), Werkzeugleiste und Menüs; die Simulation läuft
+    schrittweise im GUI-Takt (30 ms), damit alle Ansichten ohne Threads aktuell bleiben.
+  - `panels/`: `ScenarioPanel`, `VehiclePanel`, `AnalysisPanel`, `KPIPanel`, `ComparePanel`,
+    `TrajectoryEditorPanel`, `LogPanel`.
+  - `param_tree.py`: Parameterbäume (pyqtgraph) automatisch aus den Parameter-Datenklassen (Bezeichnung, Einheit, Grenzen).
+  - `theme.py`: dunkles Theme (Farben, QSS, pyqtgraph-Optionen); auch vom Wissensbrowser verwendet.
+  - `knowledge/`: Wissensbrowser `KnowledgeBrowser` (siehe Paket knowledge).
+design_decisions:
+  - decision: Simulation schrittweise im GUI-Takt statt in einem Thread
+    reason: keine Synchronisation zwischen Simulator und Ansichten nötig; „Maximal“ rechnet trotzdem so schnell wie möglich
+  - decision: Parametermasken aus Metadaten der Datenklassen
+    reason: neue Parameter erscheinen ohne GUI-Änderung
+  - decision: Dunkles Theme zentral in theme.py
+    reason: einheitliches Erscheinungsbild aller Unterpakete
+implementation:
+  - "Docklayout wird gespeichert und lässt sich zurücksetzen."
+  - "matplotlib wird im Analyse-Panel auf das QtAgg-Backend umgestellt (deshalb analysiert das Wissenssystem GUI-Module nur statisch)."
+configuration:
+  - name: TICK_MS
+    unit: ms
+    description: GUI-Takt der schrittweisen Simulation
+    default: 30
+examples:
+  - run_gui.py
+limitations:
+  - Lange Simulationen blockieren die Oberfläche nicht, laufen im Modus „Echtzeit“ aber nur so schnell wie der GUI-Takt erlaubt.
+  - Die 3D-Ansicht benötigt OpenGL.
+validation:
+  - test: tests/test_lane_change_study_and_gui.py
+    shows: GUI-Durchlauf ohne Bildschirm (offscreen)
+references: []
+concepts: []
+related_modules: [visualization, reporting, simulation, knowledge]
+extension_points:
+  - Neue Panels als QWidget in panels/ und Registrierung im MainWindow (Dock oder Reiter)
+  - Eingebettete Widgets anderer Pakete (vdsim.gui.ad, vdsim.gui.knowledge.KnowledgeBrowser)

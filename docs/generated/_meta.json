@@ -1,0 +1,39 @@
+{
+ "generated_at": "2026-10-27T19:49:33+00:00",
+ "files": 372,
+ "written": 163,
+ "stats": {
+  "nodes": 3201,
+  "edges": 6003,
+  "node_types": {
+   "class": 497,
+   "component": 110,
+   "concept": 147,
+   "config": 52,
+   "datatype": 24,
+   "document": 189,
+   "example": 31,
+   "function": 1769,
+   "model": 12,
+   "module": 217,
+   "package": 27,
+   "reference": 78,
+   "test": 48
+  },
+  "edge_types": {
+   "cites": 570,
+   "configured_by": 128,
+   "consumes": 137,
+   "contains": 2732,
+   "documented_by": 297,
+   "example_of": 129,
+   "implements": 446,
+   "imports": 672,
+   "produces": 117,
+   "related_to": 151,
+   "subclass_of": 191,
+   "tested_by": 433
+  }
+ },
+ "warnings": 48
+}

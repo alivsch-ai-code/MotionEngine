@@ -1,0 +1,5 @@
+{
+  "component": "tracking_controller/werling_bilevel@^1",
+  "description": "Langsame Vorwärtsfahrt mit Orientierungsstabilisierung (Werling 5.2, Vergleichsfahrt (a)).",
+  "params": {"forward_slow": "orientation", "orientation": {"k1": 0.5, "k2": 2.0, "k3": 2.0, "k4": 10.0}}
+}

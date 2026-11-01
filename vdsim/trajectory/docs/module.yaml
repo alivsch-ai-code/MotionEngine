@@ -1,0 +1,114 @@
+id: trajectory
+title: Trajektorien – Manöver, Import, Editor, Geschwindigkeitsprofile
+summary: Referenzpfade mit Geschwindigkeitsprofil – Manöver-Generator (ISO-Tests, Fahrmanöver, Strecken), Import aus sieben Formaten, Wegpunkt-Editor, Ideallinie und GGV-Geschwindigkeitsprofil.
+purpose: |
+  Jeder Versuch braucht eine Referenz: einen Pfad (x, y, Kurswinkel, Krümmung über der Bogenlänge) mit
+  Sollgeschwindigkeit, bei offenen Manövern eine Lenk- oder Beschleunigungstabelle. Das Paket erzeugt diese
+  Referenzen reproduzierbar aus Normen und Parametern oder importiert sie aus Messungen und Karten.
+architecture: |
+  - `trajectory.py`: `Trajectory` (Polylinie, Kurswinkel, Krümmung, Geschwindigkeit, Pylonen, Begrenzungen,
+    Tabellen), `Projection`, Projektion mit Suchhinweis, Serialisierung (JSON/CSV).
+  - `trajectory_generator.py`: `PathBuilder` (Gerade, Bogen, Klothoide, Kurve mit Übergang, Versatz),
+    alle Manöver mit `@maneuver(...)`, `racing_line()`, `generate(name, **params)`.
+  - `speed_profile.py`: `speed_profile()` (GGV-begrenzt) und `lap_time()`.
+  - `trajectory_loader.py`: CSV, JSON, GPX, NMEA, MATLAB, ROS nav_msgs/Path, OpenDRIVE (Registry „trajectory_loader“).
+  - `opendrive.py`: Referenzlinie und Fahrstreifenmitten aus .xodr.
+  - `waypoint_editor.py`: Wegpunktmodell mit Eckradien (Fillets), Rückgängig, JSON.
+design_decisions:
+  - decision: Pfade aus Krümmungssegmenten integrieren (fein abgetastet, trapezförmig)
+    reason: glatte Krümmungsverläufe (Klothoiden), Kurswinkeländerung exakt gleich Integral der Krümmung
+    alternatives: Splines durch Stützpunkte (Krümmung schwer kontrollierbar)
+  - decision: Manöver als registrierte Funktionen mit deutschen Parameterbeschriftungen
+    reason: GUI baut Parametermasken automatisch; neue Manöver ohne GUI-Änderung
+  - decision: Projektion mit Suchfenster um den letzten Index, globale Suche nur bei Verlust der Bahn
+    reason: Start/Ziel geschlossener Strecken und Kreuzungen (Acht) werden nicht verwechselt
+implementation:
+  - "Krümmung der Polylinie als Ableitung des gemittelten Kurswinkels nach der Bogenlänge; der PathBuilder überschreibt sie mit der exakten Segmentkrümmung."
+  - "ISO-Doppelspurwechsel: Gassenbreiten 1,1 b + 0,25, 1,2 b + 0,25, 1,3 b + 0,25 (b = Fahrzeugbreite); Referenzlinie innerhalb der Gassen über eine Glättung (lsq_linear)."
+configuration:
+  - name: maneuver, maneuver_params
+    description: Manöver und seine Parameter (km/h, m, s) im Szenario
+  - name: trajectory_file, trajectory_options
+    description: Importdatei und Optionen (z. B. speed, road_id, lane_id)
+examples:
+  - run_scenario.py
+limitations:
+  - Ideallinie nur als minimale Krümmung (kein Zeitoptimum, keine Fahrzeugdynamik).
+  - Projektion auf die Polylinie ist stückweise linear (Kurswinkel linear interpoliert); für Planungsaufgaben ist vdsim.geometry.ReferenceLine genauer.
+  - GPS-Import mit äquirektangulärer Projektion (genau für wenige Kilometer).
+  - OpenDRIVE: nur Referenzlinie und Fahrstreifenmitten einer Straße, keine Kreuzungen und Höhenprofile.
+validation:
+  - test: tests/test_trajectory.py
+    shows: Geometrie aller Manöver, Pylonengassen, Geschwindigkeitsprofil-Grenzen, Projektion auf geschlossenen Strecken, alle Importformate, Fillet-Radius im Editor
+references: [iso3888_1, iso3888_2, iso4138, iso7401, iso7975, fmvss126, braghin2008, kapania2016, milliken1995, asam_opendrive]
+concepts: [path_construction, ggv_speed_profile, racing_line, polyline_projection, trajectory_import]
+related_modules: [geometry, simulation, controllers, gui]
+extension_points:
+  - Neues Manöver mit "@maneuver(name, label, category, description, param=(Bezeichnung, Einheit))"
+  - Neues Importformat mit "@register('trajectory_loader', name)" und Eintrag in EXTENSIONS
+components:
+  maneuver/iso_double_lane_change:
+    references: [iso3888_1]
+    concepts: [path_construction]
+  maneuver/iso_obstacle_avoidance:
+    references: [iso3888_2]
+    concepts: [path_construction]
+  maneuver/circle:
+    references: [iso4138]
+    concepts: [path_construction]
+  maneuver/ramp_steer:
+    references: [iso4138]
+  maneuver/step_steer:
+    references: [iso7401]
+  maneuver/frequency_sweep:
+    references: [iso7401]
+    concepts: [frequency_response_estimation]
+  maneuver/sine_with_dwell:
+    references: [fmvss126]
+  maneuver/brake_in_turn:
+    references: [iso7975]
+  maneuver/race_track:
+    references: [braghin2008, kapania2016]
+    concepts: [racing_line, ggv_speed_profile]
+  maneuver/lane_change:
+    concepts: [path_construction, lane_change_curvature_profile]
+  maneuver/highway:
+    concepts: [path_construction, ggv_speed_profile]
+  maneuver/city:
+    concepts: [path_construction, ggv_speed_profile]
+  trajectory_loader/opendrive:
+    references: [asam_opendrive]
+    concepts: [trajectory_import]
+  trajectory_loader/gpx:
+    concepts: [trajectory_import]
+  trajectory_loader/nmea:
+    concepts: [trajectory_import]
+traceability:
+  - implementation: vdsim.trajectory.trajectory_generator.PathBuilder.build
+    concept: path_construction
+    tests: [tests/test_trajectory.py]
+  - implementation: vdsim.trajectory.trajectory_generator.PathBuilder.turn
+    concept: path_construction
+  - implementation: vdsim.trajectory.trajectory_generator.racing_line
+    concept: racing_line
+    source: braghin2008
+    tests: [tests/test_trajectory.py]
+  - implementation: vdsim.trajectory.speed_profile.speed_profile
+    concept: ggv_speed_profile
+    source: kapania2016
+    tests: [tests/test_trajectory.py]
+  - implementation: vdsim.trajectory.speed_profile.lap_time
+    concept: ggv_speed_profile
+  - implementation: vdsim.trajectory.trajectory.Trajectory.project
+    concept: polyline_projection
+    tests: [tests/test_trajectory.py]
+  - implementation: vdsim.trajectory.trajectory_loader.geodetic_to_local
+    concept: trajectory_import
+    tests: [tests/test_trajectory.py]
+  - implementation: vdsim.trajectory.opendrive.load_opendrive
+    concept: trajectory_import
+    source: asam_opendrive
+    tests: [tests/test_trajectory.py]
+  - implementation: vdsim.trajectory.waypoint_editor.WaypointEditor.to_trajectory
+    concept: path_construction
+    tests: [tests/test_trajectory.py]

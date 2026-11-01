@@ -1,0 +1,13 @@
+{
+  "name": "werling_autobahnversuch",
+  "type": "werling_highway",
+  "description": "Autobahnversuch nach Werling 5.3.2: Einfädeln zwischen Lkw, verzögerter Spurwechsel wegen schnell herannahendem Pkw, ausscherender Lkw und Seitenwindböe (lateral_impulse) bei t = 38,5 s.",
+  "params": {},
+  "seed": 14,
+  "duration": 48,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

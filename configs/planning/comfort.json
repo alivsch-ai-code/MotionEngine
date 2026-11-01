@@ -1,0 +1,16 @@
+{
+  "name": "comfort",
+  "description": "Komfortabel: niedrige Beschleunigungsgrenzen, langsamere Manöver (kleineres k_tau). Zusätzlich gewichteter Komfortterm (nicht konsistent: Bellman-Garantie entfällt teilweise).",
+  "component": "trajectory_planner/werling@^1",
+  "params": {
+    "sampling": {"lat_tau_max": 6.0, "lon_tau_max": 10.0},
+    "cost": {"terminal_time": {"k_tau_lat": 2.5, "k_tau_lon": 1.0},
+             "terminal_deviation": {"k_delta": 150.0, "k_nu": 15.0},
+             "comfort": {"weight": 0.2},
+             "rerank_window": 10},
+    "constraints": {"max_lateral_acceleration": {"a_max": 3.0},
+                    "max_longitudinal_acceleration": {"a_accel_max": 1.5, "a_decel_max": 6.0},
+                    "max_jerk": {"j_max": 10.0}},
+    "collision": {"margin_car": 0.8, "margin_pedestrian": 2.0, "margin_cyclist": 1.5}
+  }
+}

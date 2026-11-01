@@ -1,0 +1,90 @@
+id: runtime
+title: Laufzeitumgebung – Graph, Executor, Debugging, Versionierung, Custom Nodes
+summary: Führt Komponentengraphen der offenen Fahrzeugarchitektur deterministisch und mehrratig aus und bindet Custom Nodes in Python, Rust und C++ mit Hot Reload ein.
+purpose: |
+  Die Plattform setzt automatisierte Fahrfunktionen aus austauschbaren Komponenten zusammen
+  (Perception bis Fahrzeugstrecke). Das Paket runtime liefert das Graphmodell, das der
+  Architektur-Editor bearbeitet, die Validierung mit verständlichen Meldungen, den Executor
+  mit Simulink-ähnlicher Semantik (Zweiphasen-Ausführung, Rückführungs-Ports, Multi-Rate mit
+  Halteglied), Werkzeuge für Echtzeit-Debugging und Laufzeitmessung, einen Versionsspeicher
+  für Graphen sowie die Anbindung eigener Algorithmen als Custom Nodes mit denselben
+  Schnittstellen wie native Komponenten.
+architecture: |
+  - `graph.py`: `Graph` mit `Node`/`Connection`, JSON nach contracts.md (Abschn. 4), Validierung
+    (`ValidationReport`), Abhängigkeitsgraph, topologische Sortierung (Kahn, deterministisch),
+    algebraische Schleifen (Tarjan), Änderungs-Listener für den Editor.
+  - `executor.py`: `Executor` mit ganzzahligem Zeitraster, Aktionsliste output → step → update,
+    Rückführungs-Latch, Breakpoints/Single-Step über einen Programmzähler innerhalb des Schritts,
+    `advance(wall_dt)` für den Echtzeitmodus.
+  - `debug.py` (Breakpoint, Probe, Profiler), `recorder.py` (Zeitreihen, Ereignisse).
+  - `blocks.py`: Grundblöcke (Quellen, Mathematik, Diskret, Senken, Signalführung).
+  - `versioning.py`: `VersionStore` (.history, Inhalts-Hash, Diff, Restore, Git).
+  - `python_nodes.py`, `native.py`, `build.py`, `codegen.py`, `codecs.py`, `scaffold.py`,
+    `hot_reload.py`: Custom Nodes (Loader, C-ABI über ctypes, Build, Header-Generator,
+    Projektvorlagen, Hot Reload).
+design_decisions:
+  - decision: Ganzzahlige Ticks, t_k = round(k·Δt, 12)
+    reason: keine Akkumulation von Rundungsfehlern; Abtastzeitpunkte exakt reproduzierbar
+    alternatives: t += Δt (Drift, Multi-Rate-Zeitpunkte verschieben sich)
+  - decision: Zweiphasen-Ausführung für Blöcke ohne Durchgriff, Rückführungs-Ports mit Wert des Vorschritts
+    reason: bricht Regelkreise wie in Simulink auf, ohne algebraische Gleichungen lösen zu müssen
+    alternatives: iterativer Löser für algebraische Schleifen (nicht deterministisch in der Laufzeit)
+  - decision: Aktionsliste mit Programmzähler statt rekursiver Ausführung
+    reason: Breakpoints und Einzelschritte mitten im Basisschritt, Fortsetzen ohne Zustandsverlust
+  - decision: Natives Interface als schlanke C-ABI mit flachen float64-Puffern
+    reason: sprachneutral (Rust, C++, C), ohne Abhängigkeiten, Layouts aus framework.types generiert
+    alternatives: pybind11/PyO3 (Python-ABI-abhängig, Build-Abhängigkeiten)
+  - decision: Schattenkopie der DLL mit Versionszähler
+    reason: Windows sperrt geladene Bibliotheken; so kann neu gebaut werden, während der Node läuft
+  - decision: Vollständige Schnappschüsse mit Inhalts-Hash statt Deltas
+    reason: einfache, robuste Wiederherstellung; Graphen sind klein
+implementation:
+  - Pro Knoten vorkompilierte Eingangsliste (Quelle, Rückführung) und Ausgangsschlüssel "knoten.port"
+  - Profiler mit perf_counter_ns, p95 über einen Ringpuffer (20 000 Werte je Knoten)
+  - Python-Custom-Nodes werden ohne Bytecode-Cache unter eindeutigem Modulnamen ausgeführt
+  - Native Eingänge großer Typen (Trajektorie, Objektlisten) werden bei identischem Objekt nicht neu kodiert
+  - MSVC-Umgebung (vcvars64) wird einmalig ermittelt und zwischengespeichert; fehlt das Windows SDK,
+    werden Import-Bibliotheken für Rust aus den System-DLLs erzeugt
+configuration:
+  - name: base_dt
+    description: Basisschritt des Executors (s); alle Perioden müssen ganzzahlige Vielfache sein
+  - name: nodes[].period
+    description: Abtastperiode eines Knotens (None = PERIOD der Komponente bzw. jeder Basisschritt)
+  - name: VDSIM_BUILD_DIR
+    description: Umgebungsvariable für das Build-Verzeichnis nativer Nodes (Standard <temp>/vdsim_native)
+  - name: Executor(check_types=True)
+    description: Laufzeit-Typprüfung aller Ein- und Ausgänge über framework.types.check_value
+  - name: Executor.realtime_factor
+    description: Echtzeitfaktor für advance(wall_dt)
+examples:
+  - configs/graphs/examples/integrator_regelkreis.json
+  - configs/graphs/examples/multirate_zoh.json
+  - configs/graphs/examples/pt1_sprungantwort.json
+  - configs/graphs/examples/custom_nodes_kette.json
+  - examples/custom_nodes/README.md
+limitations:
+  - Keine kontinuierlichen Zustände mit variabler Schrittweite; Integration erfolgt in den Komponenten
+  - Algebraische Schleifen werden gemeldet, nicht gelöst
+  - Hot Reload lädt nur die Node-Datei neu, nicht von ihr importierte Hilfsmodule
+  - Native Nodes nur für Typen mit flachem Codec (BehaviorCommand, PlannerDebug fehlen)
+  - Native Eingänge werden als unveränderlich betrachtet (Kodierungs-Cache bei identischem Objekt)
+  - C++-Build benötigt das Windows SDK (UCRT-Header) bzw. g++/clang++
+validation:
+  - test: tests/runtime/test_runtime_graph.py
+    shows: Typfehler, unverbundene Eingänge, algebraische Schleifen, Schleife über UnitDelay/Rückführung erlaubt
+  - test: tests/runtime/test_runtime_executor.py
+    shows: exaktes Multi-Rate-Timing, Zweiphasen-Regelkreis gegen geschlossene Lösung, bitgleiche Läufe, Debugging, Profiler
+  - test: tests/runtime/test_runtime_versioning.py
+    shows: Schnappschuss, Diff, Wiederherstellung, Git-Commit
+  - test: tests/runtime/test_runtime_custom_python.py
+    shows: Python-Hot-Reload mit Zustandsübertragung, Fehlerfall, Portänderung
+  - test: tests/runtime/test_runtime_native.py
+    shows: Rust/C++ bauen, laden, Codec-Rundreise aller Typen, bitgleich zum Python-Regler, Hot Reload
+references: [simulink_exec, lee_seshia2017, edwards_lee2003, rust_ffi, python_ctypes, msvc_dll, cargo_book]
+concepts: [synchronous_dataflow, multirate_zoh, algebraic_loop, deterministic_execution, c_abi, hot_reload, content_addressed_versioning, discrete_blocks]
+related_modules: [framework, ad, gui]
+extension_points:
+  - Neue Grundblöcke über @component(kind="node")
+  - Weitere Loader-Präfixe über vdsim.framework.plugins.register_loader
+  - Neue Datentypen für native Nodes über runtime.codecs und codegen
+  - Listener (vor/nach Knoten, nach Schritt) für Live-Anzeigen

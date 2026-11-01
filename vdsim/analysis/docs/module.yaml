@@ -1,0 +1,67 @@
+id: analysis
+title: Fahrzeuganalyse – linear und quasi-statisch
+summary: Kennwerte eines Fahrzeugs ohne Simulation – Eigenlenkgradient, Verstärkungen, Eigenwerte, Frequenzgang, Radlasten, Wankgradient, Rollachse, Lenkkinematik.
+purpose: |
+  Viele Fahrzeugeigenschaften folgen direkt aus den Parametern. Die analytischen Werte dienen als
+  schnelle Auslegungshilfe (z. B. Parameterstudie Schräglaufsteifigkeit gegen Eigenlenkgradient) und als
+  Referenz, gegen die die Simulationsmodelle getestet werden.
+architecture: |
+  - `linear_analysis.LinearSingleTrackAnalysis`: nutzt `LinearBicycleModel.state_space()`; Eigenlenkgradient,
+    charakteristische und kritische Geschwindigkeit, stationäre Verstärkungen, Eigenwerte, Bode-Daten, Zusammenfassung.
+  - `quasi_static.QuasiStaticAnalysis`: Rollachse, Wankgradient, Wanksteifigkeitsverteilung, Radlasten bei
+    konstanter Längs- und Querbeschleunigung, Querlastverteilung (LLTD), Abhebegrenze, Sturz, Ackermann-Winkel, Wendekreis.
+design_decisions:
+  - decision: Lineare Analyse auf dem identischen Modell, das auch simuliert wird
+    reason: Test „lineares Modell gleich Analyse“ ist exakt; Achssteifigkeiten kommen aus dem eingestellten Reifenmodell
+  - decision: Quasi-statische Lasten mit denselben Formeln wie das Zweispurmodell
+    reason: Validierung des Zweispurmodells innerhalb 2–3 %
+implementation:
+  - "Eigenfrequenz aus dem Produkt der Eigenwerte (Determinante von A), Dämpfung aus deren Summe (Spur von A)."
+  - "Die Abhebegrenze wird durch Abtasten von a_y bis 30 m/s² bestimmt (600 Stützstellen)."
+configuration:
+  - name: speeds
+    description: Geschwindigkeiten der Zusammenfassung (Standard 10, 20, 30, 40 m/s)
+    unit: m/s
+examples:
+  - run_scenario.py
+limitations:
+  - Linear – keine Aussage über den Grenzbereich; Lastverlagerung und Reifendegression fehlen in der linearen Analyse.
+  - Quasi-statisch – keine Dynamik der Wankbewegung, keine Elastokinematik.
+  - Der Wendekreis nutzt eine einfache Geometrie (äußeres Vorderrad, Fahrzeugüberhang).
+validation:
+  - test: tests/test_vehicle_models.py
+    shows: Gierverstärkung des linearen Modells gleich der analytischen Lösung; Wankgradient und Radlasten des Zweispurmodells gegen die quasi-statische Analyse
+references: [mitschke2014, rajamani2012, milliken1995, iso4138]
+concepts: [understeer_gradient, linear_stability_analysis, quasi_static_wheel_loads, ackermann_steering]
+related_modules: [vehicle_models, reporting, visualization]
+extension_points:
+  - Weitere Kennwerte als Methoden; die GUI (Tab „Kennwerte“) zeigt summary() automatisch
+traceability:
+  - implementation: vdsim.analysis.linear_analysis.LinearSingleTrackAnalysis.characteristic_speed
+    concept: understeer_gradient
+    source: mitschke2014
+  - implementation: vdsim.analysis.linear_analysis.LinearSingleTrackAnalysis.critical_speed
+    concept: understeer_gradient
+    source: mitschke2014
+  - implementation: vdsim.analysis.linear_analysis.LinearSingleTrackAnalysis.steady_state_gains
+    concept: linear_stability_analysis
+    source: mitschke2014
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.analysis.linear_analysis.LinearSingleTrackAnalysis.eigen
+    concept: linear_stability_analysis
+    source: rajamani2012
+  - implementation: vdsim.analysis.linear_analysis.LinearSingleTrackAnalysis.frequency_response
+    concept: linear_stability_analysis
+  - implementation: vdsim.analysis.quasi_static.QuasiStaticAnalysis.roll_gradient
+    concept: quasi_static_wheel_loads
+    source: milliken1995
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.analysis.quasi_static.QuasiStaticAnalysis.wheel_loads
+    concept: quasi_static_wheel_loads
+    source: milliken1995
+    tests: [tests/test_vehicle_models.py]
+  - implementation: vdsim.analysis.quasi_static.QuasiStaticAnalysis.ackermann_angles
+    concept: ackermann_steering
+    source: mitschke2014
+  - implementation: vdsim.analysis.quasi_static.QuasiStaticAnalysis.turning_circle
+    concept: ackermann_steering

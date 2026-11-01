@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "name": "multirate_zoh",
+  "base_dt": 0.001,
+  "nodes": [
+    {"id": "sinus", "component": "node/sine", "params": {"amplitude": 1.0, "frequency": 0.5}, "period": null, "position": [60, 100], "label": "Sinus 1 kHz"},
+    {"id": "abtaster", "component": "node/gain", "params": {"k": 1.0}, "period": 0.1, "position": [240, 60], "label": "Abtastung 10 Hz (ZOH)"},
+    {"id": "verzoegerung", "component": "node/unit_delay", "params": {}, "period": 0.02, "position": [240, 160], "label": "z^-1 bei 50 Hz"},
+    {"id": "begrenzer", "component": "node/rate_limiter", "params": {"rising": 2.0, "falling": 2.0}, "period": 0.01, "position": [420, 60], "label": "Ratenbegrenzer 100 Hz"},
+    {"id": "uhr", "component": "node/clock", "params": {}, "period": 0.05, "position": [60, 240], "label": "Uhr 20 Hz"},
+    {"id": "scope", "component": "node/scope", "params": {"n": 4}, "period": null, "position": [620, 120], "label": "Scope"}
+  ],
+  "connections": [
+    {"from": "sinus.y", "to": "abtaster.u"},
+    {"from": "sinus.y", "to": "verzoegerung.u"},
+    {"from": "abtaster.y", "to": "begrenzer.u"},
+    {"from": "sinus.y", "to": "scope.u1"},
+    {"from": "abtaster.y", "to": "scope.u2"},
+    {"from": "begrenzer.y", "to": "scope.u3"},
+    {"from": "uhr.t", "to": "scope.u4"}
+  ],
+  "metadata": {"description": "Multi-Rate mit Zero-Order-Hold: 1 kHz Basisschritt, Knoten mit 10/20/50/100 Hz", "t_end": 4.0}
+}

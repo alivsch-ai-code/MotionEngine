@@ -1,0 +1,80 @@
+id: knowledge
+title: Wissens-, Dokumentations- und Rückverfolgbarkeitssystem
+summary: Sammelt Wissen aus Code und Doku, erzeugt die Paketdokumentation, verknüpft Implementierung, Theorie, Quellen und Tests und stellt alles als Wissensgraph und Wissensbrowser bereit.
+purpose: |
+  Ein Entwickler soll jederzeit verstehen, wie ein Teilsystem funktioniert, welche Komponenten, Datenflüsse
+  und Modelle beteiligt sind, warum eine Implementierung existiert, welche Theorie und Annahmen dahinterstehen
+  und auf welchen Quellen sie beruht. Das Paket macht dieses Wissen automatisch auffindbar: aus Docstrings,
+  Komponenten-Metadaten (`ComponentDoc`, Ports, Parameter), `@trace`-Annotationen, den handgeschriebenen
+  `module.yaml`/`theory.md` je Paket, Tests, Beispielen, Konfigurationen und der Referenzdatenbank.
+architecture: |
+  - `references.py`: `ReferenceDB` (alle docs/references/*.yaml), Validierung, Suche, deutsche Zitate, BibTeX,
+    Benutzerreferenzen (`user.yaml`) und Verknüpfungen (`links.yaml`).
+  - `collector.py`: `collect()` → `KnowledgeBase` (Pakete, Module per ast, Komponenten beider Registries,
+    Traces, Konzepte, Datentypen, Parametersätze, Tests, Beispiele, Konfigurationen, Hinweise).
+  - `graph.py`: `build_graph()` → `KnowledgeGraph` (13 Knoten-, 12 Kantentypen), Abfragen, JSON/HTML-Export, `force_layout()`.
+  - `generator.py`: `generate()` schreibt docs/generated/ deterministisch; Seitenbausteine werden auch vom Browser genutzt.
+  - `markdown.py`, `mathrender.py`: Markdown → HTML mit gerenderten Formeln für die GUI.
+  - `cli.py` / `tools/build_docs.py`: Kommandozeile; `gui.py`: Starter des Wissensbrowsers.
+  - `vdsim/gui/knowledge/`: `KnowledgeBrowser(QWidget)` mit Navigation, Dokument, Wissensgraph, Rückverfolgbarkeit, Quellen, Suche und Expertenmodus.
+data_flow: |
+  Code (ast, Import) + docs/*.yaml/md + Tests/Beispiele/Configs → Collector → KnowledgeBase → Graph →
+  Generator (docs/generated) und Browser (GUI).
+design_decisions:
+  - decision: Dokumentation neben dem Code (vdsim/<paket>/docs), Generat getrennt (docs/generated)
+    reason: Muster Module/{src, tests, examples, docs}; Handgeschriebenes und Erzeugtes werden nie vermischt
+  - decision: Tolerantes Sammeln (Hinweise statt Abbruch)
+    reason: Mehrere Teams arbeiten parallel; halbfertige Pakete dürfen die Doku der anderen nicht blockieren
+  - decision: Rückverfolgbarkeit aus zwei Quellen – @trace im Code und traceability in module.yaml
+    reason: neuer Code wird direkt annotiert; bestehender Code wird nachträglich dokumentiert, ohne ihn zu ändern
+  - decision: Deterministische Ausgabe ohne Zeitstempel (außer _meta.json), Schreiben nur bei Änderung
+    reason: generierte Doku ist diff- und reviewbar; --check eignet sich für CI
+  - decision: Eigener Markdown-Konverter und matplotlib-mathtext statt externer Bibliotheken
+    reason: keine neuen Abhängigkeiten; Formeln auch offline und ohne LaTeX-Installation
+  - decision: Wissensgraph-HTML mit eigenem JavaScript ohne CDN
+    reason: funktioniert offline und in abgeschotteten Netzen
+implementation:
+  - "GUI-Module (Import von PySide6/pyqtgraph/OpenGL auf oberster Ebene oder matplotlib.use) werden nur statisch analysiert, alle anderen zusätzlich importiert."
+  - "Komponenten der klassischen Registry erhalten Ports aus ihrer Schnittstelle (LEGACY_INTERFACES) und Parameter aus der Konstruktorsignatur; Einheiten aus TireParameters bzw. module.yaml."
+  - "Tests, Beispiele und Konfigurationen werden über Importe und Zeichenketten (Spec-Strings, model=, lateral_controller=, systems.X_enabled) mit Komponenten verknüpft."
+  - "Formelbilder werden mit SHA-256-Schlüssel im Benutzer-Cache abgelegt (VDSIM_CACHE_DIR überschreibt)."
+configuration:
+  - name: python tools/build_docs.py [--check] [--report] [--explain X] [--path A B] [--search T] [--bibtex F] [--init P] [--no-import]
+    description: Kommandozeile (siehe docs/KNOWLEDGE.md)
+  - name: VDSIM_CACHE_DIR
+    description: Ordner für den Formel-Cache (Standard %LOCALAPPDATA%/vdsim/cache bzw. ~/.cache/vdsim)
+  - name: docs/references/user.yaml, docs/references/links.yaml
+    description: Benutzerreferenzen und Verknüpfungen Referenz → Ziel
+examples:
+  - tools/build_docs.py
+limitations:
+  - Konzepte werden über ihre ID verknüpft; gleiche Verfahren mit verschiedenen IDs erkennt das System nicht.
+  - Die Testzuordnung über Importe ist grob (ein Test, der ein Modul importiert, gilt als dessen Test).
+  - Formeln nur im matplotlib-mathtext-Umfang (keine Umgebungen wie aligned oder Matrizen).
+  - Der Markdown-Konverter unterstützt kein eingebettetes HTML und keine verschachtelten Blockelemente in Listen.
+validation:
+  - test: tests/knowledge/test_knowledge_references.py
+    shows: Laden und Zusammenführen, Validierung, Zitat, BibTeX, Benutzerreferenzen und Verknüpfungen
+  - test: tests/knowledge/test_knowledge_collector.py
+    shows: Sammeln über das ganze Repository ohne Ausnahme, Toleranz gegenüber defekten Dateien, Referenzbericht
+  - test: tests/knowledge/test_knowledge_generator.py
+    shows: Pflichtartefakte je Paket, Determinismus (zwei Läufe identisch), Rückverfolgbarkeitsmatrix
+  - test: tests/knowledge/test_knowledge_graph.py
+    shows: Knoten- und Kantentypen, Kette to_frenet → frenet_transformation → werling2011, Abfragen
+  - test: tests/knowledge/test_knowledge_rendering.py
+    shows: Formel-Rendering, Markdown-Konverter, Darstellbarkeit aller theory.md-Formeln
+  - test: tests/knowledge/test_knowledge_gui.py
+    shows: Wissensbrowser offscreen (Navigation, Expertenmodus, Graph, Quellen anlegen und verknüpfen)
+references: [fruchterman1991, gotel1994, iso26262, matplotlib_mathtext]
+concepts: [knowledge_graph_model, force_directed_layout, traceability_model]
+related_modules: [framework, gui]
+extension_points:
+  - Neue Knoten- oder Kantentypen in graph.NODE_TYPES/EDGE_TYPES und build_graph()
+  - Neue Seiten je Paket über PAGE_BUILDERS im Generator
+  - Weitere Quellen des Collectors als zusätzlicher Schritt in Collector.run()
+traceability:
+  - implementation: vdsim.knowledge.collector.Collector.run
+    concept: knowledge_graph_model
+  - implementation: vdsim.knowledge.collector.Collector._doc_traces
+    concept: traceability_model
+    source: iso26262

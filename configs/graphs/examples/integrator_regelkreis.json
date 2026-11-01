@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "name": "integrator_regelkreis",
+  "base_dt": 0.01,
+  "nodes": [
+    {"id": "sollwert", "component": "node/step", "params": {"t_step": 0.0, "final": 1.0}, "period": null, "position": [60, 100], "label": "Sollwert"},
+    {"id": "fehler", "component": "node/sum", "params": {"signs": "+-"}, "period": null, "position": [220, 100], "label": "Regelabweichung"},
+    {"id": "regler", "component": "node/gain", "params": {"k": 2.0}, "period": null, "position": [360, 100], "label": "P-Regler"},
+    {"id": "begrenzung", "component": "node/saturation", "params": {"lower": -1.5, "upper": 1.5}, "period": null, "position": [500, 100], "label": "Stellgrößenbegrenzung"},
+    {"id": "strecke", "component": "node/integrator", "params": {"initial": 0.0}, "period": null, "position": [640, 100], "label": "Strecke (I-Glied, ohne Durchgriff)"},
+    {"id": "scope", "component": "node/scope", "params": {"n": 2}, "period": null, "position": [800, 200], "label": "Scope"}
+  ],
+  "connections": [
+    {"from": "sollwert.y", "to": "fehler.u1"},
+    {"from": "strecke.y", "to": "fehler.u2"},
+    {"from": "fehler.y", "to": "regler.u"},
+    {"from": "regler.y", "to": "begrenzung.u"},
+    {"from": "begrenzung.y", "to": "strecke.u"},
+    {"from": "sollwert.y", "to": "scope.u1"},
+    {"from": "strecke.y", "to": "scope.u2"}
+  ],
+  "metadata": {"description": "Regelkreis mit Integrator-Strecke: die Schleife ist zulässig, weil der Integrator keinen Durchgriff hat (Zweiphasen-Ausführung)", "t_end": 5.0}
+}

@@ -1,0 +1,58 @@
+id: powertrain
+title: Antriebsstrang, Bremse und Längsaktuierung
+summary: Setzt eine Beschleunigungsanforderung in Antriebs- und Bremsmomente je Rad um – mit Verbrennungsmotor und Automatikgetriebe oder E-Motor, Bremskraftverteilung (EBV), Rekuperation und Energiebilanz.
+purpose: |
+  Längsregler fordern eine Beschleunigung an; das Fahrzeugmodell braucht Momente je Rad. Dazwischen liegen
+  Fahrwiderstandskompensation, Antriebsgrenzen (Kennlinie, Leistung, Übersetzung), die Aufteilung auf
+  Achsen und Räder, die Bremskraftverteilung und bei E-Fahrzeugen das Zusammenspiel von Rekuperation und
+  Reibbremse. Die Energiebilanz liefert Verbrauchskennwerte.
+architecture: |
+  - `engine.py`: `CombustionEngine` (Volllastkennlinie), `Gearbox` (Übersetzungen, Schaltdrehzahlen),
+    `ElectricMotor` (konstantes Moment, dann konstante Leistung; Rekuperationsgrenzen).
+  - `powertrain.py`: `Powertrain` (Layout fwd/rwd/awd, maximale Antriebs- und Rekuperationskraft,
+    Radmomente, Energiekonto), `BrakeSystem` (EBV, Achsmomente), `LongitudinalActuation.actuate()`.
+design_decisions:
+  - decision: Vorsteuerung der Fahrwiderstände in der Längsaktuierung
+    reason: Längsregler arbeiten mit Beschleunigungen; stationär ist kein Integratoranteil nötig
+  - decision: Rekuperation zuerst, Reibbremse für den Rest, achsweise nach EBV-Verteilung
+    reason: maximale Energierückgewinnung ohne Verletzung der stabilen Bremskraftverteilung
+    alternatives: parallele Rekuperation mit fester Quote
+implementation:
+  - "Die Gesamtkraft wird nach unten auf −1,3 m g begrenzt."
+  - "Rekuperation nur oberhalb 1 m/s; die Rekuperation erscheint als negatives Antriebsmoment."
+  - "Der Verbrenner nutzt einen pauschalen Wirkungsgrad von 30 % für die Kraftstoffenergie."
+configuration:
+  - name: powertrain.*
+    description: Antriebsart, Layout, Kennlinien, Übersetzungen, E-Motor- und Rekuperationsgrenzen (Parametersatz PowertrainParameters im Paket core)
+  - name: brakes.*
+    description: maximale Bremsmomente, Bremskraftverteilung, EBV (BrakeParameters)
+examples:
+  - run_scenario.py
+limitations:
+  - Keine Motordynamik, kein Turboloch, keine Kupplung und kein Wandler; Schalten ist sofortig.
+  - Wirkungsgrade konstant (keine Kennfelder), keine Batteriezustände (SOC, Spannung).
+  - Bremse ohne Hydraulikdynamik und ohne Temperatureinfluss.
+validation:
+  - test: tests/test_vehicle_models.py
+    shows: Bremsweg aus 100 km/h im erwarteten Bereich, Radblockieren ohne ABS
+  - test: tests/test_simulation_and_reporting.py
+    shows: Energie-KPIs und Beschleunigungsmanöver 0–100 km/h
+references: [mitschke2014, reif2010]
+concepts: [ideal_brake_distribution, drive_torque_limits, regenerative_braking, energy_balance]
+related_modules: [controllers, simulation, vehicle_models]
+extension_points:
+  - Wirkungsgradkennfelder für Motor und Getriebe, Batteriemodell mit SOC
+traceability:
+  - implementation: vdsim.powertrain.powertrain.BrakeSystem.front_share
+    concept: ideal_brake_distribution
+    source: mitschke2014
+  - implementation: vdsim.powertrain.engine.ElectricMotor.max_torque
+    concept: drive_torque_limits
+  - implementation: vdsim.powertrain.powertrain.Powertrain.max_drive_force
+    concept: drive_torque_limits
+  - implementation: vdsim.powertrain.powertrain.LongitudinalActuation.actuate
+    concept: regenerative_braking
+    source: reif2010
+  - implementation: vdsim.powertrain.powertrain.Powertrain.account_energy
+    concept: energy_balance
+    tests: [tests/test_simulation_and_reporting.py]

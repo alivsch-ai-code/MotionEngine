@@ -1,0 +1,13 @@
+{
+  "name": "ausscherer_stauende",
+  "type": "cut_out",
+  "description": "Das Vorderfahrzeug schert kurz vor einem stehenden Fahrzeug aus; das Ego muss reagieren.",
+  "params": {},
+  "seed": 12,
+  "duration": 30,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

@@ -1,0 +1,15 @@
+{
+  "name": "verkehrsdichte_20",
+  "type": "traffic_density",
+  "description": "Dreispurige Ringstraße mit 20 Fz/km/Spur, IDM-Längsverhalten und MOBIL-Spurwechseln, 10 % Lkw.",
+  "params": {
+    "density": 20.0
+  },
+  "seed": 13,
+  "duration": 60,
+  "vehicle": "mid_size_sedan",
+  "ego": {},
+  "mission": {},
+  "success": {},
+  "metadata": {}
+}

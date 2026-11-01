@@ -1,0 +1,71 @@
+simulink_exec:
+  type: documentation
+  authors: [The MathWorks]
+  title: "Simulink: Simulation Phases in Dynamic Systems, Algebraic Loop Concepts, Time-Based Scheduling"
+  year: 2024
+  publisher: The MathWorks, Inc.
+  url: https://www.mathworks.com/help/simulink/ug/simulating-dynamic-systems.html
+  notes: Ausführungsmodell (output/update, Durchgriff), Multi-Rate mit Halteglied und Behandlung algebraischer Schleifen als Vorbild des Executors
+lee_seshia2017:
+  type: book
+  authors: [Edward A. Lee, Sanjit A. Seshia]
+  title: "Introduction to Embedded Systems: A Cyber-Physical Systems Approach"
+  year: 2017
+  edition: 2
+  publisher: MIT Press
+  url: https://ptolemy.berkeley.edu/books/leeseshia/
+  isbn: 978-0-262-53381-2
+  notes: Zeitdiskrete Modelle, synchron-reaktive Komposition, Rückkopplung und Determinismus (Kap. 2, 5, 6)
+edwards_lee2003:
+  type: paper
+  authors: [Stephen A. Edwards, Edward A. Lee]
+  title: The semantics and execution of a synchronous block-diagram language
+  year: 2003
+  venue: Science of Computer Programming 48(1)
+  doi: 10.1016/S0167-6423(02)00096-5
+  notes: Semantik von Blockdiagrammen mit Rückkopplung, Grundlage der Schleifenprüfung
+rust_ffi:
+  type: documentation
+  authors: [The Rust Project]
+  title: "The Rustonomicon: FFI; The Rust Reference: External blocks and the C ABI"
+  year: 2024
+  url: https://doc.rust-lang.org/nomicon/ffi.html
+  notes: extern "C", no_mangle, catch_unwind an der FFI-Grenze, cdylib
+cargo_book:
+  type: documentation
+  authors: [The Rust Project]
+  title: The Cargo Book
+  year: 2024
+  url: https://doc.rust-lang.org/cargo/
+  notes: cargo build --release, --target-dir, crate-type cdylib
+python_ctypes:
+  type: documentation
+  authors: [Python Software Foundation]
+  title: "ctypes – A foreign function library for Python"
+  year: 2024
+  url: https://docs.python.org/3/library/ctypes.html
+  notes: Laden der nativen Nodes, Funktionssignaturen, Zeigerarrays
+msvc_dll:
+  type: documentation
+  authors: [Microsoft]
+  title: "DLLs in Visual C++; LoadLibrary/FreeLibrary; vswhere; Use the Microsoft C++ toolset from the command line"
+  year: 2024
+  url: https://learn.microsoft.com/en-us/cpp/build/dlls-in-visual-cpp
+  notes: __declspec(dllexport), Sperren geladener DLLs (Schattenkopie), vcvars64.bat, cl /LD
+git_book:
+  type: book
+  authors: [Scott Chacon, Ben Straub]
+  title: Pro Git
+  year: 2014
+  edition: 2
+  publisher: Apress
+  url: https://git-scm.com/book
+  notes: Inhaltsadressierte Speicherung (SHA), Vorbild des Versionsspeichers
+coulter1992:
+  type: report
+  authors: [R. Craig Coulter]
+  title: Implementation of the Pure Pursuit Path Tracking Algorithm
+  year: 1992
+  publisher: Carnegie Mellon University, Robotics Institute
+  number: CMU-RI-TR-92-01
+  notes: Algorithmus des Beispiel-Reglers in examples/custom_nodes

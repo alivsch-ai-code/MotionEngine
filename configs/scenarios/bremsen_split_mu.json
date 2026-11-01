@@ -1,0 +1,41 @@
+{
+  "name": "Bremsen auf Split-µ",
+  "description": "Linke Fahrzeugseite auf Eis (µ 0,2), ABS + ESP",
+  "vehicle": "mid_size_sedan",
+  "vehicle_overrides": {
+    "systems.esp_enabled": true
+  },
+  "model": "double_track",
+  "maneuver": "braking",
+  "maneuver_params": {
+    "speed_kmh": 80,
+    "deceleration": 9
+  },
+  "trajectory_file": "",
+  "trajectory_options": {},
+  "lateral_controller": "stanley",
+  "lateral_params": {},
+  "longitudinal_controller": "speed_pi",
+  "longitudinal_params": {},
+  "steering_actuator": {},
+  "environment": {
+    "friction": {
+      "base": 1.0,
+      "patches": [
+        {
+          "x_min": 0,
+          "x_max": 1000000.0,
+          "y_min": 0.0,
+          "y_max": 1000000.0,
+          "mu": 0.2,
+          "name": "Eis links"
+        }
+      ]
+    }
+  },
+  "duration": 0.0,
+  "dt_control": 0.01,
+  "dt_model": 0.0,
+  "solver": "rk4",
+  "initial_speed": null
+}

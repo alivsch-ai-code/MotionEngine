@@ -1,0 +1,107 @@
+id: tire_models
+title: Reifenmodelle
+summary: Stationäre Reifenkraftmodelle – linear mit Reibkreis, Pacejka Magic Formula mit kombiniertem Schlupf und Bürstenmodell.
+purpose: |
+  Die Reifenkräfte bestimmen das Fahrverhalten im Grenzbereich. Das Paket stellt drei austauschbare
+  Modelle mit identischer Schnittstelle `forces(alpha, kappa, fz, mu, camber) -> (fx, fy, mz)` bereit:
+  ein lineares Modell für Reglerauslegung und Analyse, die Magic Formula als empirisches Standardmodell
+  und das physikalisch begründete Bürstenmodell. Alle Modelle sind vektorisiert (numpy) und werden von allen
+  Fahrzeugmodellen genutzt.
+architecture: |
+  - `linear_tire.LinearTire`: Kräfte proportional zu Schlupf und Last, optional am Reibkreis begrenzt.
+  - `pacejka.PacejkaTire` mit der Funktion `magic_formula(slip, B, C, D, E)`; lastdegressive
+    Schräglaufsteifigkeit, lastabhängiger Reibwert, Sturz als äquivalenter Schräglaufwinkel,
+    kombinierter Schlupf über cos(atan)-Gewichtungsfunktionen, Rückstellmoment über Reifennachlauf.
+  - `brush_model.BrushTire`: theoretischer Schlupf, isotroper kombinierter Schlupf, parabolische Druckverteilung.
+  - `__init__.create_tires(TireParameters)` erzeugt (vorn, hinten), `create_tire_set` eine Instanz für vier Räder.
+  Parameter stammen aus `vdsim.core.parameters.TireParameters`.
+design_decisions:
+  - decision: Reduzierter Magic-Formula-Parametersatz aus physikalischen Kenngrößen (Schräglaufsteifigkeit, Längssteifigkeit, Nennlast, mu)
+    reason: Parameter sind aus Datenblättern und Messungen leicht zu schätzen; B folgt aus K/(C D), damit stimmt die Anfangssteigung exakt
+    alternatives: vollständiger MF-6.2-Datensatz mit TIR-Import (Ausbaustufe)
+  - decision: Kombinierter Schlupf über Gewichtungsfunktionen G = cos(atan(B kappa))
+    reason: einfache, glatte und monotone Reduktion; entspricht dem Aufbau der Magic Formula
+    alternatives: Reibellipse (nicht glatt), Similarity-Ansatz
+  - decision: Gemeinsame Schnittstelle für alle Modelle, vektorisiert
+    reason: Zweispur- und Mehrkörpermodell berechnen alle vier Räder in einem Aufruf
+implementation:
+  - "Alle Modelle setzen negative Radlasten auf 0 und addieren 1e-9 in Nennern (abgehobenes Rad ohne Division durch null)."
+  - "PacejkaTire normiert die degressive Steifigkeit so, dass sie bei Nennlast genau `cornering_stiffness` ergibt."
+  - "Der Reibwert `mu` ist das Produkt aus Reifen-mu (TireParameters.mu) und Fahrbahn-mu der Reibwertkarte."
+configuration:
+  - name: tires.model
+    description: Auswahl linear / pacejka / brush
+  - name: tires.*
+    description: alle Reifenparameter mit Einheit und Grenzen, siehe Parametersatz TireParameters im Paket core
+examples:
+  - run_scenario.py
+limitations:
+  - Stationäre Kräfte ohne Einlaufverhalten (Relaxationslänge); bei sehr schnellen Lenkeingaben reagiert das Modell zu schnell.
+  - Keine Temperatur-, Druck- oder Verschleißabhängigkeit.
+  - Das Rückstellmoment ist eine Näherung über einen abklingenden Reifennachlauf, ohne Restmoment und ohne Anteil der Längskraft.
+  - Der Sturz wirkt nur als Verschiebung des Schräglaufwinkels (Sturzseitenkraft), nicht auf Steifigkeit oder Reibwert.
+validation:
+  - test: tests/test_tire_models.py
+    shows: Anfangssteigung gleich Parameter, Ungeradheit und Sättigung bei mu Fz, Lastdegression, Abbau von Fy durch kombinierten Schlupf, Nullkraft bei Nulllast, Vektorisierung
+references: [pacejka2012, mitschke2014, schramm2018]
+concepts: [linear_tire, magic_formula, combined_slip, brush_model]
+related_modules: [vehicle_models, core, visualization]
+extension_points:
+  - Neues Reifenmodell als Unterklasse von vdsim.core.interfaces.TireModel mit "@register('tire_model', name)"; danach tires.model = name
+  - MF 6.2 mit TIR-Import, Einlaufverhalten erster Ordnung (Relaxationslänge)
+components:
+  tire_model/linear:
+    summary: Lineares Reifenmodell mit Lastproportionalität und optionaler Begrenzung am Reibkreis.
+    purpose: Reglerauslegung, lineare Analyse und Referenz für den linearen Fahrbereich.
+    concepts: [linear_tire]
+    references: [mitschke2014]
+    assumptions: [Kräfte proportional zu Schlupf und Radlast, Rückstellmoment über konstanten Nachlauf]
+    limitations: [Keine Sättigungsform – der Übergang zum Gleiten ist ein harter Knick am Reibkreis]
+    parameters:
+      cornering_stiffness: {unit: N/rad, description: Schräglaufsteifigkeit bei Nennlast}
+      longitudinal_stiffness: {unit: N, description: Längsschlupfsteifigkeit bei Nennlast}
+      nominal_load: {unit: N}
+      camber_stiffness: {unit: N/rad}
+      pneumatic_trail: {unit: m}
+      saturate: {description: Begrenzung am Reibkreis ein/aus}
+  tire_model/pacejka:
+    summary: Magic Formula (reduzierter Parametersatz) mit lastabhängiger Steifigkeit und Reibung, Sturz, kombiniertem Schlupf und Rückstellmoment.
+    purpose: Standardmodell für Simulationen im Grenzbereich.
+    concepts: [magic_formula, combined_slip]
+    references: [pacejka2012]
+    assumptions: [Stationäres Reifenverhalten, Symmetrie (keine Verschiebungen S_H, S_V außer Sturz)]
+    limitations: [Kein Einlaufverhalten, kein MF-6.2-Datensatz]
+    validation: [tests/test_tire_models.py prüft Steifigkeit, Sättigung, Lastdegression und kombinierten Schlupf]
+  tire_model/brush:
+    summary: Bürstenmodell mit parabolischer Druckverteilung und isotropem kombiniertem Schlupf.
+    purpose: Physikalisch motiviertes Modell, das kombinierten Schlupf ohne empirische Gewichtungsfaktoren abbildet.
+    concepts: [brush_model]
+    references: [pacejka2012]
+    assumptions: [Parabolische Druckverteilung, gleiche Haft- und Gleitreibung, isotrope Borstensteifigkeit (über theta_x, theta_y normiert)]
+    limitations: [Haft- und Gleitreibwert identisch, daher kein Kraftabfall nach dem Maximum]
+traceability:
+  - implementation: vdsim.tire_models.pacejka.magic_formula
+    concept: magic_formula
+    source: pacejka2012
+    section: "4"
+    tests: [tests/test_tire_models.py]
+  - implementation: vdsim.tire_models.pacejka.PacejkaTire.cornering_stiffness
+    concept: magic_formula
+    source: pacejka2012
+    section: "4"
+    note: degressive Lastabhängigkeit sin(2 atan(Fz/(p_Ky2 Fz0)))
+    tests: [tests/test_tire_models.py]
+  - implementation: vdsim.tire_models.pacejka.PacejkaTire.forces
+    concept: combined_slip
+    source: pacejka2012
+    section: "4"
+    tests: [tests/test_tire_models.py]
+  - implementation: vdsim.tire_models.brush_model.BrushTire.forces
+    concept: brush_model
+    source: pacejka2012
+    section: "3"
+    tests: [tests/test_tire_models.py]
+  - implementation: vdsim.tire_models.linear_tire.LinearTire.forces
+    concept: linear_tire
+    source: mitschke2014
+    tests: [tests/test_tire_models.py]

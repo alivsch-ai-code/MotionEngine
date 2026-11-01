@@ -1,0 +1,72 @@
+# Referenzen von vdsim.stabilization (Werling-IDs siehe docs/references/werling.yaml: werling2011, werling2010tro)
+khalil2002:
+  type: book
+  authors: [Hassan K. Khalil]
+  title: Nonlinear Systems
+  year: 2002
+  publisher: Prentice Hall, 3. Auflage
+  isbn: 978-0-13-067389-3
+  notes: Lyapunov-Stabilität, LaSalle-Invarianzprinzip, Backstepping (Sätze 4 und 6)
+isidori1995:
+  type: book
+  authors: [Alberto Isidori]
+  title: Nonlinear Control Systems
+  year: 1995
+  publisher: Springer, 3. Auflage
+  isbn: 978-3-540-19916-8
+  notes: Exakte E/A-Linearisierung, relativer Grad, Nulldynamik, Minimalphasigkeit (Sätze 8 und 9)
+rajamani2012:
+  type: book
+  authors: [Rajesh Rajamani]
+  title: Vehicle Dynamics and Control
+  year: 2012
+  publisher: Springer, 2. Auflage
+  doi: 10.1007/978-1-4614-1433-9
+  notes: Querfehlermodell des Einspurmodells, LQR mit Vorsteuerung (Kap. 3), ACC (Kap. 5)
+pacejka2012:
+  type: book
+  authors: [Hans B. Pacejka]
+  title: Tire and Vehicle Dynamics
+  year: 2012
+  publisher: Butterworth-Heinemann, 3. Auflage
+  isbn: 978-0-08-097016-5
+  notes: Magic Formula; Grundlage des isotropen Reifenmodells (Werling 4.3.2)
+snider2009:
+  type: report
+  authors: [Jarrod M. Snider]
+  title: Automatic Steering Methods for Autonomous Automobile Path Tracking
+  year: 2009
+  publisher: Carnegie Mellon University, Robotics Institute, CMU-RI-TR-09-08
+  notes: Pure Pursuit, Stanley, Vergleich geometrischer und kinematischer Querregler
+hoffmann2007:
+  type: paper
+  authors: [Gabriel M. Hoffmann, Claire J. Tomlin, Michael Montemerlo, Sebastian Thrun]
+  title: Autonomous Automobile Trajectory Tracking for Off-Road Driving - Controller Design, Experimental Validation and Racing
+  year: 2007
+  venue: American Control Conference (ACC)
+  doi: 10.1109/ACC.2007.4282788
+  notes: Stanley-Regler
+borrelli2017:
+  type: book
+  authors: [Francesco Borrelli, Alberto Bemporad, Manfred Morari]
+  title: Predictive Control for Linear and Hybrid Systems
+  year: 2017
+  publisher: Cambridge University Press
+  doi: 10.1017/9781139061759
+  notes: Lineare (zeitvariante) MPC, kondensiertes QP
+stellato2020:
+  type: paper
+  authors: [Bartolomeo Stellato, Goran Banjac, Paul Goulart, Alberto Bemporad, Stephen Boyd]
+  title: "OSQP: An Operator Splitting Solver for Quadratic Programs"
+  year: 2020
+  venue: Mathematical Programming Computation 12
+  doi: 10.1007/s12532-020-00179-2
+  notes: ADMM-Iteration des MPC-QP-Lösers (dichte Eigenimplementierung)
+astrom2006:
+  type: book
+  authors: [Karl J. Åström, Tore Hägglund]
+  title: Advanced PID Control
+  year: 2006
+  publisher: ISA
+  isbn: 978-1-55617-942-6
+  notes: PID, Vorsteuerung, Anti-Windup (Split-Range-Integrator, Geschwindigkeitsregler)

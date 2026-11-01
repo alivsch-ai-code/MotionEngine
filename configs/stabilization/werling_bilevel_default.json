@@ -1,0 +1,22 @@
+{
+  "component": "tracking_controller/werling_bilevel@^1",
+  "description": "Standard-Parametersatz der Bi-level-Stabilisierung (Mittelklasselimousine). Alle Fehlerdynamiken überkritisch gedämpft; Verstärkungen bei v_s so abgestimmt, dass die Umschaltung kaum Sprünge erzeugt (Werling 4.4).",
+  "params": {
+    "v_switch": 3.0,
+    "v_min_dynamic": 1.0,
+    "forward_slow": "center",
+    "c_t": 1.0,
+    "c_n": 0.5,
+    "e_t_max": 0.0,
+    "e_n_max": 0.0,
+    "e_theta_max": 0.0,
+    "cooldown": 0.3,
+    "max_hold": 0.5,
+    "prediction_dt": 0.1,
+    "orientation": {"k1": 0.5, "k2": 2.0, "k3": 2.0, "k4": 10.0, "gamma_brake": 0.75},
+    "center": {"k1": 0.5, "k3": 2.0, "k4": 5.0, "lam": -1.0, "gamma_brake": 0.75, "sign_variant": "proof"},
+    "dynamic": {"zeta": 1.0, "lam_min": 0.0, "lam_max": 20.0, "lam_rate": 4.0,
+                "pole_n1": -1.18, "pole_n2": -3.82, "pole_t1": -0.29, "pole_t2": -1.71,
+                "k_delta": 10.0, "gamma_brake": 0.75, "saturation_exponent": 16, "reference_transform": "dynamic"}
+  }
+}
