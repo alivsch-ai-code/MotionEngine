@@ -12,17 +12,17 @@ MotionEngine is a **publication-grade** vehicle dynamics simulation and trajecto
 
 The primary gap for open-source readiness is **internationalization**: ~500+ user-facing strings (parameter labels, GUI text, error messages, plot titles) are in German, while all code identifiers and public APIs are in English.
 
-**Open-Source Readiness Score: 87/100**
+**Open-Source Readiness Score: 87/100** (reviewer's estimate, not a measured value)
 
 | Category | Score | Notes |
 |---|---|---|
-| Physics/Math correctness | 98/100 | Publication-grade; one minor issue (tire spring clamp in multibody) |
+| Physics/Math correctness | 98/100 | No confirmed bugs in the reviewed models |
 | Software architecture | 92/100 | Clean layers, plugin registry, good separation of concerns |
 | Code quality | 85/100 | No dead code, no TODOs in production code, consistent naming |
-| Test coverage | 90/100 | 60+ test files, 500+ tests; gaps only in visualization (GUI-dependent) |
+| Test coverage | 90/100 | 60+ test files, 500+ tests; line coverage not yet measured; visualization untested |
 | Documentation | 80/100 | ARCHITECTURE.md translated to English; technical docs complete; API docs TBD |
 | Internationalization | 40/100 | All code in English; all user-facing text in German |
-| Repository infrastructure | 98/100 | 8 CI/CD workflows, 4 issue templates, enhanced PR template, security scanning, release automation |
+| Repository infrastructure | 98/100 | 8 CI/CD workflows, 4 issue templates, enhanced PR template, security scanning, release automation; workflows not yet confirmed green |
 | Performance | 85/100 | Efficient numpy vectorization; minor optimization opportunities |
 
 ---
@@ -37,7 +37,7 @@ The primary gap for open-source readiness is **internationalization**: ~500+ use
 | Linear bicycle (6 states) | **Correct** | Rajamani ch. 2, eq. 2.34 |
 | Nonlinear bicycle (6 states) | **Correct** | Friction ellipse, load transfer |
 | Double-track (12 DOF) | **Correct** | Roll, wheel spin, combined slip |
-| Multibody (24 DOF) | **Correct** (minor: clamp tire spring ≥ 0) | Heave/roll/pitch |
+| Multibody (24 DOF) | **Correct** | Heave/roll/pitch |
 | Linear tire | **Correct** | Friction circle saturation |
 | Pacejka MF | **Correct** | Load-degressive, combined slip, camber |
 | Brush model | **Correct** | Parabolic pressure, isotropic slip |
@@ -56,8 +56,11 @@ The primary gap for open-source readiness is **internationalization**: ~500+ use
 
 ### Minor Issues
 
-1. **Multibody tire spring** — `f_tire = k_t * (z_road - zw)` should clamp ≥ 0 to prevent unphysical tension during wheel lift-off.
-2. **Werling kinematic sign variant** — The printed equation (4.31) in Werling 2011 has a sign error; the implementation correctly defaults to the Lyapunov-proven sign.
+1. **Werling kinematic sign variant** — The printed equation (4.31) in Werling 2011 has a sign error; the implementation correctly defaults to the Lyapunov-proven sign.
+
+### Correction
+
+An earlier version of this report recommended clamping the multibody `f_tire` to ≥ 0, and that change was applied. This was wrong: `zw` is measured from static equilibrium, so `f_tire` is a load *deviation* and is legitimately negative when a wheel unloads. Lift-off is already handled by the clamp on the total load `fz`. The clamp dropped the multibody yaw gain from 6.07 to 2.41 and failed `test_nonlinear_models_close_to_linear_in_linear_range[multibody]`. It has been reverted.
 
 ### Numerical Stability
 

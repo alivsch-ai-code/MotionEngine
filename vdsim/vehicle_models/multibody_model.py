@@ -125,7 +125,7 @@ class MultibodyModel(VehicleModel):
         yw = y + self.x_w * sin_psi + self.y_w * cos_psi
         z_road = env.road_height(xw, yw)
         z_road_dot = (env.road_height(xw + 0.01 * cos_psi, yw + 0.01 * sin_psi) - z_road) / 0.01 * vx
-        f_tire = np.maximum(self.k_t * (z_road - zw) + self.tire_damping * (z_road_dot - zw_dot), 0.0)
+        f_tire = self.k_t * (z_road - zw) + self.tire_damping * (z_road_dot - zw_dot)
 
         # link (geometric) load transfer goes straight to the tires: lateral through the roll
         # centers, longitudinal through anti-dive/anti-squat (accelerations estimated without loop)
