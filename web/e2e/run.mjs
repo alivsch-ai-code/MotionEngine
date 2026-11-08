@@ -25,7 +25,7 @@ const SCREENS = process.argv.includes("--screens");
 const OUT = new URL("./output/", import.meta.url).pathname;
 if (SCREENS) mkdirSync(OUT, { recursive: true });
 
-const PAGES = ["/", "/app", "/app/simulate", "/app/inspector", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
+const PAGES = ["/", "/app", "/app/assistant", "/app/simulate", "/app/inspector", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
 // raw i18n keys look like "simulate.title" or "app:models.x": letters, dots, no spaces
 const RAW_KEY = /(^|\s)(common|app|domain|inspector|landing):[a-z]|(^|\s)[a-z]+(\.[a-zA-Z_]+){2,}(\s|$)/;
 const failures = [];

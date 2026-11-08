@@ -27,7 +27,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     MOTIONENGINE_PORT=8000
 WORKDIR /app
 COPY --from=build /dist/*.whl /tmp/
-RUN pip install --no-cache-dir "$(ls /tmp/*.whl)[api,ml]" && rm /tmp/*.whl \
+RUN pip install --no-cache-dir "$(ls /tmp/*.whl)[api,ml,chat]" && rm /tmp/*.whl \
     && useradd --create-home --uid 10001 motion \
     && mkdir -p /data/models && chown -R motion /data
 COPY configs ./configs

@@ -8,6 +8,7 @@ Configuration (environment variables):
     MOTIONENGINE_MAX_SIM_TIME     upper bound of the simulated time per request, s (default 120)
     MOTIONENGINE_MAX_WALL_TIME    wall-clock budget per simulation, s (default 60)
     MOTIONENGINE_CORS_ORIGINS     comma separated list of allowed CORS origins (default: none)
+    ANTHROPIC_API_KEY             enables the chat assistant (/chat, see vdsim/service/chat.py)
 
 All compute endpoints are synchronous `def` handlers: FastAPI runs them in its thread pool, so the
 event loop stays responsive. Only names listed by the catalog endpoints are accepted (vehicle
@@ -29,12 +30,13 @@ from pathlib import Path
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
 
 from .. import __version__
 from .metrics import Metrics
 from .schemas import (
+    ChatRequest,
     ConnectRequest,
     EvaluateRequest,
     ExplainResponse,
@@ -161,7 +163,7 @@ def _catalog():
 
 # ----------------------------------------------------------------------------- application
 def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_time=None, cors_origins=None,
-               model_dir=None, web_dir=None):
+               model_dir=None, web_dir=None, chat_client=None):
     api_key = api_key if api_key is not None else os.environ.get("MOTIONENGINE_API_KEY") or None
     max_concurrency = max_concurrency or int(_env_float("MOTIONENGINE_MAX_CONCURRENCY", os.cpu_count() or 2))
     max_sim_time = max_sim_time or _env_float("MOTIONENGINE_MAX_SIM_TIME", 120.0)
@@ -601,6 +603,61 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                                             dict(req.maneuver_params), req.duration)
             except (TypeError, ValueError) as exc:
                 raise HTTPException(status_code=422, detail=str(exc)) from None
+
+    # ------------------------------------------------------------------------- chat assistant
+    from .chat import ChatTools, ConversationStore, chat_events
+
+    def _chat_catalog():
+        from ..trajectory import MANEUVER_INFO
+
+        neural = [{"id": f"neural_{m['id']}", "name": m.get("name"), "vehicle": m.get("vehicle")} for m in models.list()]
+        return {"vehicles": catalog["presets"], "vehicle_models": catalog["vehicle_model"], "neural_models": neural,
+                "maneuvers": {name: {"label": info.get("label"), "params": {p: unit for p, (_, unit) in
+                                                                            info.get("params", {}).items()}}
+                              for name, info in MANEUVER_INFO.items()},
+                "lateral_controllers": catalog["lateral_controller"],
+                "longitudinal_controllers": catalog["longitudinal_controller"], "scenarios": catalog["scenarios"],
+                "planner_configs": catalog["planner_configs"], "tire_models": catalog["tire_model"],
+                "limits": {"max_simulated_time_s": max_sim_time}}
+
+    chat_tools = ChatTools(simulate=simulate, plan=plan, predict=predict, catalog=_chat_catalog)
+    conversations = ConversationStore()
+    chat_state = {"client": chat_client}
+
+    def _chat_client():
+        if chat_state["client"] is None:
+            try:
+                import anthropic
+            except ImportError:
+                raise HTTPException(status_code=503, detail="chat needs the 'anthropic' package "
+                                                            "(pip install motion-engine[chat])") from None
+            chat_state["client"] = anthropic.Anthropic()
+        return chat_state["client"]
+
+    @app.get("/chat/status", tags=["chat"], dependencies=secured, summary="Whether the chat assistant is available")
+    def chat_status():
+        import importlib.util
+
+        from .chat import DEFAULT_MODEL
+
+        installed = chat_state["client"] is not None or importlib.util.find_spec("anthropic") is not None
+        credential = chat_state["client"] is not None or any(
+            os.environ.get(k) for k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_PROFILE",
+                                        "ANTHROPIC_FEDERATION_RULE_ID")) or (Path.home() / ".config" / "anthropic").is_dir()
+        return {"available": bool(installed and credential), "installed": installed, "credential": bool(credential),
+                "model": os.environ.get("MOTIONENGINE_CHAT_MODEL", DEFAULT_MODEL)}
+
+    @app.post("/chat", tags=["chat"], dependencies=secured, response_class=StreamingResponse,
+              summary="Ask the assistant; it runs simulations and plans and streams its answer (server-sent events)")
+    def chat(req: ChatRequest):
+        client = _chat_client()
+        conv = conversations.get_or_create(req.conversation_id)
+        return StreamingResponse(chat_events(client, conv, req.message, chat_tools), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    @app.delete("/chat/{conversation_id}", tags=["chat"], dependencies=secured, status_code=204)
+    def chat_delete(conversation_id: str):
+        conversations.delete(conversation_id)
 
     # ------------------------------------------------------------------------- web application
     web = Path(web_dir) if web_dir else Path(os.environ.get("MOTIONENGINE_WEB_DIR", "")) if \

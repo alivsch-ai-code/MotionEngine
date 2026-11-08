@@ -32,6 +32,7 @@
     "label": "Main navigation",
     "sections": { "overview": "Overview", "work": "Workflows", "models": "Models", "system": "System" },
     "dashboard": "Dashboard",
+    "assistant": "Assistant",
     "simulate": "Simulation",
     "inspector": "Trajectory inspector",
     "predict": "Prediction",

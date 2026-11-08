@@ -4,7 +4,7 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
-  "postCreateCommand": "pip install --upgrade pip && pip install -e '.[dev,api]' && pre-commit install || true",
+  "postCreateCommand": "pip install --upgrade pip && pip install -e '.[dev,api,chat]' && pre-commit install || true",
   "forwardPorts": [8000],
   "portsAttributes": {"8000": {"label": "MotionEngine API"}},
   "containerEnv": {"MPLBACKEND": "Agg", "QT_QPA_PLATFORM": "offscreen"},

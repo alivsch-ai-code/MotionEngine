@@ -223,5 +223,61 @@
     "col": { "name": "Name", "value": "Value", "unit": "Unit" },
     "charts": "Chart palette",
     "emptyStates": "Empty states"
+  },
+  "chat": {
+    "title": "Assistant",
+    "subtitle": "Describe what you want to simulate or plan. The assistant runs it with MotionEngine and explains the result with the numbers behind it.",
+    "newChat": "New chat",
+    "inputLabel": "Message",
+    "placeholder": "For example: double lane change at 100 km/h on wet road with the sports car",
+    "hint": "Enter sends, Shift+Enter adds a line. Answers come from {{model}} and the MotionEngine tools.",
+    "send": "Send",
+    "stop": "Stop",
+    "thinking": "Thinking…",
+    "parameters": "Parameters",
+    "elapsed": "{{s}} s",
+    "drivenPath": "Driven path (top view)",
+    "predictionPlot": "Predicted paths (top view)",
+    "empty": {
+      "title": "Ask in plain words",
+      "text": "The assistant picks the vehicle, model and maneuver, runs the simulation or the planner and shows the results here. Try one of these:"
+    },
+    "suggestions": {
+      "dlc": "Simulate an ISO double lane change at 100 km/h with the sports car",
+      "friction": "How does a wet road (µ = 0.5) change the double lane change at 80 km/h?",
+      "models": "Compare the kinematic, nonlinear single-track and double-track models on the slalom",
+      "plan": "Plan an overtaking maneuver at 25 m/s with a car driving 15 m/s 40 m ahead"
+    },
+    "tools": {
+      "get_catalog": "Catalog",
+      "run_simulation": "Simulation",
+      "plan_trajectory": "Trajectory planning",
+      "predict_objects": "Prediction"
+    },
+    "plan": {
+      "valid": "Valid trajectory",
+      "invalid": "No valid trajectory",
+      "candidates": "{{n}} candidates",
+      "computeTime": "{{ms}} ms",
+      "plot": "Planned trajectory (top view)"
+    },
+    "unavailable": {
+      "title": "The assistant is not set up",
+      "credential": "The server needs an Anthropic API key: set ANTHROPIC_API_KEY for the MotionEngine service and restart it.",
+      "package": "The server needs the optional chat package: pip install \"motion-engine[chat]\", then set ANTHROPIC_API_KEY and restart.",
+      "action": "Check the API settings"
+    },
+    "errors": {
+      "not_configured": "The Anthropic API key is missing or invalid.",
+      "rate_limited": "Too many requests to the language model. Try again in a moment.",
+      "api_error": "The language model returned an error.",
+      "network": "The server cannot reach the language model.",
+      "refusal": "The assistant declined this request.",
+      "truncated": "The answer was cut off.",
+      "busy": "This conversation is still answering.",
+      "too_long": "This conversation is too long. Start a new chat.",
+      "invalid_tool_input": "The assistant sent invalid tool input several times.",
+      "other": "The assistant could not finish this answer."
+    }
   }
 }

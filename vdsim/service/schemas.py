@@ -258,6 +258,12 @@ class ExplainResponse(BaseModel):
     compute_time: float = Field(description="s, planner cycle")
 
 
+# ----------------------------------------------------------------------------- chat
+class ChatRequest(_Strict):
+    message: str = Field(min_length=1, max_length=4000)
+    conversation_id: str | None = Field(None, max_length=64, description="continue a conversation; omit to start one")
+
+
 # ----------------------------------------------------------------------------- neural models
 class TrainRequest(_Strict):
     vehicle: str = "mid_size_sedan"

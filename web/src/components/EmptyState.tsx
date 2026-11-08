@@ -32,6 +32,15 @@ const ART: Record<string, ReactNode> = {
       <rect x="92" y="70" width="16" height="24" rx="4" fill="var(--me-primary)" />
     </>
   ),
+  chat: (
+    <>
+      <rect x="12" y="16" width="96" height="54" rx="12" fill="var(--me-surface-2)" stroke="var(--me-border-strong)" />
+      <path d="M30 70 L26 86 L46 70" fill="var(--me-surface-2)" stroke="var(--me-border-strong)" strokeLinejoin="round" />
+      <path d="M28 36 H90 M28 50 H70" stroke="var(--me-text-subtle)" strokeWidth="3" strokeLinecap="round" />
+      <rect x="64" y="58" width="84" height="40" rx="10" fill="var(--me-primary)" fillOpacity="0.18" stroke="var(--me-primary)" />
+      <path d="M76 86 C92 86 96 70 110 70 S130 78 138 66" fill="none" stroke="var(--me-primary)" strokeWidth="3" strokeLinecap="round" />
+    </>
+  ),
   model: (
     <>
       {[[30, 34], [30, 58], [30, 82], [80, 46], [80, 70], [130, 58]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="9" fill="var(--me-surface-2)" stroke="var(--me-border-strong)" strokeWidth="2" />)}
