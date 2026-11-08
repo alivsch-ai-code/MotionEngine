@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t">
+  <title id="t">MotionEngine – Option A: motion planning symbol</title>
+  <defs>
+    <linearGradient id="ga" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#2563EB"/><stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+  <!-- candidate trajectories (sampling) -->
+  <g fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" opacity=".28">
+    <path d="M8 46 C24 46 26 30 44 24"/>
+    <path d="M8 46 C24 46 28 40 44 38"/>
+  </g>
+  <!-- selected trajectory: quintic lane change -->
+  <path d="M8 46 C26 46 26 18 46 18" fill="none" stroke="url(#ga)" stroke-width="5" stroke-linecap="round"/>
+  <g fill="#06B6D4"><circle cx="8" cy="46" r="3.5"/><circle cx="27" cy="32" r="2.2"/></g>
+  <!-- vehicle at the end of the path -->
+  <path d="M46 12 L58 18 L46 24 L49 18 Z" fill="#2563EB"/>
+</svg>

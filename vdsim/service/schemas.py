@@ -48,9 +48,18 @@ class VehicleAnalysis(BaseModel):
     per_speed: list[SpeedAnalysis]
 
 
+class ParameterInfo(BaseModel):
+    key: str = Field(description="group.field, also the translation key of the label")
+    value: float | int | bool | str | list | None
+    unit: str = ""
+    min: float | None = None
+    max: float | None = None
+
+
 class VehicleResponse(BaseModel):
     name: str
     parameters: dict
+    schema_: list[ParameterInfo] = Field(alias="schema", serialization_alias="schema")
     analysis: VehicleAnalysis
 
 
@@ -112,6 +121,7 @@ class SimulateResponse(BaseModel):
     name: str
     model: str
     stop_reason: str
+    stop_code: str = Field(description="language-neutral key of the stop reason")
     simulated_time: float = Field(description="s")
     wall_time: float = Field(description="s")
     n_samples: int
@@ -176,6 +186,7 @@ class EgoModel(_Strict):
 
 class PlanRequest(_Strict):
     config: str = Field("default", description="planner configuration from configs/planning")
+    vehicle: str = Field("mid_size_sedan", description="vehicle preset (geometry, limits, tires)")
     road: list[RoadSegment] = Field(default_factory=lambda: [RoadSegment(kind="straight", length=500.0,
                                                                          curvature=0.0)],
                                     min_length=1, max_length=50)
@@ -215,9 +226,67 @@ class PlanCycle(BaseModel):
     compute_time: float = Field(description="s")
 
 
+class RoadGeometry(BaseModel):
+    x: list[float]
+    y: list[float]
+    left_x: list[float]
+    left_y: list[float]
+    right_x: list[float]
+    right_y: list[float]
+    target_x: list[float]
+    target_y: list[float]
+
+
 class PlanResponse(BaseModel):
+    road: RoadGeometry | None = None
     trajectory: PlannedTrajectoryModel
     n_candidates: int
     fallback: bool
     compute_time: float = Field(description="s, first cycle")
     cycles: list[PlanCycle]
+
+
+class ExplainResponse(BaseModel):
+    road: RoadGeometry
+    obstacles: list[ObjectModel]
+    steps: list[dict]
+    series: dict[str, list]
+    candidates: list[dict]
+    weights: dict
+    compute_time: float = Field(description="s, planner cycle")
+
+
+# ----------------------------------------------------------------------------- neural models
+class TrainRequest(_Strict):
+    vehicle: str = "mid_size_sedan"
+    teacher: Literal["bicycle_nonlinear", "bicycle_linear"] = "bicycle_nonlinear"
+    n_samples: int = Field(20000, ge=500, le=200000)
+    hidden: list[int] = Field(default_factory=lambda: [64, 64], min_length=1, max_length=4)
+    epochs: int = Field(150, ge=1, le=1000)
+    learning_rate: float = Field(2e-3, gt=0.0, le=0.1)
+    seed: int = 0
+    name: str = Field("", max_length=80)
+
+
+class TrainJob(BaseModel):
+    id: str
+    state: Literal["queued", "running", "done", "failed", "cancelled"]
+    phase: str = ""
+    progress: float = 0.0
+    history: list[dict] = Field(default_factory=list)
+    model_id: str | None = None
+    error: str | None = None
+
+
+class ConnectRequest(_Strict):
+    name: str = Field(..., min_length=1, max_length=80)
+    backend: Literal["onnx", "http"]
+    onnx_base64: str | None = Field(None, description="ONNX graph, base64 (max. 20 MB)")
+    url: str | None = Field(None, description="HTTP endpoint: POST {inputs} -> {outputs}")
+    vehicle: str = "mid_size_sedan"
+
+
+class EvaluateRequest(_Strict):
+    maneuver: str = "iso_double_lane_change"
+    maneuver_params: dict[str, ScalarValue] = Field(default_factory=dict)
+    duration: float | None = Field(None, gt=0.0, le=60.0)

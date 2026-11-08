@@ -27,7 +27,7 @@ jobs:
           pip install -e ".[dev,api]"
 
       - name: Run mypy on core modules
-        run: mypy vdsim/core vdsim/vehicle_models vdsim/tire_models vdsim/simulation vdsim/service --ignore-missing-imports
+        run: mypy vdsim/core vdsim/vehicle_models vdsim/tire_models vdsim/simulation vdsim/service vdsim/learning --ignore-missing-imports
 
   complexity:
     name: Code Complexity
