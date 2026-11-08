@@ -258,13 +258,13 @@ def test_web_app_is_served(tmp_path):
     (tmp_path / "index.html").write_text("<html>app</html>")
     (tmp_path / "assets" / "a.js").write_text("x")
     (tmp_path / "favicon.svg").write_text("<svg/>")
+    (tmp_path / "brand").mkdir()
+    (tmp_path / "brand" / "logo.svg").write_text("<svg/>")
+    (tmp_path.parent / "secret.txt").write_text("secret")
     c = TestClient(create_app(api_key="k", web_dir=tmp_path, model_dir=tmp_path / "m"))
     assert c.get("/").text == "<html>app</html>"
     assert c.get("/app/simulate").text == "<html>app</html>"
     assert c.get("/assets/a.js").text == "x" and c.get("/favicon.svg").status_code == 200
-    (tmp_path / "brand").mkdir()
-    (tmp_path / "brand" / "logo.svg").write_text("<svg/>")
-    (tmp_path.parent / "secret.txt").write_text("secret")
     assert c.get("/brand/logo.svg").text == "<svg/>"
     for bad in ("/../secret.txt", "/brand/../../secret.txt", "/%2e%2e/secret.txt", "/brand/%2e%2e/%2e%2e/secret.txt"):
         r = c.get(bad)

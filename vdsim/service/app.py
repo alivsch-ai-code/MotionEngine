@@ -612,6 +612,13 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         app.mount("/assets", StaticFiles(directory=web / "assets"), name="assets")
         index = web / "index.html"
         web_root_dir = web.resolve()
+        # static files of the build (favicon, brand/, screenshots/), collected once: a request path is only
+        # looked up in this table and never joined to a filesystem path, so ".." or absolute paths cannot escape
+        web_files = {
+            p.relative_to(web_root_dir).as_posix(): p
+            for p in web_root_dir.rglob("*")
+            if p.is_file() and web_root_dir in p.resolve().parents
+        }
 
         @app.get("/", include_in_schema=False)
         def web_root():
@@ -619,11 +626,10 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
 
         @app.get("/{path:path}", include_in_schema=False)
         def web_spa(path: str):
-            # static files of the build (favicon, brand/, screenshots/), resolved inside the build directory
-            # only (no "..": the resolved path must stay below the web root); client routes get the app
-            candidate = (web_root_dir / path).resolve()
-            if candidate.is_file() and web_root_dir in candidate.parents:
-                return FileResponse(candidate)
+            static = web_files.get(path)
+            if static is not None:
+                return FileResponse(static)
+            # client routes get the app
             if path.split("/")[0] in ("app", "docs-ui", ""):
                 return FileResponse(index)
             raise HTTPException(status_code=404, detail="not found")
