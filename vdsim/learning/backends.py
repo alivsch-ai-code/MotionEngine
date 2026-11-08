@@ -1,8 +1,8 @@
 """Inference backends with one interface: predict(x: (n, n_in)) -> (n, n_out).
 
-    MLPBackend   network trained in MotionEngine (vdsim.learning.mlp)
-    ONNXBackend  any framework exported to ONNX (PyTorch, TensorFlow, JAX, ...); needs `onnxruntime`
-    HTTPBackend  model served elsewhere: POST {"inputs": [[...], ...]} -> {"outputs": [[...], ...]}
+MLPBackend   network trained in MotionEngine (vdsim.learning.mlp)
+ONNXBackend  any framework exported to ONNX (PyTorch, TensorFlow, JAX, ...); needs `onnxruntime`
+HTTPBackend  model served elsewhere: POST {"inputs": [[...], ...]} -> {"outputs": [[...], ...]}
 """
 
 from __future__ import annotations
@@ -49,8 +49,9 @@ class HTTPBackend:
 
     def predict(self, x):
         body = json.dumps({"inputs": np.atleast_2d(x).tolist()}).encode()
-        req = urllib.request.Request(self.url, data=body, method="POST",
-                                     headers={"Content-Type": "application/json", **self.headers})
+        req = urllib.request.Request(
+            self.url, data=body, method="POST", headers={"Content-Type": "application/json", **self.headers}
+        )
         with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310 (URL checked by the store)
             out = json.loads(resp.read())["outputs"]
         return np.atleast_2d(np.asarray(out, dtype=float))

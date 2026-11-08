@@ -34,8 +34,9 @@ def control_for(delta, fx, wheel_radius):
     return u
 
 
-def sample_dataset(config, teacher="bicycle_nonlinear", n=20000, seed=0, v_range=(3.0, 40.0), beta_max=0.12,
-                   delta_max=0.2):
+def sample_dataset(
+    config, teacher="bicycle_nonlinear", n=20000, seed=0, v_range=(3.0, 40.0), beta_max=0.12, delta_max=0.2
+):
     if teacher not in TEACHERS:
         raise ValueError(f"teacher must be one of {TEACHERS}")
     model = create("vehicle_model", teacher, config)

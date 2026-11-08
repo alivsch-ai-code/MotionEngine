@@ -22,19 +22,33 @@ def client(tmp_path_factory):
 
 
 # ----------------------------------------------------------------------------- explain
-@pytest.mark.parametrize("body, lat_mode, lon_mode", [
-    ({"target_offset": 3.5, "target_speed": 20.0, "ego": {"vx": 20.0}}, "time", "velocity"),
-    ({"stop_at": 40.0, "target_speed": 8.0, "ego": {"vx": 8.0}}, "time", "stopping"),
-    ({"target_offset": 1.0, "target_speed": 2.0, "ego": {"vx": 1.0}}, "arc", "velocity"),
-])
+@pytest.mark.parametrize(
+    "body, lat_mode, lon_mode",
+    [
+        ({"target_offset": 3.5, "target_speed": 20.0, "ego": {"vx": 20.0}}, "time", "velocity"),
+        ({"stop_at": 40.0, "target_speed": 8.0, "ego": {"vx": 8.0}}, "time", "stopping"),
+        ({"target_offset": 1.0, "target_speed": 2.0, "ego": {"vx": 1.0}}, "arc", "velocity"),
+    ],
+)
 def test_explain_reproduces_the_planner(client, body, lat_mode, lon_mode):
     r = client.post("/plan/explain", json=body)
     assert r.status_code == 200, r.text
     d = r.json()
     steps = {s["id"]: s for s in d["steps"]}
-    assert list(steps) == ["start_state", "lateral", "longitudinal", "selection", "transformation", "constraints",
-                           "vehicle_physics"]
-    lat, lon, sel = steps["lateral"]["quantities"], steps["longitudinal"]["quantities"], steps["selection"]["quantities"]
+    assert list(steps) == [
+        "start_state",
+        "lateral",
+        "longitudinal",
+        "selection",
+        "transformation",
+        "constraints",
+        "vehicle_physics",
+    ]
+    lat, lon, sel = (
+        steps["lateral"]["quantities"],
+        steps["longitudinal"]["quantities"],
+        steps["selection"]["quantities"],
+    )
     assert lat["mode"] == lat_mode and lon["mode"] == lon_mode
     # coefficients re-derived from the boundary conditions equal the planner's polynomials
     assert lat["verification_max_abs_error"] < 1e-9 and lon["verification_max_abs_error"] < 1e-9
@@ -85,6 +99,7 @@ def test_gradients_match_finite_differences():
 
     def loss():
         return float(np.mean((net._forward(x)[-1] - y) ** 2))
+
     for p, g in zip(params, grads):
         i = np.unravel_index(0, p.shape)
         old = p[i]
@@ -101,12 +116,12 @@ def test_dataset_is_the_physics_teacher():
     from vdsim.core.registry import create
     from vdsim.learning.dataset import control_for
     from vdsim.simulation.environment import Environment
+
     cfg = load_vehicle_preset("mid_size_sedan")
     x, y = sample_dataset(cfg, n=50, seed=3)
     model = create("vehicle_model", "bicycle_nonlinear", cfg)
     for i in (0, 17, 49):
-        ds = model.derivatives(0, np.array([0, 0, 0, *x[i, :3]]), control_for(x[i, 3], x[i, 4], 0.32),
-                               Environment())
+        ds = model.derivatives(0, np.array([0, 0, 0, *x[i, :3]]), control_for(x[i, 3], x[i, 4], 0.32), Environment())
         assert np.allclose(ds[3:], y[i])
     assert np.all(np.abs(np.arctan2(x[:, 1], x[:, 0])) <= 0.12 + 1e-12)
 
@@ -135,11 +150,13 @@ def test_http_backend_protocol(monkeypatch):
 
         def __exit__(self, *a):
             return False
+
     seen = {}
 
     def fake_urlopen(req, timeout):
         seen["body"] = json.loads(req.data)
         return Resp(json.dumps({"outputs": [[1.0, 2.0, 3.0]]}).encode())
+
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
     out = HTTPBackend("http://models.example/predict").predict([[1, 2, 3, 4, 5]])
     assert out.tolist() == [[1.0, 2.0, 3.0]] and seen["body"] == {"inputs": [[1, 2, 3, 4, 5]]}
@@ -165,8 +182,9 @@ def test_train_evaluate_simulate_delete(client):
     meta = client.get(f"/models/{mid}").json()
     assert meta["name"] == "test" and meta["test_metrics"]["vy_dot"]["r2"] > 0.9 and meta["history"]
     assert any(m["id"] == mid and "history" not in m for m in client.get("/models").json())
-    sim = client.post("/simulate", json={"model": f"neural_{mid}", "maneuver": "step_steer", "duration": 2.0,
-                                        "signals": ["t", "r"]})
+    sim = client.post(
+        "/simulate", json={"model": f"neural_{mid}", "maneuver": "step_steer", "duration": 2.0, "signals": ["t", "r"]}
+    )
     assert sim.status_code == 200 and sim.json()["model"] == f"neural_{mid}"
     ev = client.post(f"/models/{mid}/evaluate", json={"maneuver": "step_steer", "duration": 3.0}).json()
     assert ev["max_position_error"] >= 0 and len(ev["series"]["t"]) == len(ev["series"]["neural_y"])
@@ -190,26 +208,36 @@ def test_connect_rules(client, monkeypatch):
     # HTTP models: only operator-approved hosts (the server would make the request: SSRF)
     r = client.post("/models/connect", json={"name": "x", "backend": "http", "url": "http://169.254.169.254/x"})
     assert r.status_code == 403
-    assert client.post("/models/connect", json={"name": "x", "backend": "http", "url": "file:///etc/passwd"}).status_code == 422
+    assert (
+        client.post("/models/connect", json={"name": "x", "backend": "http", "url": "file:///etc/passwd"}).status_code
+        == 422
+    )
     assert client.post("/models/connect", json={"name": "x", "backend": "onnx"}).status_code == 422
-    assert client.post("/models/connect", json={"name": "x", "backend": "onnx",
-                                                "onnx_base64": "%%%"}).status_code == 422
+    assert (
+        client.post("/models/connect", json={"name": "x", "backend": "onnx", "onnx_base64": "%%%"}).status_code == 422
+    )
 
 
 def test_connect_onnx_model(client):
     pytest.importorskip("onnx")
     pytest.importorskip("onnxruntime")
     from onnx import TensorProto, helper, numpy_helper
+
     w = np.zeros((5, 3), dtype=np.float32)
     w[4, 0] = 1.0 / 1600.0
-    graph = helper.make_graph([helper.make_node("MatMul", ["x", "W"], ["y"])], "g",
-                              [helper.make_tensor_value_info("x", TensorProto.FLOAT, [None, 5])],
-                              [helper.make_tensor_value_info("y", TensorProto.FLOAT, [None, 3])],
-                              [numpy_helper.from_array(w, "W")])
+    graph = helper.make_graph(
+        [helper.make_node("MatMul", ["x", "W"], ["y"])],
+        "g",
+        [helper.make_tensor_value_info("x", TensorProto.FLOAT, [None, 5])],
+        [helper.make_tensor_value_info("y", TensorProto.FLOAT, [None, 3])],
+        [numpy_helper.from_array(w, "W")],
+    )
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 13)])
     model.ir_version = 9
-    r = client.post("/models/connect", json={"name": "onnx", "backend": "onnx",
-                                            "onnx_base64": base64.b64encode(model.SerializeToString()).decode()})
+    r = client.post(
+        "/models/connect",
+        json={"name": "onnx", "backend": "onnx", "onnx_base64": base64.b64encode(model.SerializeToString()).decode()},
+    )
     assert r.status_code == 201, r.text
     assert r.json()["backend"] == "onnx"
 
@@ -248,8 +276,10 @@ def test_web_app_is_served(tmp_path):
 
 def test_kpis_carry_language_neutral_codes(client):
     from vdsim.service.app import KPI_GROUP_CODES
-    r = client.post("/simulate", json={"model": "bicycle_nonlinear", "maneuver": "iso_double_lane_change",
-                                       "signals": ["t"]}).json()
+
+    r = client.post(
+        "/simulate", json={"model": "bicycle_nonlinear", "maneuver": "iso_double_lane_change", "signals": ["t"]}
+    ).json()
     assert all(k["group_code"] in set(KPI_GROUP_CODES.values()) for k in r["kpis"]), r["kpis"]
     textual = [k for k in r["kpis"] if isinstance(k["value"], str)]
     assert textual and all(k["value_code"] in ("yes", "no") for k in textual)
@@ -257,7 +287,10 @@ def test_kpis_carry_language_neutral_codes(client):
 
 def test_explain_formulas_are_language_neutral(client):
     # formulas are shown in every UI language: no natural-language words inside the LaTeX
-    for body in ({"target_offset": 3.5, "target_speed": 20.0, "ego": {"vx": 20.0}}, {"stop_at": 40.0, "target_speed": 8.0, "ego": {"vx": 8.0}}):
+    for body in (
+        {"target_offset": 3.5, "target_speed": 20.0, "ego": {"vx": 20.0}},
+        {"stop_at": 40.0, "target_speed": 8.0, "ego": {"vx": 8.0}},
+    ):
         d = client.post("/plan/explain", json=body).json()
         for step in d["steps"]:
             for f in step["formulas"]:

@@ -40,8 +40,12 @@ class ModelStore:
     def save(self, meta, blob=None, model_id=None):
         model_id = model_id or self.new_id()
         jp, bp = self._paths(model_id)
-        meta = {**meta, "id": model_id, "created": meta.get("created", time.time()),
-                "vehicle_model": f"neural_{model_id}"}
+        meta = {
+            **meta,
+            "id": model_id,
+            "created": meta.get("created", time.time()),
+            "vehicle_model": f"neural_{model_id}",
+        }
         with self._lock:
             if blob is not None:
                 bp.write_bytes(blob)

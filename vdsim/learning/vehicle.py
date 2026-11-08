@@ -19,7 +19,7 @@ from ..vehicle_models.common import wheel_force_request
 class NeuralVehicleModel(VehicleModel):
     state_names = ("x", "y", "psi", "vx", "vy", "r")
     recommended_dt = 0.002
-    backend = None          # set by register_neural_model
+    backend = None  # set by register_neural_model
     model_info = {}
     v_min = 2.0
 
@@ -52,8 +52,9 @@ class NeuralVehicleModel(VehicleModel):
 def register_neural_model(model_id, backend, info=None):
     # registry name "neural_<id>": selectable in scenarios, the REST service and the GUI like any vehicle model
     name = f"neural_{model_id}"
-    cls = type(f"NeuralVehicleModel_{model_id}", (NeuralVehicleModel,),
-               {"backend": backend, "model_info": dict(info or {})})
+    cls = type(
+        f"NeuralVehicleModel_{model_id}", (NeuralVehicleModel,), {"backend": backend, "model_info": dict(info or {})}
+    )
     _REGISTRY["vehicle_model"].pop(name, None)
     register("vehicle_model", name)(cls)
     return name

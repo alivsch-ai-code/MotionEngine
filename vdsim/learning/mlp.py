@@ -39,8 +39,9 @@ class MLP:
         return out * self.y_std + self.y_mean
 
     # ------------------------------------------------------------------ training
-    def fit(self, x, y, epochs=200, batch=256, lr=2e-3, val_split=0.15, patience=25, seed=0, progress=None,
-            should_stop=None):
+    def fit(
+        self, x, y, epochs=200, batch=256, lr=2e-3, val_split=0.15, patience=25, seed=0, progress=None, should_stop=None
+    ):
         x, y = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
         rng = np.random.default_rng(seed)
         idx = rng.permutation(len(x))
@@ -57,7 +58,7 @@ class MLP:
         for epoch in range(epochs):
             order = rng.permutation(tr)
             for k in range(0, len(order), batch):
-                bi = order[k:k + batch]
+                bi = order[k : k + batch]
                 grads = self._gradients(xn[bi], yn[bi])
                 step += 1
                 for p, g, mi, vi in zip(params, grads, m, v):
@@ -65,7 +66,7 @@ class MLP:
                     mi += (1 - beta1) * g
                     vi *= beta2
                     vi += (1 - beta2) * g * g
-                    p -= lr * (mi / (1 - beta1 ** step)) / (np.sqrt(vi / (1 - beta2 ** step)) + eps)
+                    p -= lr * (mi / (1 - beta1**step)) / (np.sqrt(vi / (1 - beta2**step)) + eps)
             train_loss = float(np.mean((self._forward(xn[tr])[-1] - yn[tr]) ** 2))
             val_loss = float(np.mean((self._forward(xn[val])[-1] - yn[val]) ** 2))
             history.append({"epoch": epoch + 1, "train": train_loss, "val": val_loss})
@@ -100,8 +101,15 @@ class MLP:
     def to_bytes(self):
         buf = io.BytesIO()
         arrays = {f"W{i}": w for i, w in enumerate(self.W)} | {f"b{i}": b for i, b in enumerate(self.b)}
-        np.savez(buf, x_mean=self.x_mean, x_std=self.x_std, y_mean=self.y_mean, y_std=self.y_std,
-                 meta=np.array(json.dumps({"hidden": list(self.hidden), "layers": len(self.W)})), **arrays)
+        np.savez(
+            buf,
+            x_mean=self.x_mean,
+            x_std=self.x_std,
+            y_mean=self.y_mean,
+            y_std=self.y_std,
+            meta=np.array(json.dumps({"hidden": list(self.hidden), "layers": len(self.W)})),
+            **arrays,
+        )
         return buf.getvalue()
 
     @classmethod
