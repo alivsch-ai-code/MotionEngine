@@ -1,0 +1,2 @@
+# False positive: "ABCDEF123456" is a deliberately invalid model id in a negative test, not a credential.
+8d77a732c4c76160866b47a95af25281d2265f14:tests/service/test_service_explain_learning.py:generic-api-key:123
