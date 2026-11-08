@@ -72,6 +72,9 @@ api = [
 ml = [
     "onnxruntime>=1.17",
 ]
+chat = [
+    "anthropic>=2.6,<3",
+]
 docs = [
     "sphinx>=7.0",
     "sphinx-rtd-theme>=2.0",

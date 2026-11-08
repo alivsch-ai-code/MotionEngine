@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Assistant** (`/app/assistant`, `POST /chat`): a chat in the web app where you describe a simulation or a
+  planning situation in plain English or German. Claude calls the service's own simulation, planning, prediction and
+  catalog functions as tools (inputs validated with the REST schemas, server limits unchanged), streams its answer as
+  server-sent events, and the web app shows every tool result as a card with KPIs and plots. Optional extra `chat`;
+  configured with `ANTHROPIC_API_KEY`, `MOTIONENGINE_CHAT_MODEL`, `MOTIONENGINE_CHAT_EFFORT`.
 - **Web app** (`web/`, React 19 + TypeScript + Vite): Simulate, Trajectory inspector, Neural models, Predict,
   Vehicles, Settings, landing page and live style guide; English (default) and German via i18next with a
   header switcher (stored choice → browser language → English); dark and light theme; served by the API with

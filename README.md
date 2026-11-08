@@ -44,6 +44,7 @@ stack, neural vehicle models, a REST API and a web app, in one open-source Pytho
 | **Neural vehicle models included** | Train a neural surrogate of any physics model in seconds without extra frameworks, or connect your own ONNX file or HTTP endpoint. A closed-loop comparison against the physics model shows how far you can trust it before you use it in a simulation. |
 | **Ready to deploy** | REST API with OpenAPI, API key, concurrency and runtime limits, Prometheus metrics and a Docker image that ships the web app. `docker compose up` gives you the whole platform on port 8000. |
 | **Tested and measured** | 860+ tests including physical plausibility, Monte Carlo and scenario regression against golden KPIs; CI on Linux and Windows with Python 3.10–3.13, CodeQL and secret scanning. Every performance number in this README is reproducible with `benchmarks/run_benchmarks.py`. |
+| **Just ask** | The assistant in the web app turns a sentence like *"double lane change at 100 km/h on a wet road with the sports car"* into simulations and plans, runs them with the real models and explains the numbers. It answers in English or German. |
 | **Built to be extended** | Vehicle models, tire models, controllers, maneuvers and planner nodes plug into a registry: add a component without touching the core, in Python, C++ or Rust. |
 
 ---
@@ -60,6 +61,7 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 
 | Page | What it does |
 |---|---|
+| **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
 | **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view |
 | **Trajectory inspector** | one planning cycle in seven steps, each with formula, values, source and chart |
 | **Neural models** | train an MLP surrogate in the background, connect ONNX or HTTP models, compare them closed loop with the physics model, simulate with them |
@@ -121,7 +123,7 @@ for kpi in evaluate(result):
 | **Automated driving** | full stack from scenario to actuators, 14 AD scenarios with missions and success criteria (overtaking, merging, cut-in, intersections, roundabout, evasion, parking) |
 | **Analysis** | 22 ISO and ADAS test scenarios, automated KPI evaluation with ratings, PDF and Markdown reports, linear and quasi-static vehicle analysis, parameter sweeps |
 | **Machine learning** | MLP surrogates trained against a physics teacher, ONNX and HTTP model backends, closed-loop validation, neural models usable as vehicle models |
-| **Interfaces** | web app (EN/DE), PySide6 desktop workbench with live top view and 3D view, REST API, Python library, command line |
+| **Interfaces** | chat assistant (natural language → simulations and plans), web app (EN/DE), PySide6 desktop workbench with live top view and 3D view, REST API, Python library, command line |
 
 ---
 
@@ -287,7 +289,7 @@ curl -s -X POST localhost:8000/simulate -H "Content-Type: application/json" \
 ```
 
 Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, `/trajectory`, `/simulate`, `/plan`,
-`/plan/explain`, `/predict`, `/models` (train, jobs, connect, evaluate).
+`/plan/explain`, `/predict`, `/models` (train, jobs, connect, evaluate), `/chat` (assistant, server-sent events).
 
 | Variable | Effect |
 |---|---|
@@ -297,6 +299,7 @@ Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, 
 | `MOTIONENGINE_MODEL_DIR` | where neural models are stored |
 | `MOTIONENGINE_ALLOWED_MODEL_HOSTS` | hosts that HTTP models may use |
 | `MOTIONENGINE_CONFIG_DIR` | location of `configs/` for a wheel install outside the source tree |
+| `ANTHROPIC_API_KEY` | enables the assistant (`pip install -e ".[chat]"`); `MOTIONENGINE_CHAT_MODEL` and `MOTIONENGINE_CHAT_EFFORT` choose the model and effort |
 
 Connecting ONNX models needs `pip install -e ".[api,ml]"`. A devcontainer (`.devcontainer/`) installs `.[dev,api]` for
 VS Code and Codespaces.
@@ -465,6 +468,7 @@ MotionEngine/
 | **GUI** (optional, `[gui]`) | PySide6, pyqtgraph, PyOpenGL |
 | **REST API** (optional, `[api]`) | FastAPI, uvicorn, httpx |
 | **ONNX models** (optional, `[ml]`) | onnxruntime |
+| **Assistant** (optional, `[chat]`) | anthropic; needs an Anthropic API key |
 | **Web app** (build only) | Node.js 22, npm; the Docker image contains the built app |
 | **Development** | pytest, ruff, mypy, pre-commit |
 

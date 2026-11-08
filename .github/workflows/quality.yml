@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,api]"
+          pip install -e ".[dev,api,chat]"
 
       - name: Run mypy on core modules
         run: mypy vdsim/core vdsim/vehicle_models vdsim/tire_models vdsim/simulation vdsim/service vdsim/learning --ignore-missing-imports

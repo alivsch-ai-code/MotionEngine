@@ -10,6 +10,7 @@ import { PageSkeleton } from "../components/PageSkeleton";
 const NAV: { section: string; items: { to: string; key: string; icon: IconName; end?: boolean }[] }[] = [
   { section: "nav.sections.overview", items: [{ to: "/app", key: "nav.dashboard", icon: "dashboard", end: true }] },
   { section: "nav.sections.work", items: [
+    { to: "/app/assistant", key: "nav.assistant", icon: "chat" },
     { to: "/app/simulate", key: "nav.simulate", icon: "play" },
     { to: "/app/inspector", key: "nav.inspector", icon: "sigma" },
     { to: "/app/predict", key: "nav.predict", icon: "radar" },

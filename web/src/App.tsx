@@ -10,6 +10,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Simulate = lazy(() => import("./pages/Simulate"));
 const Inspector = lazy(() => import("./pages/Inspector"));
 const Predict = lazy(() => import("./pages/Predict"));
+const Chat = lazy(() => import("./pages/Chat"));
 const Vehicles = lazy(() => import("./pages/Vehicles"));
 const Models = lazy(() => import("./pages/Models"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/app" element={<AppShell />}>
           <Route index element={<Dashboard />} />
           <Route path="simulate" element={<Simulate />} />
+          <Route path="assistant" element={<Chat />} />
           <Route path="inspector" element={<Inspector />} />
           <Route path="predict" element={<Predict />} />
           <Route path="vehicles" element={<Vehicles />} />

@@ -223,5 +223,61 @@
     "col": { "name": "Name", "value": "Wert", "unit": "Einheit" },
     "charts": "Diagrammpalette",
     "emptyStates": "Leere Zustände"
+  },
+  "chat": {
+    "title": "Assistent",
+    "subtitle": "Beschreiben Sie, was simuliert oder geplant werden soll. Der Assistent führt es mit MotionEngine aus und erklärt das Ergebnis mit den Zahlen dahinter.",
+    "newChat": "Neuer Chat",
+    "inputLabel": "Nachricht",
+    "placeholder": "Zum Beispiel: Doppelspurwechsel mit 100 km/h auf nasser Fahrbahn mit dem Sportwagen",
+    "hint": "Enter sendet, Umschalt+Enter fügt eine Zeile ein. Antworten kommen von {{model}} und den MotionEngine-Werkzeugen.",
+    "send": "Senden",
+    "stop": "Stopp",
+    "thinking": "Denkt nach…",
+    "parameters": "Parameter",
+    "elapsed": "{{s}} s",
+    "drivenPath": "Gefahrene Bahn (Draufsicht)",
+    "predictionPlot": "Prädizierte Bahnen (Draufsicht)",
+    "empty": {
+      "title": "Fragen Sie in eigenen Worten",
+      "text": "Der Assistent wählt Fahrzeug, Modell und Manöver, startet die Simulation oder den Planer und zeigt die Ergebnisse hier. Probieren Sie zum Beispiel:"
+    },
+    "suggestions": {
+      "dlc": "Simuliere einen ISO-Doppelspurwechsel mit 100 km/h mit dem Sportwagen",
+      "friction": "Wie verändert nasse Fahrbahn (µ = 0,5) den Doppelspurwechsel bei 80 km/h?",
+      "models": "Vergleiche das kinematische, das nichtlineare Einspur- und das Zweispurmodell im Slalom",
+      "plan": "Plane ein Überholmanöver mit 25 m/s, 40 m voraus fährt ein Auto mit 15 m/s"
+    },
+    "tools": {
+      "get_catalog": "Katalog",
+      "run_simulation": "Simulation",
+      "plan_trajectory": "Trajektorienplanung",
+      "predict_objects": "Prädiktion"
+    },
+    "plan": {
+      "valid": "Gültige Trajektorie",
+      "invalid": "Keine gültige Trajektorie",
+      "candidates": "{{n}} Kandidaten",
+      "computeTime": "{{ms}} ms",
+      "plot": "Geplante Trajektorie (Draufsicht)"
+    },
+    "unavailable": {
+      "title": "Der Assistent ist nicht eingerichtet",
+      "credential": "Der Server braucht einen Anthropic-API-Schlüssel: ANTHROPIC_API_KEY für den MotionEngine-Dienst setzen und ihn neu starten.",
+      "package": "Der Server braucht das optionale Chat-Paket: pip install \"motion-engine[chat]\", danach ANTHROPIC_API_KEY setzen und neu starten.",
+      "action": "API-Einstellungen prüfen"
+    },
+    "errors": {
+      "not_configured": "Der Anthropic-API-Schlüssel fehlt oder ist ungültig.",
+      "rate_limited": "Zu viele Anfragen an das Sprachmodell. Bitte gleich noch einmal versuchen.",
+      "api_error": "Das Sprachmodell hat einen Fehler gemeldet.",
+      "network": "Der Server erreicht das Sprachmodell nicht.",
+      "refusal": "Der Assistent hat diese Anfrage abgelehnt.",
+      "truncated": "Die Antwort wurde abgeschnitten.",
+      "busy": "Dieses Gespräch antwortet noch.",
+      "too_long": "Dieses Gespräch ist zu lang. Bitte einen neuen Chat beginnen.",
+      "invalid_tool_input": "Der Assistent hat mehrfach ungültige Werkzeugeingaben gesendet.",
+      "other": "Der Assistent konnte diese Antwort nicht abschließen."
+    }
   }
 }

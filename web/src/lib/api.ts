@@ -47,6 +47,46 @@ export interface TrainRequest { vehicle: string; teacher: "bicycle_nonlinear" | 
 export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null }
 export interface Evaluation { maneuver: string; max_position_error: number; max_yaw_rate_error: number; wall_time: { physics: number; neural: number }; kpis: Record<string, { physics: number; neural: number }>; series: Record<string, number[]> }
 
+export interface ChatStatus { available: boolean; installed: boolean; credential: boolean; model: string }
+export interface SimulationView { kind: "simulation"; request: Record<string, unknown>; model: string; stop_code: string; simulated_time: number; wall_time: number; kpis: Kpi[]; signals: Record<string, (number | null)[]> }
+export interface PlanView {
+  kind: "plan"; request: Record<string, unknown>; road: RoadGeometry | null; trajectory: { x: (number | null)[]; y: (number | null)[]; v: (number | null)[]; t: (number | null)[] };
+  driven: { x: number[]; y: number[] }; obstacles: ObjectSpec[]; ego: { x: number; y: number; psi: number; vx: number }; valid: boolean; n_candidates: number; compute_time: number; cost: number | null;
+}
+export interface PredictionView { kind: "prediction"; request: Record<string, unknown>; objects: PredictedObject[] }
+export type ToolView = SimulationView | PlanView | PredictionView;
+export type ChatEvent =
+  | { event: "start"; data: { conversation_id: string; model: string } }
+  | { event: "text"; data: { text: string } }
+  | { event: "tool_use"; data: { id: string; name: string } }
+  | { event: "tool_result"; data: { id: string; name: string; ok: boolean; input: Record<string, unknown>; view?: ToolView | null; error?: string; elapsed: number } }
+  | { event: "done"; data: { conversation_id: string; stop_reason: string; model: string } }
+  | { event: "error"; data: { code: string; message: string } };
+
+// Server-sent events of POST /chat, parsed from the response body (EventSource cannot send a POST body).
+async function* readEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<ChatEvent> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+    let cut: number;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const chunk = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      let event = "message";
+      const data: string[] = [];
+      for (const line of chunk.split("\n")) {
+        if (line.startsWith("event: ")) event = line.slice(7);
+        else if (line.startsWith("data: ")) data.push(line.slice(6));
+      }
+      if (data.length) yield { event, data: JSON.parse(data.join("\n")) } as ChatEvent;
+    }
+    if (done) return;
+  }
+}
+
 function errorKey(status: number): string {
   if (status === 401) return "errors.unauthorized";
   if (status === 403) return "errors.forbidden";
@@ -60,6 +100,17 @@ function errorKey(status: number): string {
 
 export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
   const base = settings.apiBase.replace(/\/+$/, "");
+  const headers = (json: boolean) => ({ ...(json ? { "Content-Type": "application/json" } : {}), ...(settings.apiKey ? { "X-API-Key": settings.apiKey } : {}) });
+  async function failure(res: Response): Promise<ApiError> {
+    let detail = "";
+    try {
+      const j = (await res.json()) as { detail?: unknown };
+      detail = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail ?? "");
+    } catch {
+      detail = res.statusText;
+    }
+    return new ApiError(errorKey(res.status), res.status, detail);
+  }
   async function request<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     let res: Response;
     try {
@@ -102,6 +153,19 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     cancelJob: (id: string) => request<TrainJob>("POST", `/models/jobs/${encodeURIComponent(id)}/cancel`),
     connect: (body: { name: string; backend: "onnx" | "http"; onnx_base64?: string; url?: string; vehicle: string }) => request<ModelMeta>("POST", "/models/connect", body),
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
+    chatStatus: (s?: AbortSignal) => request<ChatStatus>("GET", "/chat/status", undefined, s),
+    chatDelete: (id: string) => request<void>("DELETE", `/chat/${encodeURIComponent(id)}`),
+    async *chat(body: { message: string; conversation_id?: string | null }, signal?: AbortSignal): AsyncGenerator<ChatEvent> {
+      let res: Response;
+      try {
+        res = await fetch(`${base}/chat`, { method: "POST", signal, headers: headers(true), body: JSON.stringify(body) });
+      } catch (err) {
+        if ((err as Error).name === "AbortError") throw err;
+        throw new ApiError("errors.network", 0, String(err));
+      }
+      if (!res.ok || !res.body) throw await failure(res);
+      yield* readEvents(res.body);
+    },
   };
 }
 export type Client = ReturnType<typeof createClient>;

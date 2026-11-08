@@ -32,6 +32,7 @@
     "label": "Hauptnavigation",
     "sections": { "overview": "Übersicht", "work": "Arbeitsabläufe", "models": "Modelle", "system": "System" },
     "dashboard": "Dashboard",
+    "assistant": "Assistent",
     "simulate": "Simulation",
     "inspector": "Trajektorien-Inspektor",
     "predict": "Prädiktion",
