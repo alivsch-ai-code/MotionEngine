@@ -41,7 +41,11 @@ class Scenario:
                   else load_vehicle_preset(self.vehicle))
         for dotted, value in self.vehicle_overrides.items():
             group, name = dotted.split(".", 1)
-            setattr(getattr(config, group), name, value)
+            target = getattr(config, group)
+            # dataclasses accept any attribute: a typo would silently leave the parameter unchanged
+            if name not in getattr(target, "__dataclass_fields__", {}):
+                raise AttributeError(f"unknown vehicle parameter '{dotted}'")
+            setattr(target, name, value)
         return config
 
     def build_trajectory(self, config=None):

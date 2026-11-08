@@ -47,7 +47,9 @@ class CollisionSettings:
     front_overhang: float = param(-1.0, "m", "Überhang vorne (< 0: aus Länge und Radstand)", min=-1.0, max=3.0)
     rear_overhang: float = param(-1.0, "m", "Überhang hinten (< 0: aus Länge und Radstand)", min=-1.0, max=3.0)
     n_circles_ego: int = param(3, "", "Kreise Ego-Fahrzeug", min=1, max=10)
-    max_circles_object: int = param(5, "", "Max. Kreise je Objekt", min=1, max=20)
+    max_circles_object: int = param(12, "", "Max. Kreise je Objekt", min=1, max=20)
+    max_lateral_inflation: float = param(0.3, "m", "Max. seitliche Aufweitung r - W/2 der Objektkreise",
+                                         min=0.05, max=2.0)
     checker_params: dict = field(default_factory=dict, metadata={"label": "Parameter eines eigenen Prüfers",
                                                                   "unit": ""})
 
@@ -61,6 +63,12 @@ class CollisionResult:
     t_collision: np.ndarray       # (B,) absolute time of the first collision (inf if free)
     object_id: np.ndarray         # (B,) id of the first colliding object (-1 if free)
     clearance: np.ndarray         # (B, K) smallest geometric clearance to any object (inf if none)
+
+
+def circles_needed(length, width, max_inflation):
+    # smallest n with r - W/2 <= max_inflation, r = sqrt((L/2n)^2 + (W/2)^2), i.e. n >= L / (2 sqrt(e (W + e)))
+    half_spacing = np.sqrt(max_inflation * (width + max_inflation))
+    return max(int(np.ceil(length / max(width, 0.1))), int(np.ceil(length / (2.0 * half_spacing))), 1)
 
 
 def circle_cover(length, width, n):
@@ -124,7 +132,10 @@ class CircleCollisionChecker(CollisionChecker):
             y = np.interp(self.t_abs, obj.t, obj.y)
             psi = np.interp(self.t_abs, obj.t, np.unwrap(obj.psi)) if len(obj.psi) == len(obj.t) else \
                 np.zeros_like(self.t_abs)
-            n = int(np.clip(np.ceil(obj.length / max(obj.width, 0.1)), 1, settings.max_circles_object))
+            # n = ceil(L/W) alone covered a 16.5 m x 2.5 m truck with 5 circles of radius 2.07 m: a truck in
+            # the adjacent lane (3.75 m) then "collided" with every candidate of the ego lane (einfaedeln_lkw)
+            n = int(np.clip(circles_needed(obj.length, obj.width, settings.max_lateral_inflation), 1,
+                            settings.max_circles_object))
             offs, r = circle_cover(obj.length, obj.width, n)
             for o in offs:
                 centers.append(np.stack([x + o * np.cos(psi), y + o * np.sin(psi)], axis=-1))

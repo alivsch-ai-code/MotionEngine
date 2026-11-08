@@ -763,7 +763,10 @@ class PythonGenerator(BaseGenerator):
                 self.diag("warning", f"'{name}': Orientierung unbekannt, Spaltenrichtung angenommen", node)
             return f"np.{name}({c[0]}, axis={axis})", P_POST
         if name in ("any", "all"):
-            return (f"bool({c[0]})" if ts[0].is_scalar else f"bool(np.{name}({c[0]} != 0))"), P_POST
+            # the operand is parenthesized above comparison precedence: `x > c != 0` would be a chained
+            # comparison in Python ((x > c) and (c != 0)), not MATLAB's (x > c) ~= 0
+            return (f"bool({c[0]})" if ts[0].is_scalar
+                    else f"bool(np.{name}({self.p(args[0], P_BOR)} != 0))"), P_POST
         if name == "sprintf":
             self.use("m_sprintf")
             return f"m_sprintf({', '.join(c)})", P_POST
@@ -801,7 +804,7 @@ class PythonGenerator(BaseGenerator):
         if name == "strcmp":
             return f"{self.p(args[0], P_BOR)} == {self.p(args[1], P_BOR)}", P_CMP
         if name in ("logical",):
-            return (f"bool({c[0]})" if scalar else f"({c[0]} != 0)"), P_ATOM
+            return (f"bool({c[0]})" if scalar else f"({self.p(args[0], P_BOR)} != 0)"), P_ATOM
         if name == "double":
             return (f"float({c[0]})" if scalar else f"np.asarray({c[0]}, dtype=float)"), P_POST
         if name == "xor":

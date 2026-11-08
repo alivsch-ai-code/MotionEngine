@@ -1,0 +1,51 @@
+# Referenzen der Pakete vdsim.world, vdsim.behavior und vdsim.perception, die in Komponenten-
+# dokumentationen und @trace-Annotationen zitiert werden (vorher ohne Eintrag in der Datenbank).
+gottschalk1996:
+  type: paper
+  authors: [Stefan Gottschalk, Ming C. Lin, Dinesh Manocha]
+  title: "OBBTree: A Hierarchical Structure for Rapid Interference Detection"
+  year: 1996
+  venue: Proceedings of SIGGRAPH '96, 171-180
+  doi: 10.1145/237170.237244
+  notes: Trennachsensatz (SAT) für orientierte Quader/Rechtecke; Grundlage von vdsim.world.collision
+treiber2000:
+  type: paper
+  authors: [Martin Treiber, Ansgar Hennecke, Dirk Helbing]
+  title: Congested traffic states in empirical observations and microscopic simulations
+  year: 2000
+  venue: Physical Review E 62(2), 1805-1824
+  doi: 10.1103/PhysRevE.62.1805
+  notes: Intelligent Driver Model (IDM) der Verkehrsteilnehmer
+kesting2007:
+  type: paper
+  authors: [Arne Kesting, Martin Treiber, Dirk Helbing]
+  title: General Lane-Changing Model MOBIL for Car-Following Models
+  year: 2007
+  venue: Transportation Research Record 1999, 86-94
+  doi: 10.3141/1999-10
+  notes: Spurwechselentscheidung (Anreiz- und Sicherheitskriterium)
+bar_shalom2001:
+  type: book
+  authors: [Yaakov Bar-Shalom, X. Rong Li, Thiagalingam Kirubarajan]
+  title: Estimation with Applications to Tracking and Navigation
+  year: 2001
+  publisher: John Wiley & Sons
+  isbn: 0-471-41655-X
+  notes: Messrauschen und Bewegungsmodelle (CV, CA, CTRV) der Sensor- und Prädiktionsmodelle
+asam_openscenario:
+  type: standard
+  title: ASAM OpenSCENARIO XML
+  organization: ASAM e.V.
+  url: https://www.asam.net/standards/detail/openscenario-xml/
+  notes: Szenariobeschreibung (Akteure, Manöver, Auslöser); Vorbild der Szenariobibliothek, kein Import/Export
+stvo:
+  type: norm
+  title: Straßenverkehrs-Ordnung (StVO) vom 6. März 2013
+  organization: Bundesministerium der Justiz
+  url: https://www.gesetze-im-internet.de/stvo_2013/
+  notes: Rechtsfahrgebot, Überholen, Vorfahrt in der regelbasierten Verhaltensplanung
+vdsim:
+  type: software
+  title: MotionEngine (vdsim) - eigene Herleitung im Quellcode
+  url: https://github.com/alivsch-ai-code/MotionEngine
+  notes: Kennzeichnet Modelle ohne externe Quelle (z. B. vereinfachtes Sensormodell); Herleitung in der Moduldokumentation

@@ -64,6 +64,11 @@ dev = [
     "mypy>=1.8",
     "pre-commit>=3.5",
 ]
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+]
 docs = [
     "sphinx>=7.0",
     "sphinx-rtd-theme>=2.0",
@@ -78,7 +83,8 @@ Issues = "https://github.com/alivsch-ai-code/MotionEngine/issues"
 
 [project.scripts]
 motion-engine = "vdsim.gui.app:main"
-motion-engine-scenario = "run_scenario:main"
+motion-engine-scenario = "vdsim.cli.scenario:main"
+motion-engine-api = "vdsim.service.app:main"
 
 [tool.setuptools.packages.find]
 include = ["vdsim*"]
@@ -139,8 +145,8 @@ disallow_untyped_defs = false
 disable_error_code = ["assignment", "var-annotated"]
 
 [tool.coverage.run]
-# Both packages need optional extras that the coverage job does not install
-omit = ["vdsim/gui/*", "vdsim/viz3d/*"]
+# These modules import PySide6/pyqtgraph/CARLA (optional extras the coverage job does not install)
+omit = ["vdsim/gui/*", "vdsim/viz3d/*", "vdsim/visualization/dashboard.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

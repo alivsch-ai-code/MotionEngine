@@ -158,7 +158,7 @@ class NonlinearBicycleModel(_BicycleBase):
         fxv_f, fyv_f = fx_f * cf - fy_f * sf, fx_f * sf + fy_f * cf
         fxv_r, fyv_r = fx_r * cr - fy_r * sr, fx_r * sr + fy_r * cr
 
-        vx_dot = (fxv_f + fxv_r - aero_drag(p, vx, env.wind_speed)) / m + vy * r
+        vx_dot = (fxv_f + fxv_r - resist) / m + vy * r  # aero drag and rolling resistance
         vy_dot = (fyv_f + fyv_r) / m - vx * r
         r_dot = (lf * fyv_f - lr * fyv_r + 2 * (mz_f + mz_r)) / p.inertia_z
         if abs(vx) < 0.5 and fx_req_f + fx_req_r <= 0:

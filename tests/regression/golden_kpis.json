@@ -1,0 +1,238 @@
+{
+ "acht_30": {
+  "max_ax": 3.5355456053445255e-05,
+  "max_ay": 3.4968691128641005,
+  "max_beta": 3.76810459361545,
+  "max_lateral_error": 0.12254001881474909,
+  "max_roll": 1.1010975356070956,
+  "max_steer": 8.634170629723009,
+  "max_yaw_rate": 24.00114158469047,
+  "min_ax": 0.2610904642734606,
+  "rms_lateral_error": 0.0815539337399369
+ },
+ "autobahn_acc": {
+  "max_ax": -0.12105584522843102,
+  "max_ay": 0.0,
+  "max_beta": 0.0,
+  "max_lateral_error": 0.0,
+  "max_roll": 0.0,
+  "max_steer": 0.0,
+  "max_yaw_rate": 0.0,
+  "min_ax": 3.499489617528123,
+  "rms_lateral_error": 0.0
+ },
+ "autobahn_spurhalteassistent": {
+  "max_ax": 0.12299950005071995,
+  "max_ay": 7.046914436312115,
+  "max_beta": 1.7757197059497882,
+  "max_lateral_error": 0.7285595736946275,
+  "max_roll": 2.344675083186763,
+  "max_steer": 2.911108744687859,
+  "max_yaw_rate": 17.063997717213386,
+  "min_ax": 0.39818434066304115,
+  "rms_lateral_error": 0.28990830316527694
+ },
+ "beschleunigen_0_100_ev": {
+  "max_ax": 5.193162059701402,
+  "max_ay": 0.0,
+  "max_beta": 0.0,
+  "max_lateral_error": 0.0,
+  "max_roll": 0.0,
+  "max_steer": 0.0,
+  "max_yaw_rate": 0.0,
+  "min_ax": -0.0,
+  "rms_lateral_error": 0.0
+ },
+ "bremsen_100_abs": {
+  "max_ax": 0.0007847439754286611,
+  "max_ay": 0.0,
+  "max_beta": 0.0,
+  "max_lateral_error": 0.0,
+  "max_roll": 0.0,
+  "max_steer": 0.0,
+  "max_yaw_rate": 0.0,
+  "min_ax": 9.201249320654528,
+  "rms_lateral_error": 0.0
+ },
+ "bremsen_in_der_kurve": {
+  "max_ax": 0.026566894303138168,
+  "max_ay": 5.226021909548043,
+  "max_beta": 0.24928482628832063,
+  "max_lateral_error": 0.11230732122091591,
+  "max_roll": 1.6428896443655647,
+  "max_steer": 2.6459234148495465,
+  "max_yaw_rate": 13.928147767478148,
+  "min_ax": 0.11445432098765433,
+  "rms_lateral_error": 0.07345198334439268
+ },
+ "bremsen_split_mu": {
+  "max_ax": 0.0004175575687771271,
+  "max_ay": 1.481456946119311,
+  "max_beta": 2.6252489584137817,
+  "max_lateral_error": 0.5751249114870409,
+  "max_roll": 0.5074846881448762,
+  "max_steer": 3.6296583977450565,
+  "max_yaw_rate": 8.394853535013338,
+  "min_ax": 4.931187005602769,
+  "rms_lateral_error": 0.3515240129078946
+ },
+ "frequenzgang_80": {
+  "max_ax": 0.02158779466932126,
+  "max_ay": 2.769922380021924,
+  "max_beta": 0.1123459828692902,
+  "max_roll": 0.8734972486908713,
+  "max_steer": 1.3333301074170467,
+  "max_yaw_rate": 7.239970106255958,
+  "min_ax": 0.11445432098765433
+ },
+ "iso_ausweichtest_60": {
+  "max_ax": 0.2379856255274613,
+  "max_ay": 8.392898954291377,
+  "max_beta": 1.0643424790059388,
+  "max_lateral_error": 0.28327322840563696,
+  "max_roll": 2.7820909925230475,
+  "max_steer": 11.899031041324912,
+  "max_yaw_rate": 31.661221128960896,
+  "min_ax": 0.9222001305941611,
+  "rms_lateral_error": 0.11564801190105349
+ },
+ "iso_doppelspurwechsel_80": {
+  "max_ax": 0.04106084506693376,
+  "max_ay": 4.590421184421026,
+  "max_beta": 0.24941869012954668,
+  "max_lateral_error": 0.07062259977421353,
+  "max_roll": 1.5097783871919375,
+  "max_steer": 2.7006132738573325,
+  "max_yaw_rate": 13.296368302472247,
+  "min_ax": 0.11445432098765433,
+  "rms_lateral_error": 0.03398302781300516
+ },
+ "iso_doppelspurwechsel_mpc": {
+  "max_ax": 0.03524460311171083,
+  "max_ay": 4.6080683509171925,
+  "max_beta": 0.25957615625877,
+  "max_lateral_error": 0.013457175063315315,
+  "max_roll": 1.4936670754497547,
+  "max_steer": 2.584506835230976,
+  "max_yaw_rate": 13.11670284034723,
+  "min_ax": 0.11445432098765433,
+  "rms_lateral_error": 0.004858554171429053
+ },
+ "komfort_strasse_klasse_c": {
+  "max_ax": 0.15730319898825657,
+  "max_ay": 0.0,
+  "max_beta": 0.0,
+  "max_lateral_error": 0.0,
+  "max_roll": 0.0,
+  "max_steer": 0.0,
+  "max_yaw_rate": 0.0,
+  "min_ax": 0.11445432098765433,
+  "rms_lateral_error": 0.0
+ },
+ "kreisfahrt_r40": {
+  "max_ax": 0.1588032538415588,
+  "max_ay": 0.3456665185532177,
+  "max_beta": 0.530858148620707,
+  "max_lateral_error": 0.009783644902252324,
+  "max_roll": 0.10336246246554397,
+  "max_steer": 1.1408367490578486,
+  "max_yaw_rate": 2.3073901186611434,
+  "min_ax": 0.007153395061728396,
+  "rms_lateral_error": 0.0017081241295968006
+ },
+ "lenkwinkelsprung_80": {
+  "max_ax": 0.038880039415546026,
+  "max_ay": 5.362560835781577,
+  "max_beta": 0.2644353489257303,
+  "max_roll": 1.68955297504412,
+  "max_steer": 2.6666666666666665,
+  "max_yaw_rate": 14.327136421029667,
+  "min_ax": 0.1286260676702226
+ },
+ "notausweichen_60": {
+  "max_ax": 0.3829676870246966,
+  "max_ay": 8.422295938124034,
+  "max_beta": 1.1892790054336564,
+  "max_lateral_error": 0.2689938233050235,
+  "max_roll": 2.78574306033279,
+  "max_steer": 10.273010151100467,
+  "max_yaw_rate": 32.27950313721523,
+  "min_ax": 0.72245583213092,
+  "rms_lateral_error": 0.09706331758479486
+ },
+ "notbremsassistent_70": {
+  "max_ax": 0.0002889627011298046,
+  "max_ay": 0.0,
+  "max_beta": 0.0,
+  "max_lateral_error": 0.0,
+  "max_roll": 0.0,
+  "max_steer": 0.0,
+  "max_yaw_rate": 0.0,
+  "min_ax": 0.08762908950617286,
+  "rms_lateral_error": 0.0
+ },
+ "rennstrecke_sportwagen": {
+  "max_ax": 3.470653643179404,
+  "max_ay": 8.224016772061235,
+  "max_beta": 1.0751564570964658,
+  "max_lateral_error": 0.20199064813330916,
+  "max_roll": 1.2593256509439557,
+  "max_steer": 2.7854291580349178,
+  "max_yaw_rate": 18.304145549158598,
+  "min_ax": 0.43127843234389274,
+  "rms_lateral_error": 0.09004940352405043
+ },
+ "sinus_haltezeit_esp": {
+  "max_ax": 2.0033001319381154,
+  "max_ay": 9.840117128728174,
+  "max_beta": 1.600935508043084,
+  "max_roll": 1.531047266450121,
+  "max_steer": 16.923076923076923,
+  "max_yaw_rate": 30.557914652803223,
+  "min_ax": 3.049613552970322
+ },
+ "slalom_45": {
+  "max_ax": 0.27136189775437747,
+  "max_ay": 8.013631265771176,
+  "max_beta": 2.7590779305217357,
+  "max_lateral_error": 0.14434035913450818,
+  "max_roll": 2.4831935027359284,
+  "max_steer": 14.07058116370073,
+  "max_yaw_rate": 38.065584400794094,
+  "min_ax": 0.9966904453407903,
+  "rms_lateral_error": 0.031140710719473993
+ },
+ "spurwechsel_latenzkette": {
+  "max_ax": 0.0022511924507266734,
+  "max_ay": 0.6123226044868052,
+  "max_beta": 0.048940893994877124,
+  "max_lateral_error": 0.013903085758368211,
+  "max_roll": 0.0,
+  "max_steer": 0.08840930822962591,
+  "max_yaw_rate": 1.0524986220381636,
+  "min_ax": 0.37524222222222225,
+  "rms_lateral_error": 0.005717606501188792
+ },
+ "stadtverkehr": {
+  "max_ax": 1.5016878137977643,
+  "max_ay": 0.0,
+  "max_beta": 0.0,
+  "max_lateral_error": 0.0,
+  "max_roll": 0.0,
+  "max_steer": 0.0,
+  "max_yaw_rate": 0.0,
+  "min_ax": 0.016095138888888895,
+  "rms_lateral_error": 0.0
+ },
+ "testzyklus_kunde": {
+  "max_ax": 0.00011802010029260401,
+  "max_ay": 0.0,
+  "max_beta": 0.0,
+  "max_lateral_error": 0.0,
+  "max_roll": 0.0,
+  "max_steer": 0.0,
+  "max_yaw_rate": 0.0,
+  "min_ax": 0.044708719135802474,
+  "rms_lateral_error": 0.0
+ }
+}

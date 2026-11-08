@@ -103,8 +103,12 @@ def matlab_analyze(path_or_source):
 
 
 def matlab_convert(path_or_source, target="python"):
-    from .. import matlab
-    return matlab.convert(path_or_source, target)
+    # {"ok", "files": {name: code}, "report"}; `vdsim.matlab.convert` is a module, not a function
+    from ..matlab import generate, parse
+    src = path_or_source
+    mfile = parse(src) if isinstance(src, str) and "\n" in src else src
+    code = generate(mfile, target)
+    return {"ok": bool(code.ok), "files": dict(code.files), "report": code.report()}
 
 
 # ---------------------------------------------------------------------------- custom nodes
@@ -115,15 +119,16 @@ def create_custom_node(language, name, layer="tracking_controller", dest="custom
 
 # ---------------------------------------------------------------------------- knowledge
 def references():
-    from ..knowledge import load_references
-    return load_references()
+    # {id: reference dict} of docs/references (the former import of `load_references` did not exist)
+    from ..knowledge import ReferenceDB
+    return {rid: ref.to_dict() for rid, ref in ReferenceDB().refs.items()}
 
 
 def knowledge_graph():
-    from ..knowledge import build_knowledge_graph
-    return build_knowledge_graph()
+    from ..knowledge import build_graph
+    return build_graph()
 
 
 def build_docs(out_dir=None):
-    from ..knowledge import build_docs as _build
-    return _build(out_dir) if out_dir else _build()
+    from ..knowledge import generate_docs
+    return generate_docs(out_dir=out_dir)

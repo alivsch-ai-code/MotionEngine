@@ -5,7 +5,8 @@ Peak:           D = mu(Fz) Fz,  mu(Fz) = mu (1 + p_mu dFz),  dFz = (Fz - Fz0) / 
 Stiffness:      K_alpha(Fz) degressive (Pacejka 2006: sin(2 atan(Fz / (p_Ky2 Fz0)))),
                 K_kappa proportional to Fz,  B = K / (C D)
 Camber:         camber thrust as an equivalent slip-angle shift
-Combined slip:  cosine weighting functions G_xa = cos(atan(B_xa alpha)), G_yk = cos(atan(B_yk kappa))
+Combined slip:  cosine weighting functions G_xa = cos(atan(B_xa alpha)), G_yk = cos(atan(B_yk kappa)),
+                resultant bounded by Kamm's circle |F| <= D
 Aligning moment: pneumatic trail decaying with slip angle
 """
 
@@ -63,5 +64,10 @@ class PacejkaTire(TireModel):
 
         fx = fx0 * np.cos(np.arctan(self.B_xa * alpha))
         fy = fy0 * np.cos(np.arctan(self.B_yk * kappa))
+        # The weighting functions use fixed B_xa, B_yk and do not depend on mu: near the combined peak
+        # |F| exceeded D by up to ~6 % at mu = 1 and ~37 % at mu = 0.2. Kamm's circle bounds the
+        # resultant force by the available grip D = mu(Fz) Fz.
+        scale = np.minimum(1.0, D / np.maximum(np.hypot(fx, fy), 1e-12))
+        fx, fy = fx * scale, fy * scale
         trail = self.trail * np.cos(1.2 * np.arctan(B_y * alpha))
         return fx, fy, -trail * fy0

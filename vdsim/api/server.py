@@ -44,11 +44,30 @@ def _clean(obj):
 
 
 class JobStore:
-    def __init__(self, workers=2):
+    # Finished jobs beyond `max_jobs` are evicted oldest first: every result holds complete time
+    # series, so an unbounded store grows without limit in a long-running server.
+    def __init__(self, workers=2, max_jobs=200):
         self.pool = ThreadPoolExecutor(max_workers=workers)
         self.jobs = {}
         self.results = {}
+        self.max_jobs = max_jobs
         self.lock = threading.Lock()
+
+    def _evict(self):
+        # caller holds the lock; dicts keep insertion order, so the first finished entries are the oldest
+        finished = [jid for jid, job in self.jobs.items() if job["state"] in ("done", "failed")]
+        for jid in finished[:max(len(self.jobs) - self.max_jobs, 0)]:
+            self.jobs.pop(jid, None)
+            self.results.pop(jid, None)
+
+    def snapshot(self):
+        with self.lock:
+            return [dict(job) for job in self.jobs.values()]
+
+    def get(self, job_id):
+        with self.lock:
+            job = self.jobs.get(job_id)
+            return dict(job) if job else None
 
     def submit(self, kind, fn, *args):
         job_id = uuid.uuid4().hex[:12]
@@ -63,9 +82,11 @@ class JobStore:
                 with self.lock:
                     self.results[job_id] = out
                     self.jobs[job_id].update(state="done", summary=_summarize(out))
+                    self._evict()
             except Exception as exc:
                 with self.lock:
                     self.jobs[job_id].update(state="failed", error=repr(exc), traceback=traceback.format_exc())
+                    self._evict()
         self.pool.submit(runner)
         return job_id
 
@@ -159,9 +180,9 @@ def make_handler(store, token=None):
                 if parts == ["stack", "default"]:
                     return self._send(200, api.default_stack())
                 if parts == ["jobs"]:
-                    return self._send(200, list(store.jobs.values()))
+                    return self._send(200, store.snapshot())
                 if len(parts) == 2 and parts[0] == "jobs":
-                    job = store.jobs.get(parts[1])
+                    job = store.get(parts[1])
                     return self._send(200, job) if job else self._send(404, {"error": "Job unbekannt"})
                 if len(parts) == 3 and parts[0] == "jobs" and parts[2] == "signals":
                     res = store.results.get(parts[1])
@@ -203,9 +224,13 @@ def make_handler(store, token=None):
                                           int(body["n"]), int(body.get("seed", 0)), int(body.get("workers", 0)))
                     return self._send(202, {"id": job_id, "state": "queued"})
                 if parts == ["matlab", "analyze"]:
-                    return self._send(200, api.matlab_analyze(body["source"]))
+                    # source text only: a client string must never be opened as a server path
+                    from ..matlab import parse
+                    return self._send(200, api.matlab_analyze(parse(str(body["source"]))).to_dict())
                 if parts == ["matlab", "convert"]:
-                    return self._send(200, {"code": api.matlab_convert(body["source"], body.get("target", "python"))})
+                    from ..matlab import parse
+                    return self._send(200, {"code": api.matlab_convert(parse(str(body["source"])),
+                                                                       body.get("target", "python"))})
             except KeyError as exc:
                 return self._send(400, {"error": f"fehlendes Feld {exc}"})
             except Exception as exc:
@@ -221,13 +246,29 @@ def serve(host="127.0.0.1", port=8765, token=None, workers=2):
     return httpd, store
 
 
+def _is_loopback(host):
+    import ipaddress
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 def main(argv=None):
     import argparse
     parser = argparse.ArgumentParser(description="vdsim REST-API")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--token", default=None, help="API-Schlüssel (Header X-API-Key)")
+    parser.add_argument("--insecure", action="store_true",
+                        help="ohne API-Schlüssel auf einer nicht lokalen Adresse lauschen (nicht empfohlen)")
     args = parser.parse_args(argv)
+    if not args.token and not args.insecure and not _is_loopback(args.host):
+        # stacks may reference python:/native: nodes and scenario files by path, i.e. local code execution
+        parser.error(f"Adresse {args.host} ist nicht lokal: API-Schlüssel setzen (Option token) "
+                     "oder bewusst die Option insecure wählen")
     httpd, _ = serve(args.host, args.port, args.token)
     print(f"vdsim API auf http://{args.host}:{args.port}{PREFIX}  (OpenAPI: {PREFIX}/openapi.json)")
     try:

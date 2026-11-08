@@ -1,5 +1,9 @@
 # MotionEngine — Technical Review Report
 
+> **Superseded in parts** by [review/2026-11-08-full-review.md](review/2026-11-08-full-review.md): that review
+> found and fixed three physics errors (Pacejka friction circle, wind sign, rolling resistance of the nonlinear
+> single-track model) that this report lists as correct.
+
 **Date:** 2026-11-01
 **Reviewer:** Principal Autonomous Driving Software Architect
 **Scope:** Complete repository review — physics, mathematics, architecture, code quality, documentation, open-source readiness
