@@ -611,7 +611,7 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
 
         app.mount("/assets", StaticFiles(directory=web / "assets"), name="assets")
         index = web / "index.html"
-        public = {p.name for p in web.iterdir() if p.is_file()}
+        web_root_dir = web.resolve()
 
         @app.get("/", include_in_schema=False)
         def web_root():
@@ -619,9 +619,11 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
 
         @app.get("/{path:path}", include_in_schema=False)
         def web_spa(path: str):
-            # files of the build root (favicon, icons) by name, every client route to the single-page app
-            if path in public:
-                return FileResponse(web / path)
+            # static files of the build (favicon, brand/, screenshots/), resolved inside the build directory
+            # only (no "..": the resolved path must stay below the web root); client routes get the app
+            candidate = (web_root_dir / path).resolve()
+            if candidate.is_file() and web_root_dir in candidate.parents:
+                return FileResponse(candidate)
             if path.split("/")[0] in ("app", "docs-ui", ""):
                 return FileResponse(index)
             raise HTTPException(status_code=404, detail="not found")

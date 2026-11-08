@@ -1,5 +1,7 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
+
+declare const process: { env: Record<string, string | undefined> };
 
 // REST endpoints of vdsim.service; the dev server forwards them to the API (default http://127.0.0.1:8000)
 const API = process.env.MOTIONENGINE_API ?? "http://127.0.0.1:8000";

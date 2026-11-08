@@ -234,6 +234,13 @@ def test_web_app_is_served(tmp_path):
     assert c.get("/").text == "<html>app</html>"
     assert c.get("/app/simulate").text == "<html>app</html>"
     assert c.get("/assets/a.js").text == "x" and c.get("/favicon.svg").status_code == 200
+    (tmp_path / "brand").mkdir()
+    (tmp_path / "brand" / "logo.svg").write_text("<svg/>")
+    (tmp_path.parent / "secret.txt").write_text("secret")
+    assert c.get("/brand/logo.svg").text == "<svg/>"
+    for bad in ("/../secret.txt", "/brand/../../secret.txt", "/%2e%2e/secret.txt", "/brand/%2e%2e/%2e%2e/secret.txt"):
+        r = c.get(bad)
+        assert "secret" not in r.text, bad
     assert c.get("/nope/x").status_code == 404
     # the API stays protected and is not shadowed by the single-page app
     assert c.get("/vehicle").status_code == 401 and c.get("/health").json()["status"] == "ok"
@@ -246,3 +253,13 @@ def test_kpis_carry_language_neutral_codes(client):
     assert all(k["group_code"] in set(KPI_GROUP_CODES.values()) for k in r["kpis"]), r["kpis"]
     textual = [k for k in r["kpis"] if isinstance(k["value"], str)]
     assert textual and all(k["value_code"] in ("yes", "no") for k in textual)
+
+
+def test_explain_formulas_are_language_neutral(client):
+    # formulas are shown in every UI language: no natural-language words inside the LaTeX
+    for body in ({"target_offset": 3.5, "target_speed": 20.0, "ego": {"vx": 20.0}}, {"stop_at": 40.0, "target_speed": 8.0, "ego": {"vx": 8.0}}):
+        d = client.post("/plan/explain", json=body).json()
+        for step in d["steps"]:
+            for f in step["formulas"]:
+                assert "\\text{" not in f, f
+                assert not any(w in f for w in ("quintisch", "geprüft", "frei", "Kosten")), f

@@ -1,0 +1,43 @@
+{
+  "a11y": { "skipToContent": "Zum Inhalt springen" },
+  "actions": "Aktionen",
+  "cancel": "Abbrechen",
+  "delete": "Löschen",
+  "expertSettings": "Experteneinstellungen",
+  "reset": "Auf Standardwerte zurücksetzen",
+  "search": "Suchen",
+  "errors": {
+    "unauthorized": "Die API hat die Anfrage abgelehnt: API-Schlüssel fehlt oder ist ungültig.",
+    "forbidden": "Die API erlaubt diese Anfrage nicht.",
+    "notFound": "Nicht gefunden.",
+    "conflict": "Es läuft bereits ein anderer Auftrag. Warte, bis er fertig ist, oder brich ihn ab.",
+    "tooLarge": "Die Datei ist zu groß.",
+    "invalid": "Die API hat die Eingabe abgelehnt.",
+    "busy": "Der Server ist ausgelastet. Versuche es gleich noch einmal.",
+    "server": "Der Server hat einen Fehler gemeldet.",
+    "network": "Die MotionEngine-API ist nicht erreichbar.",
+    "unknown": "Etwas ist schiefgelaufen.",
+    "checkSettings": "API-Verbindung in den Einstellungen prüfen"
+  },
+  "header": {
+    "language": "Sprache",
+    "lightMode": "Zum hellen Modus wechseln",
+    "darkMode": "Zum dunklen Modus wechseln",
+    "menu": "Navigation öffnen",
+    "home": "MotionEngine Startseite",
+    "apiDocs": "API-Dokumentation",
+    "api": { "checking": "API wird geprüft", "online": "API online", "offline": "API offline" }
+  },
+  "nav": {
+    "label": "Hauptnavigation",
+    "sections": { "overview": "Übersicht", "work": "Arbeitsabläufe", "models": "Modelle", "system": "System" },
+    "dashboard": "Dashboard",
+    "simulate": "Simulation",
+    "inspector": "Trajektorien-Inspektor",
+    "predict": "Prädiktion",
+    "vehicles": "Fahrzeuge",
+    "models": "Neuronale Modelle",
+    "settings": "Einstellungen",
+    "design": "Design-System"
+  }
+}

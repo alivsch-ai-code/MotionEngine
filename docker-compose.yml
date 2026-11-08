@@ -1,4 +1,4 @@
-# docker compose up --build   ->  http://localhost:8000/docs
+# docker compose up --build   ->  web app http://localhost:8000, API reference http://localhost:8000/docs
 services:
   api:
     build: .
@@ -10,12 +10,18 @@ services:
       MOTIONENGINE_MAX_CONCURRENCY: ${MOTIONENGINE_MAX_CONCURRENCY:-2}
       MOTIONENGINE_MAX_SIM_TIME: ${MOTIONENGINE_MAX_SIM_TIME:-120}
       MOTIONENGINE_MAX_WALL_TIME: ${MOTIONENGINE_MAX_WALL_TIME:-60}
+      MOTIONENGINE_ALLOWED_MODEL_HOSTS: ${MOTIONENGINE_ALLOWED_MODEL_HOSTS:-}
     read_only: true
     tmpfs:
       - /tmp
+    volumes:
+      - models:/data/models
     restart: unless-stopped
     deploy:
       resources:
         limits:
           cpus: "2"
           memory: 1g
+
+volumes:
+  models:

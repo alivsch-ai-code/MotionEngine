@@ -100,7 +100,7 @@ def explain_cycle(planner, start, debug, trajectory, behavior, vehicle_cfg, hori
                        "d_end": d_ref + delta, "coefficients": lat_c.tolist(), "jerk_integral": j_lat,
                        "cost": c_lat, "verification_max_abs_error": float(np.max(np.abs(lat_check - lat_c)))},
         "formulas": [
-            f"\\min \\int_0^{{{tsym}}} \\tfrac12 \\dddot d^2\\,d{arg} \\;\\Rightarrow\\; d \\text{{ quintisch}}",
+            f"\\min \\int_0^{{{tsym}}} \\tfrac12 \\dddot d^2\\,d{arg} \\;\\Rightarrow\\; d({arg}) = \\sum_{{i=0}}^{{5}} c_i {arg}^i",
             f"\\xi_d({tsym}) = [d_{{ref}} + \\delta,\\ 0,\\ 0] = [{_f(d_ref + delta)},\\ 0,\\ 0],\\quad "
             f"{tsym} = {_f(tau_lat)}",
             "\\Delta p = d_1 - (d_0 + \\dot d_0 \\tau + \\tfrac12 \\ddot d_0 \\tau^2),\\ "
@@ -126,7 +126,7 @@ def explain_cycle(planner, start, debug, trajectory, behavior, vehicle_cfg, hori
         lon_check = quartic_coefficients(st["s"], st["s_d"], st["s_dd"], v_ref + off, 0.0, tau_lon)
         k_off = cost.terminal_deviation.k_nu
         off_sym, end_formula = "\\nu", (f"\\dot s(\\tau) = \\dot s_{{ref}} + \\nu = {_f(v_ref)} + {_f(off)},\\ "
-                                         "\\ddot s(\\tau) = 0 \\;(\\text{Endposition frei} \\Rightarrow c_5 = 0)")
+                                         "\\ddot s(\\tau) = 0,\\ s(\\tau)\\ \\mathrm{free} \\Rightarrow c_5 = 0")
         verification = float(np.max(np.abs(lon_check - lon_c)))
     else:
         k_off = cost.terminal_deviation.k_sigma
@@ -142,7 +142,7 @@ def explain_cycle(planner, start, debug, trajectory, behavior, vehicle_cfg, hori
         "quantities": {"mode": kind, "tau": tau_lon, "offset": off, "coefficients": lon_c.tolist(),
                        "jerk_integral": j_lon, "cost": c_lon, "verification_max_abs_error": verification},
         "formulas": [
-            ("\\min \\int_0^\\tau \\tfrac12 \\dddot s^2 dt,\\ \\text{" + kind + "}"),
+            ("\\min \\int_0^\\tau \\tfrac12 \\dddot s^2\\,dt \\;\\Rightarrow\\; s(t) = \\sum_{i=0}^{" + ("4" if kind == "velocity" else "5") + "} c_i t^i"),
             end_formula + f",\\quad \\tau = {_f(tau_lon)}",
             _poly_latex("s", lon_c, "t"),
             f"J_s = {_f(j_lon)}",
@@ -172,8 +172,7 @@ def explain_cycle(planner, start, debug, trajectory, behavior, vehicle_cfg, hori
         "formulas": [
             "C = k_{lat} C_d + k_{lon} C_s = "
             f"{_f(cost.k_lat)} \\cdot {_f(c_lat)} + {_f(cost.k_lon)} \\cdot {_f(c_lon)} = {_f(total)}",
-            f"N = N_d \\times N_s = {int(debug.n_candidates)},\\ \\text{{geprüft (faul, aufsteigende Kosten)}}: "
-            f"{int(debug.n_checked)}",
+            f"N = N_d \\times N_s = {int(debug.n_candidates)},\\quad N_{{\\mathrm{{checked}}}} = {int(debug.n_checked)}",
         ],
     })
 

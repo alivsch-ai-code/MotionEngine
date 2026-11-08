@@ -1,0 +1,110 @@
+name: Web
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Typecheck, i18n tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx tsc -b
+
+      - name: Unit tests (translations complete, no hardcoded UI strings)
+        run: npx vitest run
+
+      - name: Build
+        run: npx vite build
+
+      - name: Bundle size report
+        run: |
+          echo "## Web bundle" >> $GITHUB_STEP_SUMMARY
+          echo '| file | bytes |' >> $GITHUB_STEP_SUMMARY
+          echo '|---|---:|' >> $GITHUB_STEP_SUMMARY
+          for f in dist/assets/*.js dist/assets/*.css; do echo "| $(basename $f) | $(stat -c %s $f) |"; done | sort -t'|' -k3 -n -r >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web-dist
+          path: web/dist
+
+  domain-locales:
+    name: Domain translations match the library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Regenerate and compare
+        run: |
+          python web/scripts/generate_domain_locales.py
+          git diff --exit-code web/src/locales
+
+  e2e:
+    name: End-to-end (API + web app, EN/DE, dark/light)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+
+      - name: Install
+        run: |
+          pip install -e ".[api]"
+          cd web && npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
+
+      - name: Start the service with the web app
+        run: |
+          MOTIONENGINE_WEB_DIR=web/dist MOTIONENGINE_MODEL_DIR=$RUNNER_TEMP/models MPLBACKEND=Agg \
+            nohup uvicorn vdsim.service.app:app --port 8000 > $RUNNER_TEMP/uvicorn.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/health && break; sleep 1; done
+
+      - name: End-to-end
+        working-directory: web
+        run: node e2e/run.mjs --screens
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-screenshots
+          path: web/e2e/output

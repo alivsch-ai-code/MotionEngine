@@ -1,0 +1,39 @@
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import { PageSkeleton } from "./components/PageSkeleton";
+import { AppShell } from "./layouts/AppShell";
+
+// Every page is its own chunk: the landing page does not download the charting or formula code.
+const Landing = lazy(() => import("./pages/Landing"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Simulate = lazy(() => import("./pages/Simulate"));
+const Inspector = lazy(() => import("./pages/Inspector"));
+const Predict = lazy(() => import("./pages/Predict"));
+const Vehicles = lazy(() => import("./pages/Vehicles"));
+const Models = lazy(() => import("./pages/Models"));
+const Settings = lazy(() => import("./pages/Settings"));
+const DesignSystem = lazy(() => import("./pages/DesignSystem"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Suspense fallback={null}><Landing /></Suspense>} />
+        <Route path="/app" element={<AppShell />}>
+          <Route index element={<Dashboard />} />
+          <Route path="simulate" element={<Simulate />} />
+          <Route path="inspector" element={<Inspector />} />
+          <Route path="predict" element={<Predict />} />
+          <Route path="vehicles" element={<Vehicles />} />
+          <Route path="models" element={<Models />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="design" element={<DesignSystem />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+        <Route path="*" element={<Suspense fallback={<PageSkeleton />}><NotFound /></Suspense>} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
