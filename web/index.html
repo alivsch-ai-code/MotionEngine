@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MotionEngine - motion planning and vehicle simulation platform" />
+    <meta name="theme-color" content="#0F172A" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>MotionEngine</title>
+    <script>
+      // apply the stored or system theme before the first paint (no flash)
+      try {
+        var t = localStorage.getItem("me.theme");
+        if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+      } catch (e) { document.documentElement.dataset.theme = "dark"; }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

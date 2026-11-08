@@ -237,3 +237,12 @@ def test_web_app_is_served(tmp_path):
     assert c.get("/nope/x").status_code == 404
     # the API stays protected and is not shadowed by the single-page app
     assert c.get("/vehicle").status_code == 401 and c.get("/health").json()["status"] == "ok"
+
+
+def test_kpis_carry_language_neutral_codes(client):
+    from vdsim.service.app import KPI_GROUP_CODES
+    r = client.post("/simulate", json={"model": "bicycle_nonlinear", "maneuver": "iso_double_lane_change",
+                                       "signals": ["t"]}).json()
+    assert all(k["group_code"] in set(KPI_GROUP_CODES.values()) for k in r["kpis"]), r["kpis"]
+    textual = [k for k in r["kpis"] if isinstance(k["value"], str)]
+    assert textual and all(k["value_code"] in ("yes", "no") for k in textual)

@@ -89,6 +89,27 @@ STOP_CODES = {
 }
 
 
+KPI_GROUP_CODES = {
+    "Fahrdynamik": "dynamics", "Bahnführung": "tracking", "Allgemein": "general", "Komfort": "comfort",
+    "Energie": "energy", "Normtest": "standard_test", "Bremsen": "braking", "Beschleunigen": "acceleration",
+    "Rennstrecke": "race_track", "Frequenzgang": "frequency_response", "Fahrerassistenz": "driver_assistance",
+}
+KPI_VALUE_CODES = {
+    "ja": "yes", "nein": "no", "nicht unkomfortabel": "not_uncomfortable",
+    "etwas unkomfortabel": "a_little_uncomfortable", "ziemlich unkomfortabel": "fairly_uncomfortable",
+    "unkomfortabel": "uncomfortable", "sehr unkomfortabel": "very_uncomfortable",
+    "extrem unkomfortabel": "extremely_uncomfortable",
+}
+
+
+def _kpi_model(k):
+    d = k.to_dict()
+    value = d["value"]
+    code = KPI_VALUE_CODES.get(value, "other") if isinstance(value, str) else None
+    return KPIModel(**{**d, "value": value if isinstance(value, str) or value is None else _finite(value),
+                       "value_code": code, "group_code": KPI_GROUP_CODES.get(d["group"], "other")})
+
+
 def _env_float(name, default):
     try:
         return float(os.environ.get(name, default))
@@ -307,8 +328,7 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                 raise HTTPException(status_code=422, detail=f"invalid scenario: {exc}") from None
             sim.duration = min(sim.duration, max_sim_time)
             result = sim.run(max_wall_time=max_wall_time)
-            kpis = [KPIModel(**{**k.to_dict(), "value": k.value if isinstance(k.value, str) or k.value is None
-                                else _finite(k.value)}) for k in evaluate(result)]
+            kpis = [_kpi_model(k) for k in evaluate(result)]
         n = len(result["t"])
         idx = _decimate_index(n, req.max_points)
         signals = {}

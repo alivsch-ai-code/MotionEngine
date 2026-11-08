@@ -1,0 +1,123 @@
+/* MotionEngine design tokens. Every color, size and duration in the UI comes from here.
+   Brand: primary #2563EB, secondary #0F172A, accent #06B6D4 (docs/design-system.md). */
+
+:root {
+  /* brand */
+  --me-brand-primary: #2563eb;
+  --me-brand-secondary: #0f172a;
+  --me-brand-accent: #06b6d4;
+
+  /* typography: system stacks, no web-font download on the critical path */
+  --me-font-sans: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, sans-serif;
+  --me-font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+  --me-text-xs: 0.75rem;   /* 12 px  captions, axis labels */
+  --me-text-sm: 0.8125rem; /* 13 px  tables, dense UI */
+  --me-text-md: 0.875rem;  /* 14 px  body */
+  --me-text-lg: 1rem;      /* 16 px  section titles */
+  --me-text-xl: 1.25rem;   /* 20 px  page titles */
+  --me-text-2xl: 1.5rem;   /* 24 px  KPI values */
+  --me-text-3xl: 2rem;     /* 32 px  landing section titles */
+  --me-text-4xl: 3rem;     /* 48 px  hero */
+  --me-weight-regular: 400;
+  --me-weight-medium: 500;
+  --me-weight-semibold: 600;
+  --me-weight-bold: 700;
+  --me-leading-tight: 1.2;
+  --me-leading-normal: 1.5;
+
+  /* spacing: 4 px grid */
+  --me-space-1: 4px;
+  --me-space-2: 8px;
+  --me-space-3: 12px;
+  --me-space-4: 16px;
+  --me-space-5: 24px;
+  --me-space-6: 32px;
+  --me-space-7: 48px;
+  --me-space-8: 64px;
+
+  --me-radius-sm: 6px;
+  --me-radius-md: 10px;
+  --me-radius-lg: 14px;
+  --me-radius-full: 999px;
+
+  --me-sidebar-width: 232px;
+  --me-header-height: 56px;
+  --me-content-max: 1440px;
+
+  --me-duration-fast: 120ms;
+  --me-duration-normal: 200ms;
+  --me-ease: cubic-bezier(0.2, 0, 0, 1);
+  --me-focus-ring: 0 0 0 3px color-mix(in srgb, var(--me-primary) 45%, transparent);
+}
+
+/* dark theme (default for engineering dashboards) */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --me-bg: #0b1120;
+  --me-surface: #0f172a;
+  --me-surface-2: #131d33;
+  --me-surface-3: #1a2540;
+  --me-border: #1e293b;
+  --me-border-strong: #334155;
+  --me-text: #e2e8f0;
+  --me-text-strong: #f8fafc;
+  --me-text-muted: #94a3b8;
+  --me-text-subtle: #64748b;
+  --me-primary: #3b82f6;          /* #2563EB lifted for 4.5:1 contrast on dark surfaces */
+  --me-primary-strong: #2563eb;
+  --me-primary-contrast: #ffffff;
+  --me-accent: #22d3ee;
+  --me-success: #22c55e;
+  --me-warning: #f59e0b;
+  --me-danger: #ef4444;
+  --me-info: #38bdf8;
+  --me-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.25);
+  /* data visualization: categorical palette, checked for distinguishability on both themes */
+  --me-chart-1: #3b82f6;
+  --me-chart-2: #22d3ee;
+  --me-chart-3: #f59e0b;
+  --me-chart-4: #a78bfa;
+  --me-chart-5: #f472b6;
+  --me-chart-6: #4ade80;
+  --me-chart-grid: #1e293b;
+  --me-chart-axis: #94a3b8;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --me-bg: #f1f5f9;
+  --me-surface: #ffffff;
+  --me-surface-2: #f8fafc;
+  --me-surface-3: #eef2f7;
+  --me-border: #e2e8f0;
+  --me-border-strong: #cbd5e1;
+  --me-text: #1e293b;
+  --me-text-strong: #0f172a;
+  --me-text-muted: #475569;
+  --me-text-subtle: #64748b;
+  --me-primary: #2563eb;
+  --me-primary-strong: #1d4ed8;
+  --me-primary-contrast: #ffffff;
+  --me-accent: #0891b2;
+  --me-success: #16a34a;
+  --me-warning: #b45309;
+  --me-danger: #dc2626;
+  --me-info: #0284c7;
+  --me-shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
+  --me-chart-1: #2563eb;
+  --me-chart-2: #0891b2;
+  --me-chart-3: #d97706;
+  --me-chart-4: #7c3aed;
+  --me-chart-5: #db2777;
+  --me-chart-6: #16a34a;
+  --me-chart-grid: #e2e8f0;
+  --me-chart-axis: #475569;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --me-duration-fast: 0ms;
+    --me-duration-normal: 0ms;
+  }
+}

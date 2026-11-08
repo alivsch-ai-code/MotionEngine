@@ -109,11 +109,13 @@ class SimulateRequest(_Strict):
 
 
 class KPIModel(BaseModel):
-    key: str
-    label: str
+    key: str = Field(description="language-neutral KPI key (translation key)")
+    label: str = Field(description="German label of the library")
     value: float | str | None
+    value_code: str | None = Field(None, description="language-neutral code of a textual value")
     unit: str = ""
     group: str = ""
+    group_code: str = Field("", description="language-neutral key of the KPI group")
     rating: str = ""
 
 
