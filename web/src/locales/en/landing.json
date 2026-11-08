@@ -1,0 +1,47 @@
+{
+  "nav": { "label": "Sections", "features": "Features", "architecture": "Architecture", "api": "API", "docs": "Documentation" },
+  "cta": { "open": "Open app", "simulate": "Start simulation", "inspect": "Inspect a trajectory" },
+  "hero": {
+    "badge": "Open source · MIT",
+    "title": "Modern Motion Planning and Vehicle Simulation Platform",
+    "text": "Plan trajectories with the Werling method, see every step of the computation with its physics and mathematics, simulate the vehicle from a kinematic model to a 24-state multibody model, and train neural surrogates that you can validate against the physics.",
+    "art": "Road with sampled candidate trajectories and the selected lane change"
+  },
+  "features": {
+    "title": "Built for engineers who need to know why",
+    "planning": { "title": "Trajectory planning", "text": "Werling planner in Frenet coordinates: optimal quintic and quartic polynomials, consistent costs, lazy selection, collision checking." },
+    "explain": { "title": "Every step explained", "text": "The trajectory inspector re-derives one planning cycle with the planner's numbers and checks the result against it." },
+    "dynamics": { "title": "Vehicle dynamics", "text": "Kinematic, single-track, double-track and multibody models with Pacejka, brush and isotropic tires, ESC, ABS and torque vectoring." },
+    "learning": { "title": "Neural models", "text": "Train a surrogate of the vehicle dynamics in seconds, or connect your own ONNX or HTTP model, and compare it with the physics in closed loop." },
+    "prediction": { "title": "Prediction and safety", "text": "Constant-velocity, constant-acceleration and CTRV prediction, circle-based collision checking and safety metrics." },
+    "api": { "title": "API first", "text": "REST service with OpenAPI, Python library, Docker image and a scenario library with ISO test maneuvers." }
+  },
+  "screens": {
+    "title": "A clear workspace",
+    "inspector": "Trajectory inspector: candidates, selected trajectory and the derivation of each step",
+    "simulate": "Simulation: key figures and signals of a closed-loop run"
+  },
+  "architecture": {
+    "title": "Architecture",
+    "text": "The automated-driving stack runs as a graph of exchangeable components. The same library powers the REST service and this web app.",
+    "blocks": { "perception": "Perception", "prediction": "Prediction", "behavior": "Behavior", "planner": "Trajectory planner", "controller": "Controller", "vehicle": "Vehicle model" },
+    "layers": {
+      "library": { "title": "Python library vdsim", "text": "Models, planners, controllers and analysis; tested against literature values and physical laws." },
+      "service": { "title": "REST service", "text": "FastAPI with OpenAPI 3, API keys, rate limits and Prometheus metrics; runs in Docker." },
+      "web": { "title": "Web application", "text": "React, English and German, dark and light theme; charts on canvas, formulas with KaTeX." }
+    }
+  },
+  "api": {
+    "title": "Integrate in minutes",
+    "text": "Every function of the web app is an API call. Use the REST endpoints from any language or the Python library directly.",
+    "rest": "REST",
+    "python": "Python"
+  },
+  "docs": {
+    "title": "Documentation",
+    "openapi": { "title": "API reference", "text": "Interactive OpenAPI documentation of every endpoint." },
+    "theory": { "title": "Theory and review", "text": "Model derivations, references and the technical review report." },
+    "source": { "title": "Source code", "text": "Repository, issues and contribution guide on GitHub." }
+  },
+  "footer": { "license": "MotionEngine · MIT license" }
+}

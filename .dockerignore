@@ -11,3 +11,6 @@ build
 docs/images
 examples/**/output
 tests
+web/node_modules
+web/dist
+web/e2e/output

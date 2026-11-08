@@ -1,0 +1,312 @@
+{
+ "kpi": {
+  "aeb_trigger_ttc": "AEB triggered at TTC",
+  "ay_gain": "Steady-state lateral acceleration gain",
+  "brake_speed": "Initial braking speed",
+  "collision": "Collision",
+  "cone_hits": "Lane gate violations",
+  "consumption": "Consumption",
+  "distance": "Distance",
+  "duration": "Simulated time",
+  "energy_drive": "Energy demand (drive)",
+  "energy_regen": "Recuperated energy",
+  "entry_speed": "Entry speed",
+  "iso2631_aw": "Weighted vertical accel. a_w (ISO 2631)",
+  "iso2631_rating": "Comfort rating (ISO 2631)",
+  "lane_departure": "Lane departure",
+  "lap_time": "Lap time",
+  "lateral_displacement": "Lateral displacement 1.07 s after steering start",
+  "lka_active_time": "LKA intervention time",
+  "max_ax": "Max. longitudinal acceleration",
+  "max_ay": "Max. lateral acceleration",
+  "max_ay_steady": "Max. steady-state lateral acceleration",
+  "max_beta": "Max. side-slip angle",
+  "max_friction_utilization": "Max. friction utilization",
+  "max_lateral_error": "Max. path deviation",
+  "max_lateral_jerk": "Max. lateral jerk",
+  "max_pitch": "Max. pitch angle",
+  "max_roll": "Max. roll angle",
+  "max_steer": "Max. road-wheel angle",
+  "max_yaw_deviation": "Max. yaw angle deviation",
+  "max_yaw_rate": "Max. yaw rate",
+  "mean_speed": "Mean speed",
+  "mfdd": "Mean fully developed deceleration (MFDD)",
+  "min_ax": "Max. deceleration",
+  "min_distance_to_line": "Min. distance to lane marking",
+  "min_gap": "Min. gap",
+  "min_time_gap": "Min. time gap",
+  "peak_response_time": "Time to yaw rate peak",
+  "response_time": "Yaw rate response time (90 %)",
+  "rms_ay": "RMS lateral acceleration",
+  "rms_lateral_error": "RMS path deviation",
+  "rms_lateral_jerk": "RMS lateral jerk",
+  "stability_reserve": "Stability reserve (1 - utilization)",
+  "stopping_distance": "Stopping distance",
+  "test_passed": "Test passed",
+  "understeer_gradient": "Understeer gradient",
+  "understeer_gradient_g": "Understeer gradient",
+  "yaw_gain": "Steady-state yaw gain",
+  "yaw_gain_1hz_ratio": "Yaw gain 1 Hz / steady state",
+  "yaw_gain_peak_ratio": "Yaw gain peak ratio",
+  "yaw_overshoot": "Yaw rate overshoot",
+  "yaw_ratio_175s": "Yaw rate 1.75 s after steering end",
+  "yaw_ratio_1s": "Yaw rate 1.0 s after steering end",
+  "yaw_resonance": "Frequency of max. yaw gain"
+ },
+ "maneuver": {
+  "acceleration": {
+   "category": "Driving maneuvers",
+   "description": "Full-load acceleration from standstill",
+   "label": "Acceleration (0-100 km/h)"
+  },
+  "brake_in_turn": {
+   "category": "Standard tests",
+   "description": "Steady-state circle, then braking with constant deceleration",
+   "label": "Braking in a turn (ISO 7975)"
+  },
+  "braking": {
+   "category": "Driving maneuvers",
+   "description": "Braking from constant speed",
+   "label": "Straight-line braking"
+  },
+  "circle": {
+   "category": "Standard tests",
+   "description": "Constant-radius circle with slowly rising speed (understeer gradient)",
+   "label": "Steady-state circle (ISO 4138)"
+  },
+  "city": {
+   "category": "Routes",
+   "description": "Urban circuit with turns",
+   "label": "City traffic"
+  },
+  "custom": {
+   "category": "Routes",
+   "description": "Segment list as JSON: [[\"straight\", L, v_kmh], [\"arc\", R, angle_deg, v_kmh], ...]",
+   "label": "Custom test cycle"
+  },
+  "emergency_evasion": {
+   "category": "Driving maneuvers",
+   "description": "Fast evasion around an obstacle and return to the lane",
+   "label": "Emergency evasion"
+  },
+  "figure_eight": {
+   "category": "Driving maneuvers",
+   "description": "Figure eight from two circles",
+   "label": "Figure eight"
+  },
+  "frequency_sweep": {
+   "category": "Standard tests",
+   "description": "Steering sweep to identify the frequency response (ISO 7401)",
+   "label": "Frequency response (sine sweep)"
+  },
+  "highway": {
+   "category": "Routes",
+   "description": "Highway with clothoid curves and a lane change",
+   "label": "Highway"
+  },
+  "iso_double_lane_change": {
+   "category": "Standard tests",
+   "description": "Double lane change through cone gates per ISO 3888-1 (offset 3.5 m)",
+   "label": "ISO double lane change (ISO 3888-1)"
+  },
+  "iso_obstacle_avoidance": {
+   "category": "Standard tests",
+   "description": "Avoidance maneuver per ISO 3888-2 (\"moose test\")",
+   "label": "ISO obstacle avoidance (ISO 3888-2)"
+  },
+  "lane_change": {
+   "category": "Basic",
+   "description": "Single lane change with sinusoidal curvature (heading 0 at the end)",
+   "label": "Lane change"
+  },
+  "race_track": {
+   "category": "Routes",
+   "description": "Circuit with a computed minimum-curvature line and GGV speed profile",
+   "label": "Race track (racing line)"
+  },
+  "ramp_steer": {
+   "category": "Standard tests",
+   "description": "Slowly increasing steering angle at constant speed",
+   "label": "Ramp steer (ISO 4138)"
+  },
+  "sine_with_dwell": {
+   "category": "Standard tests",
+   "description": "ESC test: 0.7 Hz sine with 500 ms dwell",
+   "label": "Sine with dwell (FMVSS 126)"
+  },
+  "slalom": {
+   "category": "Driving maneuvers",
+   "description": "Slalom around equally spaced cones",
+   "label": "Slalom"
+  },
+  "step_steer": {
+   "category": "Standard tests",
+   "description": "Step steering input at constant speed",
+   "label": "Step steer (ISO 7401)"
+  },
+  "straight": {
+   "category": "Basic",
+   "description": "Straight road at constant speed",
+   "label": "Straight"
+  }
+ },
+ "maneuverParam": {
+  "amplitude": "Lateral amplitude",
+  "amplitude_deg": "Steering-wheel amplitude",
+  "ax_max": "Max. longitudinal acceleration",
+  "ax_min": "Max. deceleration",
+  "ay_max": "Max. lateral acceleration",
+  "brake_time": "Braking start",
+  "deceleration": "Deceleration",
+  "duration": "Duration",
+  "dwell": "Dwell time",
+  "evade_length": "Evasion length",
+  "f_end": "End frequency",
+  "f_start": "Start frequency",
+  "frequency": "Frequency",
+  "hold_length": "Hold length",
+  "laps": "Laps",
+  "length": "Length",
+  "n_cones": "Number of cones",
+  "offset": "Evasion offset",
+  "post_length": "Run-out",
+  "pre_length": "Lead-in",
+  "radius": "Radius",
+  "request": "Requested acceleration",
+  "return_length": "Return length",
+  "rise_time": "Rise time",
+  "segments": "Segments (JSON)",
+  "spacing": "Cone spacing",
+  "speed_end_kmh": "End speed",
+  "speed_kmh": "Speed",
+  "speed_start_kmh": "Start speed",
+  "steer_rate_deg": "Steering-wheel rate",
+  "steering_ratio": "Steering ratio",
+  "steering_wheel_deg": "Steering-wheel angle",
+  "target_kmh": "Target speed",
+  "track_width": "Track width",
+  "v_max_kmh": "Top speed",
+  "vehicle_width": "Vehicle width",
+  "width": "Lateral offset"
+ },
+ "param": {
+  "brakes": {
+   "brake_balance": "Brake balance (front share)",
+   "ebd_enabled": "Electronic brake-force distribution (EBD)",
+   "max_torque_front": "Max. brake torque front (per wheel)",
+   "max_torque_rear": "Max. brake torque rear (per wheel)"
+  },
+  "chassis": {
+   "anti_dive": "Anti-dive front",
+   "anti_roll_bar_front": "Anti-roll bar stiffness front",
+   "anti_roll_bar_rear": "Anti-roll bar stiffness rear",
+   "anti_squat": "Anti-squat rear",
+   "bump_steer_front": "Bump steer front per travel",
+   "bump_steer_rear": "Bump steer rear per travel",
+   "camber_gain_front": "Camber gain front per travel",
+   "camber_gain_rear": "Camber gain rear per travel",
+   "damper_force_front": "Damper curve front",
+   "damper_force_rear": "Damper curve rear",
+   "damper_velocity": "Damper curve velocities (+ = compression)",
+   "roll_center_height_front": "Roll center height front",
+   "roll_center_height_rear": "Roll center height rear",
+   "roll_steer_front": "Roll steer front",
+   "roll_steer_rear": "Roll steer rear",
+   "spring_rate_front": "Spring rate front (at wheel)",
+   "spring_rate_rear": "Spring rate rear (at wheel)"
+  },
+  "powertrain": {
+   "auxiliary_power": "Auxiliary load",
+   "battery_capacity_kwh": "Battery capacity",
+   "downshift_rpm": "Downshift speed",
+   "driveline_efficiency": "Driveline efficiency",
+   "engine_speed_rpm": "Engine speed breakpoints",
+   "engine_torque_nm": "Full-load torque curve",
+   "final_drive": "Final drive ratio",
+   "front_torque_split": "Front torque share (AWD)",
+   "gear_ratios": "Gear ratios",
+   "layout": "Drive layout (fwd / rwd / awd)",
+   "motor_efficiency": "E-motor efficiency",
+   "motor_gear_ratio": "E-motor gear ratio",
+   "motor_max_power": "E-motor max. power",
+   "motor_max_rpm": "E-motor max. speed",
+   "motor_max_torque": "E-motor max. torque",
+   "regen_max_power": "Max. regenerative power",
+   "regen_max_torque": "Max. regenerative torque (motor)",
+   "torque_vectoring_max_torque": "Torque vectoring max. differential torque (wheel)",
+   "type": "Powertrain type (ev / ice)",
+   "upshift_rpm": "Upshift speed"
+  },
+  "systems": {
+   "abs_enabled": "ABS enabled",
+   "abs_target_slip": "ABS target slip",
+   "active_damping_enabled": "Active damping (skyhook) enabled",
+   "active_roll_enabled": "Active roll stabilization enabled",
+   "active_roll_gain": "Roll compensation ratio",
+   "esp_deadband": "ESC yaw rate deadband",
+   "esp_enabled": "ESC enabled",
+   "esp_gain": "ESC yaw moment gain",
+   "rear_steering_enabled": "Rear-wheel steering enabled",
+   "rear_steering_ratio_high": "RWS ratio at high speed (in-phase > 0)",
+   "rear_steering_ratio_low": "RWS ratio at low speed (counter-phase < 0)",
+   "rear_steering_speed_high": "RWS transition end",
+   "rear_steering_speed_low": "RWS transition start",
+   "skyhook_gain": "Skyhook damping",
+   "tcs_enabled": "TCS enabled",
+   "tcs_target_slip": "TCS target slip",
+   "torque_vectoring_enabled": "Torque vectoring enabled",
+   "torque_vectoring_gain": "Torque vectoring gain",
+   "torque_vectoring_target": "TV target self-steer (0 = neutral, 1 = passive)"
+  },
+  "tires": {
+   "camber_stiffness": "Camber stiffness (per tire)",
+   "combined_lateral_reduction": "Combined slip: reduction of Fy by kappa (B_yk)",
+   "combined_longitudinal_reduction": "Combined slip: reduction of Fx by alpha (B_xa)",
+   "cornering_stiffness_front": "Cornering stiffness front (per tire, nominal load)",
+   "cornering_stiffness_rear": "Cornering stiffness rear (per tire, nominal load)",
+   "curvature_lateral": "Curvature factor E lateral",
+   "curvature_longitudinal": "Curvature factor E longitudinal",
+   "load_sensitivity_mu": "Load sensitivity of friction",
+   "load_sensitivity_stiffness": "Load sensitivity of cornering stiffness (Pacejka p_Ky2)",
+   "longitudinal_stiffness": "Longitudinal stiffness (per tire, nominal load)",
+   "model": "Tire model (linear / pacejka / brush)",
+   "mu": "Friction coefficient (reference)",
+   "nominal_load": "Nominal load",
+   "pneumatic_trail": "Pneumatic trail",
+   "shape_lateral": "Shape factor C lateral",
+   "shape_longitudinal": "Shape factor C longitudinal",
+   "vertical_stiffness": "Tire vertical stiffness"
+  },
+  "vehicle": {
+   "cg_height": "CoG height",
+   "cg_to_front": "CoG to front axle",
+   "drag_coefficient": "Drag coefficient c_w",
+   "frontal_area": "Frontal area",
+   "inertia_x": "Roll inertia (sprung)",
+   "inertia_y": "Pitch inertia",
+   "inertia_z": "Yaw inertia",
+   "length": "Vehicle length",
+   "mass": "Mass",
+   "max_steer_angle": "Max. road-wheel angle",
+   "name": "Name",
+   "rolling_resistance": "Rolling resistance coefficient",
+   "steering_ratio": "Steering ratio",
+   "track_front": "Track width front",
+   "track_rear": "Track width rear",
+   "unsprung_mass_front": "Unsprung mass front (per wheel)",
+   "unsprung_mass_rear": "Unsprung mass rear (per wheel)",
+   "wheel_inertia": "Wheel inertia (per wheel)",
+   "wheel_radius": "Dynamic wheel radius",
+   "wheelbase": "Wheelbase",
+   "width": "Vehicle width"
+  }
+ },
+ "paramGroup": {
+  "brakes": "Brakes",
+  "chassis": "Chassis",
+  "powertrain": "Powertrain",
+  "systems": "Control systems",
+  "tires": "Tires",
+  "vehicle": "Vehicle"
+ }
+}

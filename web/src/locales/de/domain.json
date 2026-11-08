@@ -1,0 +1,312 @@
+{
+ "kpi": {
+  "aeb_trigger_ttc": "AEB-Auslösung bei TTC",
+  "ay_gain": "Stationäre Querbeschleunigungsverstärkung",
+  "brake_speed": "Bremsausgangsgeschwindigkeit",
+  "collision": "Kollision",
+  "cone_hits": "Gassenverletzungen",
+  "consumption": "Verbrauch",
+  "distance": "Fahrstrecke",
+  "duration": "Simulierte Zeit",
+  "energy_drive": "Energiebedarf (Antrieb)",
+  "energy_regen": "Rekuperierte Energie",
+  "entry_speed": "Einfahrgeschwindigkeit",
+  "iso2631_aw": "Bewertete Vertikalbeschl. a_w (ISO 2631)",
+  "iso2631_rating": "Komfortbewertung (ISO 2631)",
+  "lane_departure": "Spurverlassen",
+  "lap_time": "Rundenzeit",
+  "lateral_displacement": "Querversatz 1,07 s nach Lenkbeginn",
+  "lka_active_time": "LKA-Eingriffsdauer",
+  "max_ax": "Max. Längsbeschleunigung",
+  "max_ay": "Max. Querbeschleunigung",
+  "max_ay_steady": "Max. stationäre Querbeschleunigung",
+  "max_beta": "Max. Schwimmwinkel",
+  "max_friction_utilization": "Max. Reibwertausnutzung",
+  "max_lateral_error": "Max. Bahnabweichung",
+  "max_lateral_jerk": "Max. Querruck",
+  "max_pitch": "Max. Nickwinkel",
+  "max_roll": "Max. Wankwinkel",
+  "max_steer": "Max. Radlenkwinkel",
+  "max_yaw_deviation": "Max. Gierwinkelabweichung",
+  "max_yaw_rate": "Max. Gierrate",
+  "mean_speed": "Mittlere Geschwindigkeit",
+  "mfdd": "Mittlere Vollverzögerung (MFDD)",
+  "min_ax": "Max. Verzögerung",
+  "min_distance_to_line": "Min. Abstand zur Fahrbahnmarkierung",
+  "min_gap": "Min. Abstand",
+  "min_time_gap": "Min. Zeitlücke",
+  "peak_response_time": "Zeit bis Gierraten-Maximum",
+  "response_time": "Ansprechzeit Gierrate (90 %)",
+  "rms_ay": "RMS Querbeschleunigung",
+  "rms_lateral_error": "RMS Bahnabweichung",
+  "rms_lateral_jerk": "RMS Querruck",
+  "stability_reserve": "Stabilitätsreserve (1 - Ausnutzung)",
+  "stopping_distance": "Bremsweg",
+  "test_passed": "Test bestanden",
+  "understeer_gradient": "Eigenlenkgradient",
+  "understeer_gradient_g": "Eigenlenkgradient",
+  "yaw_gain": "Stationäre Gierverstärkung",
+  "yaw_gain_1hz_ratio": "Gierverstärkung 1 Hz / stationär",
+  "yaw_gain_peak_ratio": "Überhöhung Gierverstärkung",
+  "yaw_overshoot": "Überschwingen Gierrate",
+  "yaw_ratio_175s": "Gierrate 1,75 s nach Lenkende",
+  "yaw_ratio_1s": "Gierrate 1,0 s nach Lenkende",
+  "yaw_resonance": "Frequenz max. Gierverstärkung"
+ },
+ "maneuver": {
+  "acceleration": {
+   "category": "Fahrmanöver",
+   "description": "Volllastbeschleunigung aus dem Stand",
+   "label": "Beschleunigen (0-100 km/h)"
+  },
+  "brake_in_turn": {
+   "category": "Normtests",
+   "description": "Stationäre Kreisfahrt, dann Bremsung mit konstanter Verzögerung",
+   "label": "Bremsen in der Kurve (ISO 7975)"
+  },
+  "braking": {
+   "category": "Fahrmanöver",
+   "description": "Bremsung aus konstanter Geschwindigkeit",
+   "label": "Bremsen (Geradeaus)"
+  },
+  "circle": {
+   "category": "Normtests",
+   "description": "Stationäre Kreisfahrt mit langsam steigender Geschwindigkeit (Eigenlenkgradient)",
+   "label": "Kreisfahrt (ISO 4138)"
+  },
+  "city": {
+   "category": "Strecken",
+   "description": "Innerstädtischer Rundkurs mit Abbiegevorgängen",
+   "label": "Stadtverkehr"
+  },
+  "custom": {
+   "category": "Strecken",
+   "description": "Segmentliste als JSON: [[\"straight\", L, v_kmh], [\"arc\", R, Winkel°, v_kmh], [\"clothoid\", L, kappa_end, v_kmh], [\"offset\", L, Versatz, v_kmh]]",
+   "label": "Kundenspezifischer Testzyklus"
+  },
+  "emergency_evasion": {
+   "category": "Fahrmanöver",
+   "description": "Schnelles Ausweichen um ein Hindernis und Rückkehr in die Spur",
+   "label": "Notausweichen"
+  },
+  "figure_eight": {
+   "category": "Fahrmanöver",
+   "description": "Liegende Acht aus zwei Kreisen",
+   "label": "Acht"
+  },
+  "frequency_sweep": {
+   "category": "Normtests",
+   "description": "Lenk-Sweep zur Bestimmung des Frequenzgangs (ISO 7401)",
+   "label": "Frequenzgang (Sinus-Sweep)"
+  },
+  "highway": {
+   "category": "Strecken",
+   "description": "Autobahn mit Klothoiden-Kurven und Spurwechsel",
+   "label": "Autobahnfahrt"
+  },
+  "iso_double_lane_change": {
+   "category": "Normtests",
+   "description": "Doppelter Spurwechsel mit Pylonengassen nach ISO 3888-1 (Versatz 3,5 m)",
+   "label": "ISO-Doppelspurwechsel (ISO 3888-1)"
+  },
+  "iso_obstacle_avoidance": {
+   "category": "Normtests",
+   "description": "Ausweichmanöver nach ISO 3888-2 (\"Elchtest\")",
+   "label": "ISO-Ausweichtest (ISO 3888-2)"
+  },
+  "lane_change": {
+   "category": "Basis",
+   "description": "Einfacher Spurwechsel mit sinusförmiger Krümmung (Kurswinkel am Ende 0)",
+   "label": "Spurwechsel"
+  },
+  "race_track": {
+   "category": "Strecken",
+   "description": "Rundkurs mit berechneter Ideallinie (minimale Krümmung) und GGV-Geschwindigkeitsprofil",
+   "label": "Rennstrecke (Ideallinie)"
+  },
+  "ramp_steer": {
+   "category": "Normtests",
+   "description": "Langsam steigender Lenkwinkel bei konstanter Geschwindigkeit",
+   "label": "Lenkwinkelrampe (ISO 4138)"
+  },
+  "sine_with_dwell": {
+   "category": "Normtests",
+   "description": "ESC-Prüfmanöver: 0,7-Hz-Sinus mit 500 ms Haltezeit",
+   "label": "Sinus mit Haltezeit (FMVSS 126)"
+  },
+  "slalom": {
+   "category": "Fahrmanöver",
+   "description": "Slalom um Pylonen in gleichem Abstand",
+   "label": "Slalom"
+  },
+  "step_steer": {
+   "category": "Normtests",
+   "description": "Sprungförmige Lenkeingabe bei konstanter Geschwindigkeit",
+   "label": "Lenkwinkelsprung (ISO 7401)"
+  },
+  "straight": {
+   "category": "Basis",
+   "description": "Gerade Strecke mit konstanter Geschwindigkeit",
+   "label": "Geradeausfahrt"
+  }
+ },
+ "maneuverParam": {
+  "amplitude": "Seitlicher Abstand",
+  "amplitude_deg": "Lenkradamplitude",
+  "ax_max": "Max. Längsbeschleunigung",
+  "ax_min": "Max. Verzögerung",
+  "ay_max": "Max. Querbeschleunigung",
+  "brake_time": "Bremsbeginn",
+  "deceleration": "Verzögerung",
+  "duration": "Dauer",
+  "dwell": "Haltezeit",
+  "evade_length": "Ausweichstrecke",
+  "f_end": "Endfrequenz",
+  "f_start": "Startfrequenz",
+  "frequency": "Frequenz",
+  "hold_length": "Haltestrecke",
+  "laps": "Runden",
+  "length": "Länge",
+  "n_cones": "Anzahl Pylonen",
+  "offset": "Ausweichversatz",
+  "post_length": "Nachlauf",
+  "pre_length": "Vorlauf",
+  "radius": "Radius",
+  "request": "Angeforderte Beschleunigung",
+  "return_length": "Rückkehrstrecke",
+  "rise_time": "Anstiegszeit",
+  "segments": "Segmente (JSON)",
+  "spacing": "Pylonenabstand",
+  "speed_end_kmh": "Endgeschwindigkeit",
+  "speed_kmh": "Höchstgeschwindigkeit",
+  "speed_start_kmh": "Startgeschwindigkeit",
+  "steer_rate_deg": "Lenkradwinkelgeschwindigkeit",
+  "steering_ratio": "Lenkübersetzung",
+  "steering_wheel_deg": "Lenkradwinkel",
+  "target_kmh": "Zielgeschwindigkeit",
+  "track_width": "Streckenbreite",
+  "v_max_kmh": "Höchstgeschwindigkeit",
+  "vehicle_width": "Fahrzeugbreite",
+  "width": "Querversatz"
+ },
+ "param": {
+  "brakes": {
+   "brake_balance": "Bremskraftverteilung (Anteil vorne)",
+   "ebd_enabled": "Elektronische Bremskraftverteilung (EBV)",
+   "max_torque_front": "Max. Bremsmoment vorne (je Rad)",
+   "max_torque_rear": "Max. Bremsmoment hinten (je Rad)"
+  },
+  "chassis": {
+   "anti_dive": "Bremsnickausgleich vorne",
+   "anti_roll_bar_front": "Stabilisator-Wanksteifigkeit vorne",
+   "anti_roll_bar_rear": "Stabilisator-Wanksteifigkeit hinten",
+   "anti_squat": "Anfahrnickausgleich hinten",
+   "bump_steer_front": "Vorspuränderung vorne pro Federweg",
+   "bump_steer_rear": "Vorspuränderung hinten pro Federweg",
+   "camber_gain_front": "Sturzänderung vorne pro Federweg",
+   "camber_gain_rear": "Sturzänderung hinten pro Federweg",
+   "damper_force_front": "Dämpferkennlinie vorne",
+   "damper_force_rear": "Dämpferkennlinie hinten",
+   "damper_velocity": "Dämpfer-Stützstellen Geschwindigkeit (+ = Druck)",
+   "roll_center_height_front": "Rollzentrumshöhe vorne",
+   "roll_center_height_rear": "Rollzentrumshöhe hinten",
+   "roll_steer_front": "Rolllenken vorne",
+   "roll_steer_rear": "Rolllenken hinten",
+   "spring_rate_front": "Federrate vorne (am Rad)",
+   "spring_rate_rear": "Federrate hinten (am Rad)"
+  },
+  "powertrain": {
+   "auxiliary_power": "Nebenverbraucher",
+   "battery_capacity_kwh": "Batteriekapazität",
+   "downshift_rpm": "Rückschaltdrehzahl",
+   "driveline_efficiency": "Wirkungsgrad Triebstrang",
+   "engine_speed_rpm": "Motordrehzahl-Stützstellen",
+   "engine_torque_nm": "Volllast-Drehmomentkennlinie",
+   "final_drive": "Achsübersetzung",
+   "front_torque_split": "Momentenanteil Vorderachse (AWD)",
+   "gear_ratios": "Getriebeübersetzungen",
+   "layout": "Antriebslayout (fwd / rwd / awd)",
+   "motor_efficiency": "E-Motor Wirkungsgrad",
+   "motor_gear_ratio": "E-Motor Übersetzung",
+   "motor_max_power": "E-Motor max. Leistung",
+   "motor_max_rpm": "E-Motor max. Drehzahl",
+   "motor_max_torque": "E-Motor max. Moment",
+   "regen_max_power": "Max. Rekuperationsleistung",
+   "regen_max_torque": "Max. Rekuperationsmoment (Motor)",
+   "torque_vectoring_max_torque": "Torque Vectoring max. Differenzmoment (Rad)",
+   "type": "Antriebsart (ev / ice)",
+   "upshift_rpm": "Hochschaltdrehzahl"
+  },
+  "systems": {
+   "abs_enabled": "ABS aktiv",
+   "abs_target_slip": "ABS Zielschlupf",
+   "active_damping_enabled": "Aktive Dämpfung (Skyhook) aktiv",
+   "active_roll_enabled": "Aktive Wankstabilisierung aktiv",
+   "active_roll_gain": "Wankkompensationsgrad",
+   "esp_deadband": "ESP Totband Gierrate",
+   "esp_enabled": "ESP aktiv",
+   "esp_gain": "ESP Verstärkung Giermoment",
+   "rear_steering_enabled": "Hinterachslenkung aktiv",
+   "rear_steering_ratio_high": "HAL Verhältnis hohe Geschw. (gleichsinnig > 0)",
+   "rear_steering_ratio_low": "HAL Verhältnis niedrige Geschw. (gegensinnig < 0)",
+   "rear_steering_speed_high": "HAL Übergang Ende",
+   "rear_steering_speed_low": "HAL Übergang Beginn",
+   "skyhook_gain": "Skyhook-Dämpfung",
+   "tcs_enabled": "ASR/TCS aktiv",
+   "tcs_target_slip": "TCS Zielschlupf",
+   "torque_vectoring_enabled": "Torque Vectoring aktiv",
+   "torque_vectoring_gain": "Torque Vectoring Verstärkung",
+   "torque_vectoring_target": "TV Ziel-Eigenlenkverhalten (0 = neutral, 1 = passiv)"
+  },
+  "tires": {
+   "camber_stiffness": "Sturzsteifigkeit (je Reifen)",
+   "combined_lateral_reduction": "Kombinierter Schlupf: Abbau Fy durch kappa (B_yk)",
+   "combined_longitudinal_reduction": "Kombinierter Schlupf: Abbau Fx durch alpha (B_xa)",
+   "cornering_stiffness_front": "Schräglaufsteifigkeit vorne (je Reifen, Nennlast)",
+   "cornering_stiffness_rear": "Schräglaufsteifigkeit hinten (je Reifen, Nennlast)",
+   "curvature_lateral": "Krümmungsfaktor E lateral",
+   "curvature_longitudinal": "Krümmungsfaktor E longitudinal",
+   "load_sensitivity_mu": "Lastabhängigkeit Reibwert",
+   "load_sensitivity_stiffness": "Lastabhängigkeit Schräglaufsteifigkeit (Pacejka p_Ky2)",
+   "longitudinal_stiffness": "Längssteifigkeit (je Reifen, Nennlast)",
+   "model": "Reifenmodell (linear / pacejka / brush)",
+   "mu": "Reibwert (Referenz)",
+   "nominal_load": "Nennlast",
+   "pneumatic_trail": "Reifennachlauf",
+   "shape_lateral": "Formfaktor C lateral",
+   "shape_longitudinal": "Formfaktor C longitudinal",
+   "vertical_stiffness": "Vertikalsteifigkeit Reifen"
+  },
+  "vehicle": {
+   "cg_height": "Schwerpunkthöhe",
+   "cg_to_front": "Schwerpunkt - Vorderachse",
+   "drag_coefficient": "Luftwiderstandsbeiwert cw",
+   "frontal_area": "Stirnfläche",
+   "inertia_x": "Wankträgheit (aufgebaut)",
+   "inertia_y": "Nickträgheit",
+   "inertia_z": "Gierträgheit",
+   "length": "Fahrzeuglänge",
+   "mass": "Masse",
+   "max_steer_angle": "Max. Radlenkwinkel",
+   "name": "Bezeichnung",
+   "rolling_resistance": "Rollwiderstandsbeiwert",
+   "steering_ratio": "Lenkübersetzung",
+   "track_front": "Spurweite vorne",
+   "track_rear": "Spurweite hinten",
+   "unsprung_mass_front": "Ungefederte Masse vorne (je Rad)",
+   "unsprung_mass_rear": "Ungefederte Masse hinten (je Rad)",
+   "wheel_inertia": "Radträgheit (je Rad)",
+   "wheel_radius": "Dynamischer Radradius",
+   "wheelbase": "Radstand",
+   "width": "Fahrzeugbreite"
+  }
+ },
+ "paramGroup": {
+  "brakes": "Bremsen",
+  "chassis": "Fahrwerk",
+  "powertrain": "Antrieb",
+  "systems": "Regelsysteme",
+  "tires": "Reifen",
+  "vehicle": "Fahrzeug"
+ }
+}

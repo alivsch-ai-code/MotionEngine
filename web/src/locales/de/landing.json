@@ -1,0 +1,47 @@
+{
+  "nav": { "label": "Abschnitte", "features": "Funktionen", "architecture": "Architektur", "api": "API", "docs": "Dokumentation" },
+  "cta": { "open": "App öffnen", "simulate": "Simulation starten", "inspect": "Trajektorie untersuchen" },
+  "hero": {
+    "badge": "Open Source · MIT",
+    "title": "Moderne Plattform für Bewegungsplanung und Fahrzeugsimulation",
+    "text": "Trajektorien nach Werling planen, jeden Rechenschritt mit Physik und Mathematik nachvollziehen, das Fahrzeug vom kinematischen Modell bis zum Mehrkörpermodell mit 24 Zuständen simulieren und neuronale Ersatzmodelle trainieren, die sich gegen die Physik validieren lassen.",
+    "art": "Straße mit abgetasteten Kandidatentrajektorien und dem gewählten Spurwechsel"
+  },
+  "features": {
+    "title": "Für Ingenieure, die das Warum verstehen wollen",
+    "planning": { "title": "Trajektorienplanung", "text": "Werling-Planer in Frenet-Koordinaten: optimale Polynome 4. und 5. Grades, konsistente Kosten, bedarfsweise Auswahl, Kollisionsprüfung." },
+    "explain": { "title": "Jeder Schritt erklärt", "text": "Der Trajektorien-Inspektor rechnet einen Planungszyklus mit den Zahlen des Planers nach und prüft das Ergebnis." },
+    "dynamics": { "title": "Fahrdynamik", "text": "Kinematisches, Einspur-, Zweispur- und Mehrkörpermodell mit Pacejka-, Bürsten- und isotropem Reifen, ESP, ABS und Torque Vectoring." },
+    "learning": { "title": "Neuronale Modelle", "text": "Ein Ersatzmodell der Fahrdynamik in Sekunden trainieren oder ein eigenes ONNX- oder HTTP-Modell anschließen und im geschlossenen Regelkreis mit der Physik vergleichen." },
+    "prediction": { "title": "Prädiktion und Sicherheit", "text": "Prädiktion mit konstanter Geschwindigkeit, konstanter Beschleunigung und CTRV, Kollisionsprüfung mit Kreisen und Sicherheitsmetriken." },
+    "api": { "title": "API zuerst", "text": "REST-Dienst mit OpenAPI, Python-Bibliothek, Docker-Image und eine Szenariobibliothek mit ISO-Testmanövern." }
+  },
+  "screens": {
+    "title": "Ein klarer Arbeitsbereich",
+    "inspector": "Trajektorien-Inspektor: Kandidaten, gewählte Trajektorie und die Herleitung jedes Schritts",
+    "simulate": "Simulation: Kennwerte und Signale eines Laufs im geschlossenen Regelkreis"
+  },
+  "architecture": {
+    "title": "Architektur",
+    "text": "Der Stack für automatisiertes Fahren läuft als Graph austauschbarer Komponenten. Dieselbe Bibliothek treibt den REST-Dienst und diese Web-App an.",
+    "blocks": { "perception": "Perzeption", "prediction": "Prädiktion", "behavior": "Verhalten", "planner": "Trajektorienplaner", "controller": "Regler", "vehicle": "Fahrzeugmodell" },
+    "layers": {
+      "library": { "title": "Python-Bibliothek vdsim", "text": "Modelle, Planer, Regler und Analysen; geprüft gegen Literaturwerte und physikalische Gesetze." },
+      "service": { "title": "REST-Dienst", "text": "FastAPI mit OpenAPI 3, API-Schlüsseln, Lastgrenzen und Prometheus-Metriken; läuft in Docker." },
+      "web": { "title": "Web-Anwendung", "text": "React, Englisch und Deutsch, dunkles und helles Farbschema; Diagramme auf Canvas, Formeln mit KaTeX." }
+    }
+  },
+  "api": {
+    "title": "In Minuten integriert",
+    "text": "Jede Funktion der Web-App ist ein API-Aufruf. Nutze die REST-Endpunkte aus jeder Sprache oder direkt die Python-Bibliothek.",
+    "rest": "REST",
+    "python": "Python"
+  },
+  "docs": {
+    "title": "Dokumentation",
+    "openapi": { "title": "API-Referenz", "text": "Interaktive OpenAPI-Dokumentation aller Endpunkte." },
+    "theory": { "title": "Theorie und Review", "text": "Modellherleitungen, Literatur und der technische Review-Bericht." },
+    "source": { "title": "Quellcode", "text": "Repository, Issues und Beitragsleitfaden auf GitHub." }
+  },
+  "footer": { "license": "MotionEngine · MIT-Lizenz" }
+}

@@ -1,0 +1,124 @@
+{
+  "title": "Trajektorien-Inspektor",
+  "subtitle": "Ein Planungszyklus des Werling-Planers, Schritt für Schritt nachgerechnet: jede Formel mit den Zahlen, die der Planer verwendet hat, und gegen sein Ergebnis geprüft.",
+  "presets": {
+    "label": "Situation",
+    "laneChange": "Spurwechsel bei 20 m/s",
+    "obstacle": "Langsames Fahrzeug voraus",
+    "stopLine": "Haltelinie",
+    "slow": "Langsames Rangieren d(s)",
+    "curve": "Kurve R = 120 m"
+  },
+  "setup": {
+    "speed": "Ego-Geschwindigkeit",
+    "targetSpeed": "Wunschgeschwindigkeit",
+    "offset": "Versatz der Zielspur",
+    "offsetTip": "Seitlicher Abstand der Zielspur von der Straßenmittellinie, links positiv.",
+    "stopAt": "Haltelinie bei",
+    "zeroOff": "0 = keine",
+    "obstacleX": "Hindernis bei x",
+    "obstacleV": "Geschwindigkeit des Hindernisses",
+    "curvature": "Krümmung der Straße",
+    "config": "Planer-Konfiguration"
+  },
+  "configs": { "default": "Standard (konsistente Kosten)", "comfort": "Komfort", "sporty": "Sportlich" },
+  "compute": "Berechnen",
+  "empty": {
+    "title": "Lade ein Szenario",
+    "text": "Wähle oben eine Situation. Der Planer rechnet einen Zyklus, und jeder Schritt der Berechnung wird mit Formeln und Zahlen erklärt.",
+    "action": "Spurwechsel berechnen"
+  },
+  "topView": {
+    "title": "Kandidatenmenge und gewählte Trajektorie",
+    "legend": "Blau: gewählte Trajektorie. Grün: gültige Kandidaten. Grau: durch eine Restriktion verworfen. Rot: Kollision. Gestrichelt cyan: Zielspur.",
+    "computeTime": "Planungszyklus {{ms}} ms"
+  },
+  "steps": {
+    "label": "Rechenschritte",
+    "start_state": {
+      "title": "Startzustand",
+      "source": "Werling 2011, 3.5.5 · Anhang A",
+      "text": "Der Planer beschreibt die Bewegung in Frenet-Koordinaten entlang der Referenzlinie: s ist die Bogenlänge, d der seitliche Versatz. Der Startzustand wird zur selben Zeit aus dem vorigen Plan übernommen, damit der Rest einer optimalen Trajektorie optimal bleibt; nach einer Störung wird er aus dem gemessenen Fahrzeugzustand neu initialisiert."
+    },
+    "lateral": {
+      "title": "Querbewegung: Polynom 5. Grades",
+      "source": "Werling 2011, Satz 1, (3.6)-(3.8)",
+      "text": "Unter allen Bewegungen vom Start- zum Zielzustand ist die mit dem kleinsten integrierten quadratischen Ruck ein Polynom fünften Grades. Die ersten drei Koeffizienten folgen aus dem Startzustand, die letzten drei in geschlossener Form aus den Endbedingungen. Der Planer tastet viele Endversätze δ und Endzeiten τ ab; die Kosten gewichten Ruck, Dauer und verbleibenden Versatz. Bei kleiner Geschwindigkeit wird die Querbewegung über der Bogenlänge geplant, d(s), damit sie auch im Stillstand definiert bleibt."
+    },
+    "longitudinal": {
+      "title": "Längsbewegung",
+      "source": "Werling 2011, Satz 2, Tab. 3.1",
+      "text": "Beim Geschwindigkeithalten ist die Endposition frei, deshalb ist das optimale Polynom vierten Grades, und nur Endgeschwindigkeit und -beschleunigung sind vorgegeben. Folgen, Einfädeln und Anhalten geben eine Endposition vor und verwenden Polynome fünften Grades. Auch hier bestehen die Kosten aus Ruck, Dauer und Abweichung von der Referenz."
+    },
+    "selection": {
+      "title": "Kombination und Auswahl",
+      "source": "Werling 2011, 3.2 und 3.5.5",
+      "text": "Jeder Querkandidat wird mit jedem Längskandidaten kombiniert. Die Kandidaten werden nach Gesamtkosten sortiert und erst bei Bedarf geprüft: Der erste, der alle Restriktionen einhält und kollisionsfrei ist, wird gewählt, sodass nur ein kleiner Teil transformiert und geprüft werden muss. Zwischen mehreren Längsmodi gewinnt der mit dem kleinsten Anfangsruck (Ablösestrategie)."
+    },
+    "transformation": {
+      "title": "Frenet- in Weltkoordinaten",
+      "source": "Werling 2011, Anhang A, (A.1)-(A.6)",
+      "text": "Die gewählte Bewegung wird in Weltkoordinaten transformiert. Kurswinkel, Krümmung und Geschwindigkeit der Trajektorie folgen in geschlossener Form aus d, seinen Ableitungen nach der Bogenlänge und der Krümmung der Referenzlinie."
+    },
+    "constraints": {
+      "title": "Restriktionen",
+      "source": "Werling 2011, 3.5.3",
+      "text": "Ein Kandidat ist nur zulässig, wenn er über den ganzen Horizont die physikalischen Grenzen einhält: Quer- und Längsbeschleunigung, Krümmung (Lenkanschlag), Geschwindigkeit und Gierrate. Die Balken zeigen, wie viel jeder Grenze die gewählte Trajektorie ausnutzt."
+    },
+    "vehicle_physics": {
+      "title": "Fahrzeugphysik",
+      "source": "Rajamani 2012, 3.2 (lineares Einspurmodell, stationär)",
+      "text": "Was die geplante Bewegung an ihrer anspruchsvollsten Stelle vom Fahrzeug verlangt: die Seitenkräfte der Achsen aus Kräfte- und Momentengleichgewicht, die Schräglaufwinkel aus den Schräglaufsteifigkeiten, der Lenkwinkel einschließlich Untersteuern und die Reibwertausnutzung."
+    }
+  },
+  "formulas": "Formeln",
+  "quantity": "Größe",
+  "value": "Wert",
+  "unit": "Einheit",
+  "verified": "Geprüft: Die aus den Randbedingungen neu berechneten Koeffizienten stimmen mit dem Polynom des Planers überein (max. Abweichung {{err}}).",
+  "q": {
+    "referencePoint": "Referenzpunkt",
+    "lateralMode": "Querplanung",
+    "source": "Quelle des Startzustands",
+    "mode": "Modus",
+    "offset": "Endversatz ν oder σ",
+    "nCandidates": "Kandidaten",
+    "nChecked": "Geprüft (bedarfsweise)",
+    "costTotal": "Gesamtkosten, nachgerechnet",
+    "costPlanner": "Gesamtkosten, Planer",
+    "fallback": "Rückfalltrajektorie",
+    "friction": "Reibwertausnutzung"
+  },
+  "refPoints": { "cog": "Schwerpunkt", "rear_axle": "Hinterachse" },
+  "latModes": { "time": "über der Zeit d(t)", "arc": "über der Bogenlänge d(s)" },
+  "lonModes": { "velocity": "Geschwindigkeit halten", "stopping": "Anhalten", "following": "Folgen", "merging": "Einfädeln" },
+  "yes": "ja",
+  "no": "nein",
+  "costBreakdown": "Kosten der gewählten Trajektorie",
+  "costTerms": {
+    "quer_jerk": "Querruck", "quer_terminal_time": "Dauer quer", "quer_terminal_deviation": "Endversatz quer",
+    "laengs_jerk": "Längsruck", "laengs_terminal_time": "Dauer längs", "laengs_terminal_deviation": "Endabweichung längs"
+  },
+  "status": { "valid": "gültig", "constraint": "Restriktion verletzt", "collision": "Kollision", "unchecked": "nicht geprüft" },
+  "constraints": {
+    "speed_range": "Geschwindigkeitsbereich", "max_lateral_acceleration": "Querbeschleunigung", "max_longitudinal_acceleration": "Längsbeschleunigung",
+    "max_jerk": "Ruck", "max_curvature": "Krümmung", "max_steering_angle": "Lenkwinkel", "max_steering_velocity": "Lenkrate",
+    "max_yaw_rate": "Gierrate", "tire_force": "Reifenkraft", "vehicle_envelope": "Korridor", "vehicle_stability": "Stabilität"
+  },
+  "constraint": "Restriktion",
+  "max": "Maximum",
+  "limit": "Grenze",
+  "utilization": "Ausnutzung",
+  "checks": {
+    "lateral_acceleration": "Querbeschleunigung", "longitudinal_acceleration": "Beschleunigung", "longitudinal_deceleration": "Verzögerung",
+    "curvature": "Krümmung", "speed": "Geschwindigkeit", "yaw_rate": "Gierrate"
+  },
+  "egTip": "Eigenlenkgradient: zusätzlicher Lenkwinkel je Querbeschleunigung. Positive Werte bedeuten Untersteuern.",
+  "charts": {
+    "lateral": "Querversatz und seine Ableitungen",
+    "longitudinal": "Längsgeschwindigkeit, -beschleunigung und -ruck",
+    "curvature": "Krümmung der Trajektorie",
+    "accelerations": "Quer- und Längsbeschleunigung",
+    "frenet": "Kandidaten in Frenet-Koordinaten (s, d)"
+  }
+}

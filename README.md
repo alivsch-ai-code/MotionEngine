@@ -31,6 +31,7 @@
 - **Vehicle Dynamics** — Five fidelity levels from 4-state kinematic to 24-DOF multibody, three tire models including Pacejka Magic Formula
 - **Motion Control** — Stanley, Pure Pursuit, MPC; ACC, AEB, lane keeping; ABS, TCS, ESP, torque vectoring, active suspension
 - **Production Patterns** — Plugin registry, layered architecture, 22 pre-built ISO/ADAS scenarios, automated KPI evaluation
+- **Web app** — React UI on the REST API in English and German, dark and light theme: simulation, a trajectory inspector that derives every planned trajectory step by step (polynomials, costs, Frenet transform, single-track physics), training and connecting neural vehicle models
 - **Desktop GUI** — PySide6 application with live top view, signal scope, 3D visualization, analysis plots, trajectory editor
 
 ---
@@ -211,7 +212,7 @@ curl -s -X POST localhost:8000/simulate -H "Content-Type: application/json" \
 ```
 
 Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, `/trajectory`,
-`/simulate`, `/plan`, `/predict`. Set `MOTIONENGINE_API_KEY` to require the header `X-API-Key`;
+`/simulate`, `/plan`, `/plan/explain`, `/predict`, `/models` (train, jobs, connect, evaluate). Set `MOTIONENGINE_API_KEY` to require the header `X-API-Key`;
 `MOTIONENGINE_MAX_CONCURRENCY`, `MOTIONENGINE_MAX_SIM_TIME` and `MOTIONENGINE_MAX_WALL_TIME` bound
 the load. With a wheel install outside the source tree, point `MOTIONENGINE_CONFIG_DIR` to `configs/`.
 
@@ -220,6 +221,31 @@ docker compose up --build        # container with the API on port 8000
 ```
 
 A devcontainer (`.devcontainer/`) installs `.[dev,api]` for VS Code and Codespaces.
+
+### Run the web app
+
+<p align="center"><img src="docs/ux/after/inspector-lateral-en-dark.png" width="80%" alt="Trajectory inspector"></p>
+
+```bash
+cd web && npm ci && npm run build && cd ..
+MOTIONENGINE_WEB_DIR=web/dist motion-engine-api --port 8000   # open http://localhost:8000/
+```
+
+For development run `npm run dev` in `web/` (Vite on port 5173, proxies the API on port 8000). The Docker image
+contains the built web app. Pages:
+
+| Page | What it does |
+|---|---|
+| Simulate | maneuver + vehicle model + controller, KPIs, time series and top view |
+| Trajectory inspector | one planning cycle as seven steps: start state, lateral and longitudinal quintic/quartic polynomials with their coefficients, cost and selection among all candidates, Frenet → world transform, restrictions, steady-state single-track physics (slip angles, tire forces, steering) |
+| Neural models | train an MLP surrogate of a physics model in the background, or connect an ONNX file or HTTP endpoint; evaluate it closed-loop against the physics teacher; use it as vehicle model `neural_<id>` |
+| Predict, Vehicles, Settings | object prediction, vehicle parameter sets with units, API address and key |
+
+Language (English/German) and theme are switched in the header. The design system is documented in
+[docs/design-system.md](docs/design-system.md) and live at `/app/design`; the redesign and its measurements in
+[docs/ux/2026-11-08-redesign.md](docs/ux/2026-11-08-redesign.md). Neural model training needs no extra package;
+connecting ONNX files needs `pip install -e ".[api,ml]"`. `MOTIONENGINE_MODEL_DIR` sets where models are stored and
+`MOTIONENGINE_ALLOWED_MODEL_HOSTS` which hosts HTTP models may use.
 
 ### Run Tests
 

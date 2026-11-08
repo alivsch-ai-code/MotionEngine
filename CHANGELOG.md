@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Web app** (`web/`, React 19 + TypeScript + Vite): Simulate, Trajectory inspector, Neural models, Predict,
+  Vehicles, Settings, landing page and live style guide; English (default) and German via i18next with a
+  header switcher (stored choice → browser language → English); dark and light theme; served by the API with
+  `MOTIONENGINE_WEB_DIR` and included in the Docker image. Workflow `Web` (typecheck, i18n tests, build,
+  locale drift check, Playwright end-to-end run with screenshots).
+- `POST /plan/explain`: step-by-step derivation of one planning cycle (polynomial coefficients re-derived and
+  checked against the planner, cost terms, candidates, Frenet transform, restrictions, single-track physics).
+- `vdsim.learning`: NumPy MLP surrogate of a vehicle model (training with Adam and early stopping), ONNX and
+  HTTP backends, registration as vehicle model `neural_<id>`, closed-loop evaluation; endpoints under `/models`.
+  Optional extra `ml` (onnxruntime).
+- Brand assets in `docs/brand/` (mark, logos for light and dark backgrounds, app icon, favicons, GitHub avatar,
+  two alternative logo options) and the design system `docs/design-system.md`.
+- KPI and stop reasons carry language-neutral codes (`value_code`, `group_code`, `stop_code`).
 - **REST service** `vdsim.service` (FastAPI, OpenAPI 3.1, Swagger UI): `/simulate`, `/plan`, `/predict`,
   `/vehicle`, `/trajectory`, `/health`, `/metrics` (Prometheus); API key, concurrency and runtime limits.
   Optional extra `api`, console script `motion-engine-api`.

@@ -1,0 +1,124 @@
+{
+  "title": "Trajectory inspector",
+  "subtitle": "One planning cycle of the Werling planner, re-derived step by step: every formula with the numbers the planner used, checked against its result.",
+  "presets": {
+    "label": "Situation",
+    "laneChange": "Lane change at 20 m/s",
+    "obstacle": "Slow vehicle ahead",
+    "stopLine": "Stop line",
+    "slow": "Slow maneuvering d(s)",
+    "curve": "Curve R = 120 m"
+  },
+  "setup": {
+    "speed": "Ego speed",
+    "targetSpeed": "Desired speed",
+    "offset": "Target lane offset",
+    "offsetTip": "Lateral offset of the target lane from the road center line, left positive.",
+    "stopAt": "Stop line at",
+    "zeroOff": "0 = none",
+    "obstacleX": "Obstacle at x",
+    "obstacleV": "Obstacle speed",
+    "curvature": "Road curvature",
+    "config": "Planner configuration"
+  },
+  "configs": { "default": "Default (consistent costs)", "comfort": "Comfort", "sporty": "Sporty" },
+  "compute": "Compute",
+  "empty": {
+    "title": "Load a scenario",
+    "text": "Pick a situation above. The planner runs one cycle and every step of the computation is explained with its formulas and numbers.",
+    "action": "Compute the lane change"
+  },
+  "topView": {
+    "title": "Candidate set and selected trajectory",
+    "legend": "Blue: selected trajectory. Green: valid candidates. Grey: rejected by a restriction. Red: collision. Dashed cyan: target lane.",
+    "computeTime": "Planning cycle {{ms}} ms"
+  },
+  "steps": {
+    "label": "Computation steps",
+    "start_state": {
+      "title": "Start state",
+      "source": "Werling 2011, 3.5.5 · Appendix A",
+      "text": "The planner describes the motion in Frenet coordinates along the reference line: s is the arc length, d the lateral offset. The start state is taken from the previous plan at the same time (stitching), so that the remaining part of an optimal trajectory stays optimal; after a disturbance it is re-initialized from the measured vehicle state."
+    },
+    "lateral": {
+      "title": "Lateral motion: quintic polynomial",
+      "source": "Werling 2011, Satz 1, (3.6)-(3.8)",
+      "text": "Among all motions from the start state to the target state, the one with the smallest integrated squared jerk is a quintic polynomial. Its first three coefficients follow from the start state, the last three from the end conditions in closed form. The planner samples many end offsets δ and end times τ; the cost weighs jerk, duration and remaining offset. At low speed the lateral motion is planned over the arc length, d(s), so that it stays defined at standstill."
+    },
+    "longitudinal": {
+      "title": "Longitudinal motion",
+      "source": "Werling 2011, Satz 2, Tab. 3.1",
+      "text": "For velocity keeping the end position is free, so the optimal polynomial is quartic and only the end speed and acceleration are prescribed. Following, merging and stopping prescribe an end position and use quintic polynomials. Here, too, the cost is jerk plus duration plus the deviation from the reference."
+    },
+    "selection": {
+      "title": "Combination and selection",
+      "source": "Werling 2011, 3.2 and 3.5.5",
+      "text": "Every lateral candidate is combined with every longitudinal candidate. The candidates are sorted by total cost and checked lazily: the first that satisfies all restrictions and is collision free is selected, so only a small fraction has to be transformed and checked. Among several longitudinal modes, the one with the smallest initial jerk wins (replacement strategy)."
+    },
+    "transformation": {
+      "title": "Frenet to world coordinates",
+      "source": "Werling 2011, Appendix A, (A.1)-(A.6)",
+      "text": "The selected motion is transformed into world coordinates. The heading, curvature and speed of the trajectory follow from d, its derivatives with respect to the arc length and the curvature of the reference line, in closed form."
+    },
+    "constraints": {
+      "title": "Restrictions",
+      "source": "Werling 2011, 3.5.3",
+      "text": "A candidate is admissible only if it respects the physical limits over the whole horizon: lateral and longitudinal acceleration, curvature (steering limit), speed and yaw rate. The bars show how much of each limit the selected trajectory uses."
+    },
+    "vehicle_physics": {
+      "title": "Vehicle physics",
+      "source": "Rajamani 2012, 3.2 (linear single track, steady state)",
+      "text": "What the planned motion asks of the vehicle at its most demanding point: the lateral forces of the axles from the force and moment balance, the slip angles from the cornering stiffnesses, the steering angle including understeer, and the friction utilization."
+    }
+  },
+  "formulas": "Formulas",
+  "quantity": "Quantity",
+  "value": "Value",
+  "unit": "Unit",
+  "verified": "Verified: the coefficients re-derived from the boundary conditions match the planner's polynomial (max. difference {{err}}).",
+  "q": {
+    "referencePoint": "Reference point",
+    "lateralMode": "Lateral planning",
+    "source": "Source of the start state",
+    "mode": "Mode",
+    "offset": "End offset ν or σ",
+    "nCandidates": "Candidates",
+    "nChecked": "Checked (lazy evaluation)",
+    "costTotal": "Total cost, recomputed",
+    "costPlanner": "Total cost, planner",
+    "fallback": "Fallback trajectory",
+    "friction": "Friction utilization"
+  },
+  "refPoints": { "cog": "Center of gravity", "rear_axle": "Rear axle" },
+  "latModes": { "time": "over time d(t)", "arc": "over arc length d(s)" },
+  "lonModes": { "velocity": "Velocity keeping", "stopping": "Stopping", "following": "Following", "merging": "Merging" },
+  "yes": "yes",
+  "no": "no",
+  "costBreakdown": "Cost of the selected trajectory",
+  "costTerms": {
+    "quer_jerk": "Lateral jerk", "quer_terminal_time": "Lateral duration", "quer_terminal_deviation": "Lateral end offset",
+    "laengs_jerk": "Longitudinal jerk", "laengs_terminal_time": "Longitudinal duration", "laengs_terminal_deviation": "Longitudinal end deviation"
+  },
+  "status": { "valid": "valid", "constraint": "restriction violated", "collision": "collision", "unchecked": "not checked" },
+  "constraints": {
+    "speed_range": "Speed range", "max_lateral_acceleration": "Lateral acceleration", "max_longitudinal_acceleration": "Longitudinal acceleration",
+    "max_jerk": "Jerk", "max_curvature": "Curvature", "max_steering_angle": "Steering angle", "max_steering_velocity": "Steering rate",
+    "max_yaw_rate": "Yaw rate", "tire_force": "Tire force", "vehicle_envelope": "Corridor", "vehicle_stability": "Stability"
+  },
+  "constraint": "Restriction",
+  "max": "Maximum",
+  "limit": "Limit",
+  "utilization": "Utilization",
+  "checks": {
+    "lateral_acceleration": "Lateral acceleration", "longitudinal_acceleration": "Acceleration", "longitudinal_deceleration": "Deceleration",
+    "curvature": "Curvature", "speed": "Speed", "yaw_rate": "Yaw rate"
+  },
+  "egTip": "Understeer gradient: additional steering per lateral acceleration. Positive values mean understeer.",
+  "charts": {
+    "lateral": "Lateral offset and its derivatives",
+    "longitudinal": "Longitudinal speed, acceleration and jerk",
+    "curvature": "Curvature of the trajectory",
+    "accelerations": "Lateral and longitudinal acceleration",
+    "frenet": "Candidates in Frenet coordinates (s, d)"
+  }
+}

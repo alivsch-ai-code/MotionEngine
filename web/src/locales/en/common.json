@@ -1,0 +1,43 @@
+{
+  "a11y": { "skipToContent": "Skip to content" },
+  "actions": "Actions",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "expertSettings": "Expert settings",
+  "reset": "Reset to defaults",
+  "search": "Search",
+  "errors": {
+    "unauthorized": "The API rejected the request: API key missing or invalid.",
+    "forbidden": "The API does not allow this request.",
+    "notFound": "Not found.",
+    "conflict": "Another job is already running. Wait for it to finish or cancel it.",
+    "tooLarge": "The upload is too large.",
+    "invalid": "The API rejected the input.",
+    "busy": "The server is busy. Try again in a moment.",
+    "server": "The server reported an error.",
+    "network": "The MotionEngine API cannot be reached.",
+    "unknown": "Something went wrong.",
+    "checkSettings": "Check the API connection in the settings"
+  },
+  "header": {
+    "language": "Language",
+    "lightMode": "Switch to light mode",
+    "darkMode": "Switch to dark mode",
+    "menu": "Open navigation",
+    "home": "MotionEngine home",
+    "apiDocs": "API documentation",
+    "api": { "checking": "Checking API", "online": "API online", "offline": "API offline" }
+  },
+  "nav": {
+    "label": "Main navigation",
+    "sections": { "overview": "Overview", "work": "Workflows", "models": "Models", "system": "System" },
+    "dashboard": "Dashboard",
+    "simulate": "Simulation",
+    "inspector": "Trajectory inspector",
+    "predict": "Prediction",
+    "vehicles": "Vehicles",
+    "models": "Neural models",
+    "settings": "Settings",
+    "design": "Design system"
+  }
+}

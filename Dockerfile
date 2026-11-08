@@ -1,5 +1,14 @@
-# MotionEngine REST service (FastAPI). Build: docker build -t motion-engine .
-# Run:   docker run -p 8000:8000 -e MOTIONENGINE_API_KEY=change-me motion-engine
+# MotionEngine: REST service (FastAPI) + web application. Build: docker build -t motion-engine .
+# Run:   docker run -p 8000:8000 -v me-models:/data/models -e MOTIONENGINE_API_KEY=change-me motion-engine
+#        -> web app on http://localhost:8000, API reference on /docs
+
+FROM node:22-slim AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY web/ ./
+RUN npm run build
+
 FROM python:3.12-slim AS build
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE ./
@@ -12,14 +21,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     MPLBACKEND=Agg \
     MPLCONFIGDIR=/tmp/matplotlib \
     MOTIONENGINE_CONFIG_DIR=/app/configs \
+    MOTIONENGINE_WEB_DIR=/app/web \
+    MOTIONENGINE_MODEL_DIR=/data/models \
     MOTIONENGINE_HOST=0.0.0.0 \
     MOTIONENGINE_PORT=8000
 WORKDIR /app
 COPY --from=build /dist/*.whl /tmp/
-RUN pip install --no-cache-dir "$(ls /tmp/*.whl)[api]" && rm /tmp/*.whl \
-    && useradd --create-home --uid 10001 motion
+RUN pip install --no-cache-dir "$(ls /tmp/*.whl)[api,ml]" && rm /tmp/*.whl \
+    && useradd --create-home --uid 10001 motion \
+    && mkdir -p /data/models && chown -R motion /data
 COPY configs ./configs
+COPY --from=web /web/dist ./web
 USER motion
+VOLUME ["/data/models"]
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request,sys; sys.exit(urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status != 200)"
