@@ -19,7 +19,7 @@
 [![Release](https://img.shields.io/github/v/release/alivsch-ai-code/MotionEngine?include_prereleases&label=release)](https://github.com/alivsch-ai-code/MotionEngine/releases)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
-[Getting Started](#-quick-start) · [Architecture](#-architecture) · [Documentation](docs/) · [Examples](examples/) · [Agent Reviews](docs/AGENT_REVIEWS.md) · [Contributing](CONTRIBUTING.md)
+[Getting Started](#quick-start) · [Web App](#run-the-web-app) · [Architecture](#architecture) · [Documentation](docs/) · [Examples](examples/) · [Agent Reviews](docs/AGENT_REVIEWS.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -30,7 +30,7 @@
 - **Trajectory Planning** — Werling (Frenet frame) planner with quintic polynomial sampling, jerk-optimal cost functions, and real-time collision avoidance
 - **Vehicle Dynamics** — Five fidelity levels from 4-state kinematic to 24-DOF multibody, three tire models including Pacejka Magic Formula
 - **Motion Control** — Stanley, Pure Pursuit, MPC; ACC, AEB, lane keeping; ABS, TCS, ESP, torque vectoring, active suspension
-- **Production Patterns** — Plugin registry, layered architecture, 22 pre-built ISO/ADAS scenarios, automated KPI evaluation
+- **Production Patterns** — Plugin registry, layered architecture, 22 vehicle dynamics scenarios and 14 automated driving scenarios, automated KPI evaluation, REST API with Docker image
 - **Web app** — React UI on the REST API in English and German, dark and light theme: simulation, a trajectory inspector that derives every planned trajectory step by step (polynomials, costs, Frenet transform, single-track physics), training and connecting neural vehicle models
 - **Desktop GUI** — PySide6 application with live top view, signal scope, 3D visualization, analysis plots, trajectory editor
 
@@ -298,7 +298,7 @@ def highway_exit(speed_kmh=100.0):
     return b.build(v_default=speed_kmh * KMH)
 ```
 
-The maneuver appears automatically in the GUI scenario selector with its parameter form.
+The maneuver appears automatically with its parameter form in the desktop GUI, in the web app and under `GET /trajectory/maneuvers`.
 </details>
 
 <details>
@@ -322,7 +322,7 @@ See [examples/custom_nodes/](examples/custom_nodes/) for complete examples in Py
 
 ## Pre-Built Scenarios
 
-22 ready-to-run scenarios covering standard test maneuvers and real-world situations:
+22 ready-to-run vehicle dynamics scenarios (`configs/scenarios/`, run with `run_scenario.py`) covering standard test maneuvers and real-world situations:
 
 | Category | Scenarios |
 |---|---|
@@ -332,6 +332,11 @@ See [examples/custom_nodes/](examples/custom_nodes/) for complete examples in Py
 | **Complex Scenarios** | City driving, race track with optimal speed profile, comfort road class C, customer test cycle |
 
 Vehicle presets: mid-size sedan (ICE/RWD), electric sedan (AWD), sports car, SUV.
+
+14 automated driving scenarios (`configs/ad_scenarios/`, full planning and control stack in the desktop GUI's AD workbench)
+with mission and success criteria: highway overtaking and exit, merging next to a truck, cut-in, cut-out at a traffic jam,
+rural overtaking, urban driving, intersections with traffic lights and right of way, roundabout, emergency evasion,
+traffic density, the highway experiment from Werling (2011) and reverse parallel parking (known issue, see [CHANGELOG](CHANGELOG.md)).
 
 ---
 
@@ -352,12 +357,17 @@ MotionEngine/
 │   ├── simulation/             Solver (RK4/Heun/Euler), simulator, scenarios
 │   ├── analysis/               Linear & quasi-static vehicle analysis
 │   ├── reporting/              KPIs, PDF/Markdown reports
+│   ├── ad/, world/             Automated driving stack, AD scenarios and missions
+│   ├── prediction/             Object prediction
+│   ├── service/                REST API (FastAPI), trajectory derivation (/plan/explain)
+│   ├── learning/               Neural vehicle models (MLP training, ONNX/HTTP backends)
 │   ├── visualization/          Plots, animation, dashboard widgets
 │   └── gui/                    PySide6 desktop application
+├── web/                        Web app (React, TypeScript, Vite; locales en/de)
 ├── configs/                    Vehicle presets, scenario library, trajectories
-├── tests/                      pytest suite (~47 test files)
+├── tests/                      pytest suite (~67 test files)
 ├── examples/                   Planning, stabilization, custom nodes
-├── docs/                       Architecture, references, technical docs
+├── docs/                       Architecture, references, design system, brand assets, reviews
 ├── benchmarks/                 Performance benchmarks
 ├── scripts/                    Build and utility scripts
 └── .github/                    CI/CD, issue templates, PR template
@@ -383,7 +393,10 @@ MotionEngine/
 | Component | Packages |
 |---|---|
 | **Core** | Python 3.10+, NumPy, SciPy, Matplotlib, PyYAML |
-| **GUI** (optional) | PySide6, pyqtgraph, PyOpenGL |
+| **GUI** (optional, `[gui]`) | PySide6, pyqtgraph, PyOpenGL |
+| **REST API** (optional, `[api]`) | FastAPI, uvicorn, httpx |
+| **ONNX models** (optional, `[ml]`) | onnxruntime |
+| **Web app** (build only) | Node.js 22, npm; the Docker image contains the built app |
 | **Development** | pytest, ruff, mypy, pre-commit |
 
 ---
@@ -397,7 +410,7 @@ See [ROADMAP.md](ROADMAP.md) for the full development plan.
 - Tire relaxation length (transient behavior)
 - OpenSCENARIO import
 - Sensor models (camera/radar)
-- Full English localization
+- English localization of the desktop GUI and CLI (the web app is already English/German)
 - FMI/FMU co-simulation
 
 ---

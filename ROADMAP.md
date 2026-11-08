@@ -22,7 +22,7 @@ This document outlines the planned development stages for vdsim.
 - [ ] Aerodynamics with downforce
 - [ ] OpenSCENARIO import
 - [ ] Sensor models (camera/radar with latency and noise) via `Sensor` interface
-- [ ] Full English localization of all user-facing strings
+- [ ] Full English localization of all user-facing strings (web app done: English/German; desktop GUI and CLI open)
 - [ ] Type annotations for all public APIs
 - [ ] 90%+ test coverage
 
