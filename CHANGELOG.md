@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- README rewritten: product overview, web app screenshots, features, measured performance, comparison, citation.
+- Trajectory inspector: international axle symbols (f/r, understeer gradient K) instead of v/h and EG; English source
+  references (Theorem, Table).
 - Planning cycle 40-47 % faster: the per-cycle debug snapshot no longer builds a Python set of all candidates.
 - `SimulationResult` stores scalar signals as floats (peak memory of a 60 s run 37 MiB -> 17 MiB).
 - Collision settings: `max_circles_object` 5 -> 12, new `max_lateral_inflation` (0.3 m).
