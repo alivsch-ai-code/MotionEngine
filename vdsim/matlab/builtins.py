@@ -747,7 +747,21 @@ register_builtin("mat2str", lambda x: _num2str(x) if _is_scalar(x) else
                  "[" + ";".join(" ".join(_num2str(float(e)) for e in row) for row in m_arr(x).tolist()) + "]")
 register_builtin("sprintf", lambda fmt, *args: m_sprintf(fmt, *args))
 register_builtin("str2double", lambda s: float(s) if _isfloat(s) else math.nan)
-register_builtin("str2num", lambda s: float(s) if _isfloat(s) else np.zeros((0, 0)))
+def _str2num(s):
+    # numeric literals and matrices of literals ('3', '[1 2; 3 4]', '1, 2'); MATLAB evaluates the text with
+    # eval - deliberately not done here, anything else returns [] like a failed conversion in MATLAB
+    text = s.strip()
+    if text.startswith("[") and text.endswith("]"):
+        text = text[1:-1]
+    rows = [r for r in text.replace("\n", ";").split(";") if r.strip()]
+    values = [r.replace(",", " ").split() for r in rows]
+    if not values or any(len(v) != len(values[0]) for v in values) or not all(_isfloat(x) for v in values for x in v):
+        return np.zeros((0, 0))
+    out = np.array([[float(x) for x in v] for v in values])
+    return float(out[0, 0]) if out.size == 1 else out
+
+
+register_builtin("str2num", _str2num)
 register_builtin("strcmp", lambda a, b: isinstance(a, str) and isinstance(b, str) and a == b)
 register_builtin("strcmpi", lambda a, b: isinstance(a, str) and isinstance(b, str) and a.lower() == b.lower())
 register_builtin("upper", lambda s: s.upper())
@@ -864,6 +878,12 @@ def _func2str(f):
 
 @builtin("str2func", ctx=True)
 def _str2func(ctx, s):
+    # 'name' -> handle to a function, '@(x) expr' -> anonymous function (as in MATLAB)
+    if s.strip().startswith("@"):
+        from .interpreter import Frame
+        from .parser import parse
+        stmt = parse(f"f__ = {s.strip()};").script[0]
+        return ctx.eval(stmt.value, Frame())
     return MFunction(name=s, interp=ctx)
 
 

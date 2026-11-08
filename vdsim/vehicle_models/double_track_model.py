@@ -93,7 +93,8 @@ class DoubleTrackModel(VehicleModel):
         kappa = (omega * R - v_long) / np.maximum(abs_long, self.slip_speed_floor)
 
         # wheel loads: longitudinal transfer (from the torque request) and lateral transfer
-        drag = self.drag_factor * (vx - env.wind_speed) * abs(vx - env.wind_speed)
+        v_air = vx + env.wind_speed  # head wind > 0
+        drag = self.drag_factor * v_air * abs(v_air)
         fx_req = (u.drive_torque.sum() - u.brake_torque.sum() * np.tanh(vx / 0.2)) / R
         ax_est = min(max((fx_req - drag) / m, -1.5 * G), 1.5 * G)
         ay_est = vx * r

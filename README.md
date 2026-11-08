@@ -199,6 +199,28 @@ for kpi in evaluate(result):
     print(f"{kpi.label}: {kpi.formatted()} {kpi.unit} [{kpi.rating}]")
 ```
 
+### Run the REST API
+
+```bash
+pip install -e ".[api]"
+motion-engine-api --port 8000    # or: uvicorn vdsim.service.app:app
+# Swagger UI: http://localhost:8000/docs   OpenAPI 3: http://localhost:8000/openapi.json
+
+curl -s -X POST localhost:8000/simulate -H "Content-Type: application/json" \
+     -d '{"model": "bicycle_nonlinear", "maneuver": "iso_double_lane_change", "signals": ["t", "ay"]}'
+```
+
+Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, `/trajectory`,
+`/simulate`, `/plan`, `/predict`. Set `MOTIONENGINE_API_KEY` to require the header `X-API-Key`;
+`MOTIONENGINE_MAX_CONCURRENCY`, `MOTIONENGINE_MAX_SIM_TIME` and `MOTIONENGINE_MAX_WALL_TIME` bound
+the load. With a wheel install outside the source tree, point `MOTIONENGINE_CONFIG_DIR` to `configs/`.
+
+```bash
+docker compose up --build        # container with the API on port 8000
+```
+
+A devcontainer (`.devcontainer/`) installs `.[dev,api]` for VS Code and Codespaces.
+
 ### Run Tests
 
 ```bash

@@ -5,6 +5,7 @@ parameter editors from it. All values are SI (see conventions.py).
 """
 
 import json
+import os
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 
@@ -227,4 +228,6 @@ def load_vehicle_preset(name_or_path, preset_dir=None):
 
 
 def default_config_dir():
-    return Path(__file__).resolve().parents[2] / "configs"
+    # configs/ of the source tree; MOTIONENGINE_CONFIG_DIR overrides it (wheel installs, containers)
+    override = os.environ.get("MOTIONENGINE_CONFIG_DIR")
+    return Path(override) if override else Path(__file__).resolve().parents[2] / "configs"

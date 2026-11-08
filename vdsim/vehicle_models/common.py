@@ -6,7 +6,8 @@ from ..core.conventions import AIR_DENSITY, G
 
 
 def aero_drag(vehicle, vx, wind=0.0):
-    v_rel = vx - wind
+    # wind > 0 is head wind (see Environment.wind_speed): it raises the air speed over the body
+    v_rel = vx + wind
     return 0.5 * AIR_DENSITY * vehicle.drag_coefficient * vehicle.frontal_area * v_rel * abs(v_rel)
 
 

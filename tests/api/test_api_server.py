@@ -43,3 +43,21 @@ def test_components_and_graph_build(server):
         graph = json.loads(resp.read())
     assert [n["id"] for n in graph["nodes"]][:3] == ["world", "perception", "prediction"]
     assert {"from": "controller.status", "to": "planner.status"} in graph["connections"]
+
+
+def test_job_store_evicts_old_results_and_validates_host():
+    import time
+
+    from vdsim.api.server import JobStore, _is_loopback, main
+
+    store = JobStore(workers=1, max_jobs=3)
+    ids = [store.submit("x", lambda i=i: {"i": i}) for i in range(6)]
+    deadline = time.time() + 10
+    while time.time() < deadline and any(store.get(i) and store.get(i)["state"] != "done" for i in ids[-3:]):
+        time.sleep(0.01)
+    assert len(store.jobs) <= 3 and len(store.results) <= 3
+    assert store.get(ids[0]) is None and store.get(ids[-1])["state"] == "done"
+    assert _is_loopback("127.0.0.1") and _is_loopback("localhost") and _is_loopback("::1")
+    assert not _is_loopback("0.0.0.0") and not _is_loopback("example.org")
+    with pytest.raises(SystemExit):
+        main(["--host", "0.0.0.0"])

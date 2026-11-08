@@ -136,7 +136,7 @@ class LeadVehicle:
 @dataclass
 class Environment:
     friction: FrictionMap = field(default_factory=FrictionMap)
-    wind_speed: float = 0.0     # head wind > 0, m/s
+    wind_speed: float = 0.0     # longitudinal wind, head wind > 0 (air speed = vx + wind_speed), m/s
     road: RoadProfile = field(default_factory=RoadProfile)
     lead_vehicle: LeadVehicle = None
 

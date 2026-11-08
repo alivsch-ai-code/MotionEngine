@@ -141,7 +141,8 @@ class MultibodyModel(VehicleModel):
         fx_w, fy_w, mz = self.tires.forces(alpha, kappa, fz, mu, camber)
         fx_v = fx_w * cd - fy_w * sd
         fy_v = fx_w * sd + fy_w * cd
-        drag = self.drag_factor * (vx - env.wind_speed) * abs(vx - env.wind_speed)
+        v_air = vx + env.wind_speed  # head wind > 0
+        drag = self.drag_factor * v_air * abs(v_air)
         fx_sum = fx_v.sum() - drag
         fy_sum = fy_v.sum()
         ax, ay = fx_sum / m, fy_sum / m

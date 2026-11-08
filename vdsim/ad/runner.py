@@ -301,7 +301,35 @@ def run_scenario(scenario, stack=None, seed=None, duration=None, scenario_params
     res.finalize()
     from ..research.metrics import evaluate
     evaluate(res)
+    _evaluate_mission(res, inst)
     if progress:
         progress(t_end, t_end)
     log.info("'%s': %.1f s simuliert in %.1f s (%s)", sc_name, res.duration, wall, stop_reason)
     return res
+
+
+def _evaluate_mission(res, inst):
+    # success criteria of the scenario (reach_goal, parked, final_lane, ...): defined in the library but
+    # previously never evaluated; result in metadata["mission"] and the KPI mission_passed (1/0)
+    from types import SimpleNamespace
+
+    from ..world import evaluate_success
+
+    if not isinstance(getattr(inst, "success", None), dict) or not inst.success or "t" not in res.signals:
+        return None
+    sig = res.signals
+    names = ("ego_x", "ego_y", "ego_psi", "ego_vx", "ego_vy")
+    if not all(k in sig for k in names):
+        return None
+    egos = [SimpleNamespace(x=float(x), y=float(y), psi=float(p), vx=float(vx), vy=float(vy))
+            for x, y, p, vx, vy in zip(*(sig[k] for k in names))]
+    hit = res.metadata.get("collision_with")
+    worlds = [SimpleNamespace(collision=bool(c), off_road=bool(o), collision_with=hit)
+              for c, o in zip(sig.get("collision", []), sig.get("off_road", []))]
+    mission = evaluate_success(inst, egos, worlds)
+    res.metadata["mission"] = {"passed": mission["passed"],
+                               "criteria": {k: {"ok": bool(ok), "detail": d} for k, (ok, d) in mission["criteria"].items()}}
+    if res.kpis is not None:
+        res.kpis["mission_passed"] = float(mission["passed"])
+    return mission
+

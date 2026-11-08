@@ -1,0 +1,21 @@
+# docker compose up --build   ->  http://localhost:8000/docs
+services:
+  api:
+    build: .
+    image: motion-engine:latest
+    ports:
+      - "8000:8000"
+    environment:
+      MOTIONENGINE_API_KEY: ${MOTIONENGINE_API_KEY:-}
+      MOTIONENGINE_MAX_CONCURRENCY: ${MOTIONENGINE_MAX_CONCURRENCY:-2}
+      MOTIONENGINE_MAX_SIM_TIME: ${MOTIONENGINE_MAX_SIM_TIME:-120}
+      MOTIONENGINE_MAX_WALL_TIME: ${MOTIONENGINE_MAX_WALL_TIME:-60}
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1g

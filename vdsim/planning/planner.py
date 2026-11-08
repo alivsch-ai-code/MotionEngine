@@ -460,7 +460,11 @@ class WerlingPlanner(TrajectoryPlannerBase):
         n_even = max(n_max - len(picks) - 20, 0)
         if len(rest) and n_even:
             picks += list(rest[np.linspace(0, len(rest) - 1, min(n_even, len(rest))).astype(int)])
-        infeasible = np.setdiff1d(np.arange(len(chosen.total)), order, assume_unique=False)
+        # boolean membership mask instead of setdiff1d + a Python set over all ~1e4 ordered candidates:
+        # the debug snapshot took about half of the planning cycle (benchmarks/README.md, hotspots)
+        in_order = np.zeros(len(chosen.total), dtype=bool)
+        in_order[np.asarray(order, dtype=int)] = True
+        infeasible = np.flatnonzero(~in_order)
         if len(infeasible):
             picks += list(infeasible[np.linspace(0, len(infeasible) - 1, min(20, len(infeasible))).astype(int)])
         picks = [int(c) for c in dict.fromkeys(picks) if int(c) != int(c_sel)][:n_max]
@@ -468,13 +472,12 @@ class WerlingPlanner(TrajectoryPlannerBase):
         ci = np.array(picks, dtype=int)
         n_lon = len(chosen.lon)
         batch = chosen.evaluator.batch(ci // n_lon, ci % n_lon) if len(ci) else None
-        order_set = set(int(c) for c in order)
         status, reasons = [], []
         for c in picks:
             if chosen.status[c] != STATUS_UNCHECKED:
                 status.append(int(chosen.status[c]))
                 reasons.append(chosen.reason.get(c, ""))
-            elif c not in order_set:
+            elif not in_order[c]:
                 status.append(STATUS_CONSTRAINT)
                 reasons.append("Vorfilter (straßenrelative Beschleunigung)")
             else:

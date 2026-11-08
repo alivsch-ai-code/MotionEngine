@@ -19,16 +19,20 @@ class SimulationResult:
 
     # recording
     def append(self, values):
+        # scalars are kept as Python floats: a 0-d numpy array costs ~5x the memory of a float
+        # (60 s single-track run: 37 MiB peak before, see benchmarks/README.md)
         for key, value in values.items():
             value = np.asarray(value, dtype=float)
+            if value.ndim == 0:
+                value = float(value)
             if key not in self._data:
-                fill = np.full(value.shape, np.nan)
+                fill = np.nan if np.ndim(value) == 0 else np.full(np.shape(value), np.nan)
                 self._data[key] = [fill] * self._rows
             self._data[key].append(value)
         self._rows += 1
         for key, column in self._data.items():
             if len(column) < self._rows:
-                column.append(np.full(np.shape(column[-1]), np.nan))
+                column.append(np.nan if np.ndim(column[-1]) == 0 else np.full(np.shape(column[-1]), np.nan))
         self._arrays = None
 
     def _finalize(self):

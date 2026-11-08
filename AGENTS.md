@@ -11,7 +11,7 @@ python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev,gui]"
 
 ruff check .                                    # lint
-mypy vdsim/core vdsim/vehicle_models vdsim/tire_models vdsim/simulation --ignore-missing-imports
+mypy vdsim/core vdsim/vehicle_models vdsim/tire_models vdsim/simulation vdsim/service --ignore-missing-imports
 pytest tests/ -m "not gui and not slow and not integration and not benchmark"   # unit tests
 pytest tests/ -m integration                    # integration tests
 pytest tests/numerical/                         # numerical validation and performance limits

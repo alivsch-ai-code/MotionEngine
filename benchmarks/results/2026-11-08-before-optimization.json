@@ -1,0 +1,333 @@
+{
+ "environment": {
+  "python": "3.13.18",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "cpus": 4,
+  "platform": "Linux-6.18.44-fc-v310-x86_64-with-glibc2.39"
+ },
+ "repeats": 7,
+ "derivatives": {
+  "bicycle_kinematic": {
+   "states": 4,
+   "derivative_us": 20.215253500282415
+  },
+  "bicycle_linear": {
+   "states": 6,
+   "derivative_us": 12.92014049977297
+  },
+  "bicycle_nonlinear": {
+   "states": 6,
+   "derivative_us": 54.400384499786014
+  },
+  "double_track": {
+   "states": 12,
+   "derivative_us": 95.86595649989249
+  },
+  "multibody": {
+   "states": 24,
+   "derivative_us": 131.84175950027566
+  }
+ },
+ "simulation": {
+  "bicycle_kinematic": {
+   "simulated_s": 4.999999999999938,
+   "wall_s": 0.37196171999949,
+   "real_time_factor": 13.442243465286678,
+   "control_steps_per_s": 1344.2243465286845,
+   "dt_model": 0.002
+  },
+  "bicycle_linear": {
+   "simulated_s": 4.999999999999938,
+   "wall_s": 0.3250773839999965,
+   "real_time_factor": 15.380953108691164,
+   "control_steps_per_s": 1538.0953108691356,
+   "dt_model": 0.002
+  },
+  "bicycle_nonlinear": {
+   "simulated_s": 4.999999999999938,
+   "wall_s": 0.7776741919997221,
+   "real_time_factor": 6.429427710778043,
+   "control_steps_per_s": 642.9427710778124,
+   "dt_model": 0.002
+  },
+  "double_track": {
+   "simulated_s": 4.999999999999938,
+   "wall_s": 1.4742029290000573,
+   "real_time_factor": 3.391663319643115,
+   "control_steps_per_s": 339.1663319643157,
+   "dt_model": 0.002
+  },
+  "multibody": {
+   "simulated_s": 4.999999999999938,
+   "wall_s": 1.9567626070002007,
+   "real_time_factor": 2.5552409792136963,
+   "control_steps_per_s": 255.5240979213728,
+   "dt_model": 0.002
+  }
+ },
+ "memory": {
+  "iso_dlc_double_track_8s": {
+   "simulated_s": 9.659999999999838,
+   "samples": 967,
+   "peak_mib": 6.043134689331055
+  },
+  "straight_bicycle_60s": {
+   "simulated_s": 59.99999999999663,
+   "samples": 6001,
+   "peak_mib": 37.41776657104492
+  }
+ },
+ "planner": {
+  "default/free_road": {
+   "cycle_ms_median": 12.029281999275554,
+   "cycle_ms_p95": 13.694685799782736,
+   "candidates": 18000,
+   "checked": 32
+  },
+  "default/two_obstacles": {
+   "cycle_ms_median": 12.838288999773795,
+   "cycle_ms_p95": 13.83956490026321,
+   "candidates": 18000,
+   "checked": 32
+  },
+  "default/ten_obstacles": {
+   "cycle_ms_median": 14.588562999961141,
+   "cycle_ms_p95": 15.815599399593337,
+   "candidates": 18000,
+   "checked": 32
+  },
+  "comfort/free_road": {
+   "cycle_ms_median": 15.374137999970117,
+   "cycle_ms_p95": 20.77257449991521,
+   "candidates": 27000,
+   "checked": 32
+  },
+  "comfort/two_obstacles": {
+   "cycle_ms_median": 16.221849000430666,
+   "cycle_ms_p95": 17.278822600292187,
+   "candidates": 27000,
+   "checked": 32
+  },
+  "comfort/ten_obstacles": {
+   "cycle_ms_median": 18.24649700029113,
+   "cycle_ms_p95": 28.169327699924896,
+   "candidates": 27000,
+   "checked": 32
+  },
+  "sporty/free_road": {
+   "cycle_ms_median": 12.100615999770525,
+   "cycle_ms_p95": 15.714771299917627,
+   "candidates": 16200,
+   "checked": 32
+  },
+  "sporty/two_obstacles": {
+   "cycle_ms_median": 12.798188000488153,
+   "cycle_ms_p95": 18.49446220003301,
+   "candidates": 16200,
+   "checked": 32
+  },
+  "sporty/ten_obstacles": {
+   "cycle_ms_median": 17.87824900020496,
+   "cycle_ms_p95": 21.123618999718015,
+   "candidates": 16200,
+   "checked": 32
+  }
+ },
+ "planner_scaling": [
+  {
+   "lat_d_step": 1.0,
+   "candidates": 8400,
+   "cycle_ms_median": 11.777028999858885
+  },
+  {
+   "lat_d_step": 0.5,
+   "candidates": 18000,
+   "cycle_ms_median": 12.561049000396451
+  },
+  {
+   "lat_d_step": 0.25,
+   "candidates": 34800,
+   "cycle_ms_median": 19.408383000154572
+  },
+  {
+   "lat_d_step": 0.125,
+   "candidates": 68400,
+   "cycle_ms_median": 40.33817999970779
+  }
+ ],
+ "api": {
+  "GET /health": {
+   "latency_ms_median": 5.572678000135056
+  },
+  "GET /vehicle/mid_size_sedan": {
+   "latency_ms_median": 6.996149999395129
+  },
+  "POST /predict (50 objects)": {
+   "latency_ms_median": 9.807477000322251
+  },
+  "POST /plan (1 cycle)": {
+   "latency_ms_median": 54.556667999349884
+  },
+  "POST /simulate (bicycle_linear, 5 s)": {
+   "latency_ms_median": 337.07680000043183
+  }
+ },
+ "hotspots": {
+  "simulation_double_track": {
+   "total_s": 1.537,
+   "top": [
+    {
+     "function": "double_track_model.py:77:derivatives",
+     "calls": 10001,
+     "tottime_s": 0.492,
+     "cumtime_s": 1.2301
+    },
+    {
+     "function": "pacejka.py:53:forces",
+     "calls": 10003,
+     "tottime_s": 0.2195,
+     "cumtime_s": 0.4043
+    },
+    {
+     "function": "pacejka.py:19:magic_formula",
+     "calls": 20006,
+     "tottime_s": 0.0866,
+     "cumtime_s": 0.0866
+    },
+    {
+     "function": "double_track_model.py:73:wheel_positions",
+     "calls": 10001,
+     "tottime_s": 0.0551,
+     "cumtime_s": 0.0551
+    },
+    {
+     "function": "_function_base_impl.py:1550:interp",
+     "calls": 44006,
+     "tottime_s": 0.0546,
+     "cumtime_s": 0.1229
+    },
+    {
+     "function": "pacejka.py:49:friction",
+     "calls": 10003,
+     "tottime_s": 0.05,
+     "cumtime_s": 0.05
+    },
+    {
+     "function": "pacejka.py:44:cornering_stiffness",
+     "calls": 10003,
+     "tottime_s": 0.0482,
+     "cumtime_s": 0.0482
+    },
+    {
+     "function": "~:0:<method 'reduce' of 'numpy.ufunc' objects>",
+     "calls": 61652,
+     "tottime_s": 0.0391,
+     "cumtime_s": 0.0391
+    },
+    {
+     "function": "~:0:<built-in method numpy._core._multiarray_umath.interp>",
+     "calls": 44006,
+     "tottime_s": 0.0349,
+     "cumtime_s": 0.0349
+    },
+    {
+     "function": "environment.py:28:mu_at",
+     "calls": 10001,
+     "tottime_s": 0.0283,
+     "cumtime_s": 0.0585
+    },
+    {
+     "function": "trajectory.py:149:_closest_segment",
+     "calls": 1601,
+     "tottime_s": 0.0282,
+     "cumtime_s": 0.0599
+    },
+    {
+     "function": "solver.py:44:_single_step",
+     "calls": 2400,
+     "tottime_s": 0.0251,
+     "cumtime_s": 1.224
+    }
+   ]
+  },
+  "planner_30_cycles": {
+   "total_s": 0.608,
+   "top": [
+    {
+     "function": "~:0:<built-in method numpy._core._multiarray_umath._unique_hash>",
+     "calls": 180,
+     "tottime_s": 0.1008,
+     "cumtime_s": 0.1008
+    },
+    {
+     "function": "planner.py:471:<genexpr>",
+     "calls": 381588,
+     "tottime_s": 0.0738,
+     "cumtime_s": 0.0738
+    },
+    {
+     "function": "planner.py:455:_debug",
+     "calls": 30,
+     "tottime_s": 0.0663,
+     "cumtime_s": 0.2965
+    },
+    {
+     "function": "polynomials.py:77:polyval",
+     "calls": 650,
+     "tottime_s": 0.0286,
+     "cumtime_s": 0.0307
+    },
+    {
+     "function": "reference_line.py:44:_hermite",
+     "calls": 1336,
+     "tottime_s": 0.0269,
+     "cumtime_s": 0.0269
+    },
+    {
+     "function": "reference_line.py:113:evaluate",
+     "calls": 334,
+     "tottime_s": 0.0221,
+     "cumtime_s": 0.0667
+    },
+    {
+     "function": "~:0:<method 'argsort' of 'numpy.ndarray' objects>",
+     "calls": 30,
+     "tottime_s": 0.0168,
+     "cumtime_s": 0.0168
+    },
+    {
+     "function": "polynomials.py:63:jerk_integral",
+     "calls": 1426,
+     "tottime_s": 0.0153,
+     "cumtime_s": 0.0159
+    },
+    {
+     "function": "reference_line.py:267:to_cartesian",
+     "calls": 296,
+     "tottime_s": 0.0147,
+     "cumtime_s": 0.0667
+    },
+    {
+     "function": "polynomials.py:137:evaluate",
+     "calls": 590,
+     "tottime_s": 0.0125,
+     "cumtime_s": 0.0563
+    },
+    {
+     "function": "_stride_tricks_impl.py:447:_broadcast_to",
+     "calls": 1592,
+     "tottime_s": 0.0101,
+     "cumtime_s": 0.0154
+    },
+    {
+     "function": "analysis.py:21:continuous_solution",
+     "calls": 1366,
+     "tottime_s": 0.0089,
+     "cumtime_s": 0.0493
+    }
+   ]
+  }
+ }
+}

@@ -23,8 +23,8 @@ def _straight(v, duration=20.0):
 
 @pytest.mark.parametrize("disturbance", ["head_wind", "grade"])
 def test_split_range_integrator_compensates_disturbance(sedan, disturbance):
-    # vdsim aero_drag uses v_rel = vx - wind_speed: head wind = negative wind_speed
-    env = Environment(wind_speed=-20.0) if disturbance == "head_wind" else Environment()
+    # Environment.wind_speed > 0 is head wind (air speed = vx + wind_speed)
+    env = Environment(wind_speed=20.0) if disturbance == "head_wind" else Environment()
     if disturbance == "grade":
         env.grade = 0.04                                 # 4 % uphill (werling models read env.grade)
     traj = _straight(20.0)
