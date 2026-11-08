@@ -382,13 +382,13 @@ def explain_cycle(planner, start, debug, trajectory, behavior, vehicle_cfg, hori
             },
             "formulas": [
                 f"a_y = v^2 \\kappa = {_f(v)}^2 \\cdot {_f(kap)} = {_f(ay)}\\ \\mathrm{{m/s^2}}",
-                f"F_{{y,v}} = m a_y \\frac{{l_h}}{{l}} = {_f(fyf)}\\ \\mathrm{{N}},\\quad "
-                f"F_{{y,h}} = m a_y \\frac{{l_v}}{{l}} = {_f(fyr)}\\ \\mathrm{{N}}",
-                f"\\alpha_v = \\frac{{F_{{y,v}}}}{{C_v}} = {_f(alpha_f)}\\ \\mathrm{{rad}},\\quad "
-                f"\\alpha_h = \\frac{{F_{{y,h}}}}{{C_h}} = {_f(alpha_r)}\\ \\mathrm{{rad}}",
-                f"\\delta = l\\kappa + EG\\,a_y = {_f(L)} \\cdot {_f(kap)} + {_f(eg)} \\cdot {_f(ay)} = "
+                f"F_{{y,f}} = m a_y \\frac{{l_r}}{{l}} = {_f(fyf)}\\ \\mathrm{{N}},\\quad "
+                f"F_{{y,r}} = m a_y \\frac{{l_f}}{{l}} = {_f(fyr)}\\ \\mathrm{{N}}",
+                f"\\alpha_f = \\frac{{F_{{y,f}}}}{{C_f}} = {_f(alpha_f)}\\ \\mathrm{{rad}},\\quad "
+                f"\\alpha_r = \\frac{{F_{{y,r}}}}{{C_r}} = {_f(alpha_r)}\\ \\mathrm{{rad}}",
+                f"\\delta = l\\kappa + K\\,a_y = {_f(L)} \\cdot {_f(kap)} + {_f(eg)} \\cdot {_f(ay)} = "
                 f"{_f(delta_ss)}\\ \\mathrm{{rad}}",
-                f"\\beta = l_h\\kappa - \\frac{{m l_v v^2 \\kappa}}{{C_h l}} = {_f(beta)}\\ \\mathrm{{rad}}",
+                f"\\beta = l_r\\kappa - \\frac{{m l_f v^2 \\kappa}}{{C_r l}} = {_f(beta)}\\ \\mathrm{{rad}}",
                 f"\\frac{{\\sqrt{{a_x^2 + a_y^2}}}}{{\\mu g}} = {_f(util)}",
             ],
         }

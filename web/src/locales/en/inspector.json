@@ -42,12 +42,12 @@
     },
     "lateral": {
       "title": "Lateral motion: quintic polynomial",
-      "source": "Werling 2011, Satz 1, (3.6)-(3.8)",
+      "source": "Werling 2011, Theorem 1, (3.6)-(3.8)",
       "text": "Among all motions from the start state to the target state, the one with the smallest integrated squared jerk is a quintic polynomial. Its first three coefficients follow from the start state, the last three from the end conditions in closed form. The planner samples many end offsets δ and end times τ; the cost weighs jerk, duration and remaining offset. At low speed the lateral motion is planned over the arc length, d(s), so that it stays defined at standstill."
     },
     "longitudinal": {
       "title": "Longitudinal motion",
-      "source": "Werling 2011, Satz 2, Tab. 3.1",
+      "source": "Werling 2011, Theorem 2, Table 3.1",
       "text": "For velocity keeping the end position is free, so the optimal polynomial is quartic and only the end speed and acceleration are prescribed. Following, merging and stopping prescribe an end position and use quintic polynomials. Here, too, the cost is jerk plus duration plus the deviation from the reference."
     },
     "selection": {

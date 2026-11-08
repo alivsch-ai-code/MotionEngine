@@ -224,9 +224,9 @@ function StepDetails({ step, q, lang }: { step: ExplainStep; q: Record<string, u
         ))}</tbody></table></div>;
     }
     case "vehicle_physics":
-      return table([["v", q.v, "m/s"], ["κ", q.kappa, "1/m"], ["a_y", q.a_y, "m/s²"], ["F_y,v", q.F_yf, "N"], ["F_y,h", q.F_yr, "N"],
-        ["α_v", toDeg(q.alpha_f as number), "°"], ["α_h", toDeg(q.alpha_r as number), "°"], ["δ", toDeg(q.delta as number), "°"], ["β", toDeg(q.beta as number), "°"],
-        [<span key="eg">EG <InfoTip text={t("egTip")} /></span>, q.understeer_gradient, "rad/(m/s²)"], ["C_v", q.C_f, "N/rad"], ["C_h", q.C_r, "N/rad"],
+      return table([["v", q.v, "m/s"], ["κ", q.kappa, "1/m"], ["a_y", q.a_y, "m/s²"], ["F_y,f", q.F_yf, "N"], ["F_y,r", q.F_yr, "N"],
+        ["α_f", toDeg(q.alpha_f as number), "°"], ["α_r", toDeg(q.alpha_r as number), "°"], ["δ", toDeg(q.delta as number), "°"], ["β", toDeg(q.beta as number), "°"],
+        [<span key="eg">K <InfoTip text={t("egTip")} /></span>, q.understeer_gradient, "rad/(m/s²)"], ["C_f", q.C_f, "N/rad"], ["C_r", q.C_r, "N/rad"],
         [t("q.friction"), q.friction_utilization, "–"]]);
     default:
       return null;

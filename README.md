@@ -1,38 +1,160 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/banner.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/images/banner.svg">
-  <img alt="MotionEngine" src="docs/images/banner.svg" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/motionengine-logo-dark.svg">
+  <img alt="MotionEngine" src="docs/brand/motionengine-logo-light.svg" width="420">
 </picture>
 
-<br/>
+### Motion planning and vehicle dynamics you can see, verify and explain.
 
-**Open-source framework for motion planning, trajectory optimization, vehicle dynamics simulation, and autonomous driving research.**
+Werling trajectory planning, five vehicle dynamics models from 4 to 24 states, controllers, an automated driving
+stack, neural vehicle models, a REST API and a web app, in one open-source Python package.
 
 [![Build](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/build.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/build.yml)
 [![Tests](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/test.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/test.yml)
 [![Coverage](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/coverage.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/coverage.yml)
 [![CodeQL](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/security.yml/badge.svg)](https://github.com/alivsch-ai-code/MotionEngine/actions/workflows/security.yml)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10–3.13](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/alivsch-ai-code/MotionEngine?include_prereleases&label=release)](https://github.com/alivsch-ai-code/MotionEngine/releases)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
-[Getting Started](#quick-start) · [Web App](#run-the-web-app) · [Architecture](#architecture) · [Documentation](docs/) · [Examples](examples/) · [Agent Reviews](docs/AGENT_REVIEWS.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#quick-start) · [Why MotionEngine](#why-motionengine) · [Web app](#web-app) · [Features](#features) ·
+[Performance](#performance) · [Documentation](docs/) · [Contributing](CONTRIBUTING.md)
+
+<br/>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/app/inspector-dark.png">
+  <img alt="Trajectory inspector: candidate set of the Werling planner and the derivation of the selected lateral quintic polynomial" src="docs/images/app/inspector-light.png" width="100%">
+</picture>
+
+<sub>The trajectory inspector re-derives one planning cycle step by step: every formula with the numbers the planner used.</sub>
 
 </div>
 
 ---
 
-## Highlights
+## Why MotionEngine
 
-- **Trajectory Planning** — Werling (Frenet frame) planner with quintic polynomial sampling, jerk-optimal cost functions, and real-time collision avoidance
-- **Vehicle Dynamics** — Five fidelity levels from 4-state kinematic to 24-DOF multibody, three tire models including Pacejka Magic Formula
-- **Motion Control** — Stanley, Pure Pursuit, MPC; ACC, AEB, lane keeping; ABS, TCS, ESP, torque vectoring, active suspension
-- **Production Patterns** — Plugin registry, layered architecture, 22 vehicle dynamics scenarios and 14 automated driving scenarios, automated KPI evaluation, REST API with Docker image
-- **Web app** — React UI on the REST API in English and German, dark and light theme: simulation, a trajectory inspector that derives every planned trajectory step by step (polynomials, costs, Frenet transform, single-track physics), training and connecting neural vehicle models
-- **Desktop GUI** — PySide6 application with live top view, signal scope, 3D visualization, analysis plots, trajectory editor
+| | |
+|---|---|
+| **Explainable, not a black box** | Every planned trajectory can be opened in the trajectory inspector: start state, quintic and quartic polynomials with their coefficients, cost terms, selection among all candidates, Frenet → world transform, restrictions and the single-track physics behind it. The coefficients are re-derived independently and match the planner to 2·10⁻¹⁶. |
+| **Faithful to the paper** | The Werling planner implements Werling (2011) closely, including the time-consistent replanning: changing the replanning period changes the result by 0.00 cm, while a naive Frenet planner drifts by 6.5 cm. Each step cites the section and equation it implements. |
+| **Physics at the fidelity you need** | Five vehicle models from a 4-state kinematic bicycle to a 24-state multibody model, three tire models (linear, Pacejka Magic Formula, brush), powertrain, brakes, actuators with latency, ABS/TCS/ESP. All models share one interface and run faster than real time. |
+| **Neural vehicle models included** | Train a neural surrogate of any physics model in seconds without extra frameworks, or connect your own ONNX file or HTTP endpoint. A closed-loop comparison against the physics model shows how far you can trust it before you use it in a simulation. |
+| **Ready to deploy** | REST API with OpenAPI, API key, concurrency and runtime limits, Prometheus metrics and a Docker image that ships the web app. `docker compose up` gives you the whole platform on port 8000. |
+| **Tested and measured** | 860+ tests including physical plausibility, Monte Carlo and scenario regression against golden KPIs; CI on Linux and Windows with Python 3.10–3.13, CodeQL and secret scanning. Every performance number in this README is reproducible with `benchmarks/run_benchmarks.py`. |
+| **Built to be extended** | Vehicle models, tire models, controllers, maneuvers and planner nodes plug into a registry: add a component without touching the core, in Python, C++ or Rust. |
+
+---
+
+## Web app
+
+A browser UI on top of the REST API, in **English and German**, with a **dark and a light theme**. It works on a phone as well.
+
+| Trajectory inspector: vehicle physics | Neural models: training and closed-loop validation |
+|---|---|
+| <img src="docs/images/app/physics-dark.png" alt="Vehicle physics step: axle forces, slip angles, steering angle and friction utilization with values"> | <img src="docs/images/app/models-dark.png" alt="Neural model with R² per output, training loss and closed-loop comparison with the physics model"> |
+
+<img src="docs/images/app/simulate-dark.png" alt="Simulation page: ISO double lane change with the double-track model, KPIs and driven path" width="100%">
+
+| Page | What it does |
+|---|---|
+| **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view |
+| **Trajectory inspector** | one planning cycle in seven steps, each with formula, values, source and chart |
+| **Neural models** | train an MLP surrogate in the background, connect ONNX or HTTP models, compare them closed loop with the physics model, simulate with them |
+| **Prediction, Vehicles, Settings** | object prediction, every vehicle parameter with unit and meaning, API address and key |
+
+Every workflow runs with sensible defaults; advanced parameters sit behind *Expert settings*. The design system is
+documented in [docs/design-system.md](docs/design-system.md), the redesign and its measurements in
+[docs/ux/2026-11-08-redesign.md](docs/ux/2026-11-08-redesign.md).
+
+---
+
+## Quick start
+
+**Everything in one container** (API, web app, model storage):
+
+```bash
+git clone https://github.com/alivsch-ai-code/MotionEngine.git && cd MotionEngine
+docker compose up --build
+```
+
+Open http://localhost:8000 for the web app and http://localhost:8000/docs for the API reference.
+
+**As a Python package:**
+
+```bash
+python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\Activate.ps1
+pip install -e ".[gui,api]"                          # core only: pip install -e .
+```
+
+```python
+from vdsim.simulation.scenario import Scenario
+from vdsim.simulation.simulator import Simulator
+from vdsim.reporting import evaluate
+
+scenario = Scenario(
+    name="Double Lane Change",
+    vehicle="sports_car",
+    model="double_track",
+    maneuver="iso_double_lane_change",
+    maneuver_params={"speed_kmh": 90},
+    lateral_controller="mpc",
+    vehicle_overrides={"systems.esp_enabled": True},
+)
+result = Simulator.from_scenario(scenario).run()
+
+for kpi in evaluate(result):
+    print(f"{kpi.label}: {kpi.formatted()} {kpi.unit} [{kpi.rating}]")
+```
+
+---
+
+## Features
+
+| Area | What you get |
+|---|---|
+| **Trajectory planning** | Werling planner in Frenet coordinates (quintic/quartic polynomials, jerk-optimal costs, lazy selection, time-consistent replanning, low-speed d(s) mode), circle-cover collision checking, behavior layer, object prediction |
+| **Vehicle dynamics** | kinematic, linear and nonlinear bicycle, double track (12 states), multibody (24 states); linear, Pacejka MF and brush tires; ICE and electric powertrain, gearbox, brakes with EBD |
+| **Control** | Stanley, Pure Pursuit, MPC, bi-level stabilization; ACC, AEB, lane keeping; ABS, TCS, ESP, torque vectoring, active suspension; actuator latency chains |
+| **Automated driving** | full stack from scenario to actuators, 14 AD scenarios with missions and success criteria (overtaking, merging, cut-in, intersections, roundabout, evasion, parking) |
+| **Analysis** | 22 ISO and ADAS test scenarios, automated KPI evaluation with ratings, PDF and Markdown reports, linear and quasi-static vehicle analysis, parameter sweeps |
+| **Machine learning** | MLP surrogates trained against a physics teacher, ONNX and HTTP model backends, closed-loop validation, neural models usable as vehicle models |
+| **Interfaces** | web app (EN/DE), PySide6 desktop workbench with live top view and 3D view, REST API, Python library, command line |
+
+---
+
+## Performance
+
+Measured with `benchmarks/run_benchmarks.py` on a 4-vCPU Xeon @ 2.1 GHz, single thread. Full tables in
+[benchmarks/README.md](benchmarks/README.md).
+
+| Measurement | Result |
+|---|---:|
+| Werling planning cycle, 18 000 candidates, free road (median) | **7.2 ms** |
+| Werling planning cycle, 27 000 candidates, 10 obstacles (median) | 11.0 ms |
+| Kinematic bicycle / double track / 24-state multibody | **13.8× / 3.2× / 2.4× real time** |
+| REST: `POST /plan` (1 cycle) / `POST /predict` (50 objects) | 52 ms / 10 ms |
+| Web app: first contentful paint of an app page | 124–144 ms |
+| Peak memory of a 60 s simulation | 17 MiB |
+
+The planner scales almost linearly: 8 400 → 68 400 candidates takes 6.5 → 10.9 ms, because the lazy selection only
+checks the cheapest candidates.
+
+---
+
+## Where MotionEngine fits
+
+| Project | Focus | How MotionEngine relates |
+|---|---|---|
+| Apollo, Autoware | production driving stacks (C++, ROS 2) | MotionEngine is a research and engineering tool: deeper vehicle dynamics, explainable planning, reproducible analysis in one Python package |
+| CommonRoad | planning benchmarks and scenario format | similar audience; MotionEngine adds the closed loop with controllers, actuators and vehicle dynamics |
+| CARLA | photorealistic simulation and sensors | complementary; MotionEngine can use CARLA for 3D visualization (`viz3d`) |
+| highway-env | reinforcement learning environments | MotionEngine models the physics in far more detail; no RL interface yet |
+
+The comparison is based on the public documentation of each project. Details are in the
+[review report](docs/review/2026-11-08-full-review.md).
 
 ---
 
@@ -42,9 +164,10 @@
 <img src="docs/images/architecture_overview.svg" alt="MotionEngine Architecture" width="95%">
 </div>
 
-MotionEngine follows a layered architecture where dependencies point strictly downward. The simulation core accesses all components through abstract interfaces (`vdsim.core.interfaces`) and a plugin registry — adding a new vehicle model, tire model, controller, or maneuver requires **zero changes** to the core.
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture documentation including data flow diagrams, UML class/sequence diagrams, and the extension API.
+MotionEngine follows a layered architecture where dependencies point strictly downward. The simulation core accesses
+all components through abstract interfaces (`vdsim.core.interfaces`) and a plugin registry. Adding a vehicle model,
+tire model, controller or maneuver requires **no changes** to the core. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+for data flow, UML diagrams and the extension API.
 
 ---
 
@@ -147,29 +270,44 @@ Bi-level stabilization re-initializes the trajectory at the predicted vehicle st
 
 ---
 
-## Quick Start
+## Usage
 
-### Installation
+### Web app and REST API
 
 ```bash
-git clone https://github.com/alivsch-ai-code/MotionEngine.git
-cd MotionEngine
-
-python -m venv .venv
-source .venv/bin/activate       # Linux / macOS
-# .venv\Scripts\Activate.ps1    # Windows PowerShell
-
-pip install -e ".[gui]"         # With GUI
-# pip install -e .              # Core only (no PySide6)
+cd web && npm ci && npm run build && cd ..
+MOTIONENGINE_WEB_DIR=web/dist motion-engine-api --port 8000   # web app on http://localhost:8000/
 ```
 
-### Run the GUI
+For web development, run `npm run dev` in `web/` (Vite on port 5173, proxies the API on port 8000).
+
+```bash
+curl -s -X POST localhost:8000/simulate -H "Content-Type: application/json" \
+     -d '{"model": "bicycle_nonlinear", "maneuver": "iso_double_lane_change", "signals": ["t", "ay"]}'
+```
+
+Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, `/trajectory`, `/simulate`, `/plan`,
+`/plan/explain`, `/predict`, `/models` (train, jobs, connect, evaluate).
+
+| Variable | Effect |
+|---|---|
+| `MOTIONENGINE_API_KEY` | require the header `X-API-Key` |
+| `MOTIONENGINE_MAX_CONCURRENCY`, `MOTIONENGINE_MAX_SIM_TIME`, `MOTIONENGINE_MAX_WALL_TIME` | bound the load |
+| `MOTIONENGINE_WEB_DIR` | serve the built web app |
+| `MOTIONENGINE_MODEL_DIR` | where neural models are stored |
+| `MOTIONENGINE_ALLOWED_MODEL_HOSTS` | hosts that HTTP models may use |
+| `MOTIONENGINE_CONFIG_DIR` | location of `configs/` for a wheel install outside the source tree |
+
+Connecting ONNX models needs `pip install -e ".[api,ml]"`. A devcontainer (`.devcontainer/`) installs `.[dev,api]` for
+VS Code and Codespaces.
+
+### Desktop GUI
 
 ```bash
 python run_gui.py
 ```
 
-### Run Scenarios from CLI
+### Command line
 
 ```bash
 python run_scenario.py --list                           # List all scenarios
@@ -178,81 +316,12 @@ python run_scenario.py kreisfahrt_r40 --report report.pdf --summary report.md
 python run_scenario.py --all                             # Run all 22 scenarios
 ```
 
-### Run as Python Library
-
-```python
-from vdsim.simulation.scenario import Scenario
-from vdsim.simulation.simulator import Simulator
-from vdsim.reporting import evaluate
-
-scenario = Scenario(
-    name="Double Lane Change",
-    vehicle="sports_car",
-    model="double_track",
-    maneuver="iso_double_lane_change",
-    maneuver_params={"speed_kmh": 90},
-    lateral_controller="mpc",
-    vehicle_overrides={"systems.esp_enabled": True},
-)
-result = Simulator.from_scenario(scenario).run()
-
-for kpi in evaluate(result):
-    print(f"{kpi.label}: {kpi.formatted()} {kpi.unit} [{kpi.rating}]")
-```
-
-### Run the REST API
-
-```bash
-pip install -e ".[api]"
-motion-engine-api --port 8000    # or: uvicorn vdsim.service.app:app
-# Swagger UI: http://localhost:8000/docs   OpenAPI 3: http://localhost:8000/openapi.json
-
-curl -s -X POST localhost:8000/simulate -H "Content-Type: application/json" \
-     -d '{"model": "bicycle_nonlinear", "maneuver": "iso_double_lane_change", "signals": ["t", "ay"]}'
-```
-
-Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, `/trajectory`,
-`/simulate`, `/plan`, `/plan/explain`, `/predict`, `/models` (train, jobs, connect, evaluate). Set `MOTIONENGINE_API_KEY` to require the header `X-API-Key`;
-`MOTIONENGINE_MAX_CONCURRENCY`, `MOTIONENGINE_MAX_SIM_TIME` and `MOTIONENGINE_MAX_WALL_TIME` bound
-the load. With a wheel install outside the source tree, point `MOTIONENGINE_CONFIG_DIR` to `configs/`.
-
-```bash
-docker compose up --build        # container with the API on port 8000
-```
-
-A devcontainer (`.devcontainer/`) installs `.[dev,api]` for VS Code and Codespaces.
-
-### Run the web app
-
-<p align="center"><img src="docs/ux/after/inspector-lateral-en-dark.png" width="80%" alt="Trajectory inspector"></p>
-
-```bash
-cd web && npm ci && npm run build && cd ..
-MOTIONENGINE_WEB_DIR=web/dist motion-engine-api --port 8000   # open http://localhost:8000/
-```
-
-For development run `npm run dev` in `web/` (Vite on port 5173, proxies the API on port 8000). The Docker image
-contains the built web app. Pages:
-
-| Page | What it does |
-|---|---|
-| Simulate | maneuver + vehicle model + controller, KPIs, time series and top view |
-| Trajectory inspector | one planning cycle as seven steps: start state, lateral and longitudinal quintic/quartic polynomials with their coefficients, cost and selection among all candidates, Frenet → world transform, restrictions, steady-state single-track physics (slip angles, tire forces, steering) |
-| Neural models | train an MLP surrogate of a physics model in the background, or connect an ONNX file or HTTP endpoint; evaluate it closed-loop against the physics teacher; use it as vehicle model `neural_<id>` |
-| Predict, Vehicles, Settings | object prediction, vehicle parameter sets with units, API address and key |
-
-Language (English/German) and theme are switched in the header. The design system is documented in
-[docs/design-system.md](docs/design-system.md) and live at `/app/design`; the redesign and its measurements in
-[docs/ux/2026-11-08-redesign.md](docs/ux/2026-11-08-redesign.md). Neural model training needs no extra package;
-connecting ONNX files needs `pip install -e ".[api,ml]"`. `MOTIONENGINE_MODEL_DIR` sets where models are stored and
-`MOTIONENGINE_ALLOWED_MODEL_HOSTS` which hosts HTTP models may use.
-
-### Run Tests
+### Tests
 
 ```bash
 pytest                           # All tests
 pytest -m "not slow"             # All tests except tests marked slow
-pytest tests/planning/           # Planning tests only
+cd web && npm test               # Web app: i18n checks
 ```
 
 ---
@@ -433,6 +502,21 @@ See [docs/references/](docs/references/) for the complete reference collection o
 ## Governance
 
 MotionEngine is reviewed by specialized agents for architecture, planning, dynamics, mathematics, physics, performance, testing, documentation, research, repository health and releases. [AGENTS.md](AGENTS.md) explains the review flow, and works with Claude Code, GitHub Copilot, Cursor, Cline and Roo Code.
+
+---
+
+## Citation
+
+If MotionEngine helps your research, please cite it:
+
+```bibtex
+@software{motionengine,
+  author = {Schmidt, Aljoscha Vivien},
+  title  = {MotionEngine: Motion Planning and Vehicle Dynamics Simulation},
+  year   = {2026},
+  url    = {https://github.com/alivsch-ai-code/MotionEngine}
+}
+```
 
 ---
 
