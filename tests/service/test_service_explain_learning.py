@@ -198,6 +198,9 @@ def test_train_validation_and_cancel(client):
     assert client.post("/models/train", json={"vehicle": "../x"}).status_code == 422
     r = client.post("/models/train", json={"n_samples": 50000, "epochs": 1000})
     jid = r.json()["id"]
+    # the running job is listed, so the web app can pick it up again after a page change or reload
+    jobs = client.get("/models/jobs").json()
+    assert jobs[0]["id"] == jid and jobs[0]["state"] in ("queued", "running") and jobs[0]["created"] > 0
     assert client.post("/models/train", json={}).status_code == 409
     client.post(f"/models/jobs/{jid}/cancel")
     assert _wait(client, jid)["state"] in ("cancelled", "done")

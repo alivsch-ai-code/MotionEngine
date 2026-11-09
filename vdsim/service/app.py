@@ -468,6 +468,13 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
     def list_models():
         return [_public(m) for m in models.list()]
 
+    @app.get("/models/jobs", response_model=list[TrainJob], tags=["learning"], dependencies=secured,
+             summary="Training jobs, most recent first (the web app resumes a running job from here)")
+    def train_jobs_list():
+        with train_lock:
+            jobs = sorted(train_jobs.values(), key=lambda j: j["created"], reverse=True)
+            return [_job_view(j) for j in jobs]
+
     @app.get("/models/{model_id}", tags=["learning"], dependencies=secured, summary="Model metadata and metrics")
     def get_model(model_id: str):
         try:
@@ -499,7 +506,12 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                 raise HTTPException(status_code=409, detail="a training job is already running")
             job_id = models.new_id()
             train_jobs[job_id] = {"id": job_id, "state": "queued", "phase": "", "progress": 0.0, "history": [],
-                                  "model_id": None, "error": None, "cancel": False}
+                                  "model_id": None, "error": None, "cancel": False, "created": time.time(),
+                                  "name": req.name or f"{req.teacher} surrogate ({vehicle_name})"}
+            # keep the 20 most recent jobs
+            for old in sorted(train_jobs, key=lambda k: train_jobs[k]["created"])[:-20]:
+                if train_jobs[old]["state"] not in ("queued", "running"):
+                    del train_jobs[old]
 
         def progress(phase, frac, info):
             with train_lock:

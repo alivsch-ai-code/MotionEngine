@@ -19,7 +19,7 @@
     "unknown": "Something went wrong.",
     "checkSettings": "Check the API connection in the settings"
   },
-  "header": {
+  "header": { "training": "Training {{pct}} %", "trainingDone": "Model ready",
     "language": "Language",
     "lightMode": "Switch to light mode",
     "darkMode": "Switch to dark mode",
@@ -40,5 +40,6 @@
     "models": "Neural models",
     "settings": "Settings",
     "design": "Design system"
-  }
+  },
+  "player": {"play": "Play", "pause": "Pause", "time": "Time", "speed": "Playback speed", "follow": "Follow vehicle"}
 }

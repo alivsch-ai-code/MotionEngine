@@ -29,6 +29,8 @@
     "models": { "title": "No neural models yet", "text": "Train a surrogate of the vehicle dynamics on data from a physics model, or connect an external ONNX or HTTP model.", "action": "Train a model" }
   },
   "simulate": {
+    "drive": "Drive",
+    "driveHint": "The vehicle on its driven path; dashed: the reference of the maneuver.",
     "title": "Simulation",
     "subtitle": "Closed-loop vehicle dynamics: trajectory, controllers, actuators and vehicle model.",
     "setup": "Setup",

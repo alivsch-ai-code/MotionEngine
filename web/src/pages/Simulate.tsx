@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, type ReactNode } from "react";
+import { lazy, Suspense, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
@@ -8,7 +8,8 @@ import { CheckboxField, NumberField, SelectField } from "../components/Field";
 import { Icon } from "../components/Icon";
 import { KpiTile } from "../components/KpiTile";
 import { PageHeader } from "../components/PageHeader";
-import { PathPlot } from "../components/PathPlot";
+import { PathPlot, type Polyline } from "../components/PathPlot";
+import { TrackPlayer, type Track } from "../components/TrackPlayer";
 import type { SimulateRequest, SimulateResponse } from "../lib/api";
 import { controllerLabel, kpiLabel, kpiValue, maneuverDescription, maneuverLabel, maneuverParamLabel, modelLabel } from "../lib/domain";
 import { fmt, toDeg } from "../lib/format";
@@ -16,7 +17,7 @@ import { useClient, useMutation, usePersistentState, useQuery } from "../lib/hoo
 import { addRecentRun } from "./recentRuns";
 
 const Chart = lazy(() => import("../components/Chart"));
-const SIGNALS = ["t", "x", "y", "vx", "r", "ay", "ax", "beta", "delta_f", "lateral_error"];
+const SIGNALS = ["t", "x", "y", "psi", "vx", "r", "ay", "ax", "beta", "delta_f", "lateral_error"];
 const SUMMARY = ["max_ay", "max_yaw_rate", "max_beta", "max_lateral_error", "max_steer", "min_ax", "max_friction_utilization", "duration"];
 const MODELS_BASIC = ["bicycle_kinematic", "bicycle_linear", "bicycle_nonlinear", "double_track", "multibody"];
 
@@ -26,6 +27,23 @@ interface Form {
 }
 const DEFAULT: Form = { vehicle: "mid_size_sedan", maneuver: "iso_double_lane_change", model: "double_track", params: {},
   lateral: "stanley", longitudinal: "speed_pi", solver: "rk4", dt: 0.01, duration: 0, mu: 1.0, esp: false };
+
+const LAST_KEY = "me.simulate.last";
+let lastRun: { request: SimulateRequest; data: SimulateResponse } | null = null;
+function readLastRun() {
+  if (lastRun) return lastRun;
+  try {
+    const raw = sessionStorage.getItem(LAST_KEY);
+    lastRun = raw ? JSON.parse(raw) : null;
+  } catch {
+    lastRun = null;
+  }
+  return lastRun;
+}
+function storeLastRun(run: { request: SimulateRequest; data: SimulateResponse }) {
+  lastRun = run;
+  try { sessionStorage.setItem(LAST_KEY, JSON.stringify(run)); } catch { /* quota: memory copy is enough */ }
+}
 
 export default function Simulate() {
   const { t, i18n } = useTranslation(["app", "common", "domain"]);
@@ -37,6 +55,8 @@ export default function Simulate() {
   const maneuvers = useQuery((s) => client.maneuvers(s), [client]);
   const neural = useQuery((s) => client.models(s), [client]);
   const sim = useMutation((body: SimulateRequest) => client.simulate(body));
+  // the last result stays when the page is left and opened again (memory + session storage)
+  const [last, setLast] = useState<{ request: SimulateRequest; data: SimulateResponse } | null>(readLastRun);
 
   const maneuverOptions = useMemo(() => Object.keys(maneuvers.data ?? {}).filter((m) => m !== "custom")
     .map((m) => ({ value: m, label: maneuverLabel(t, m) })), [maneuvers.data, t]);
@@ -55,6 +75,8 @@ export default function Simulate() {
     };
     const res = await sim.run(body);
     if (res) {
+      setLast({ request: body, data: res });
+      storeLastRun({ request: body, data: res });
       const ay = res.kpis.find((k) => k.key === "max_ay")?.value;
       addRecentRun({ at: Date.now(), maneuver: form.maneuver, model: form.model, maxAy: typeof ay === "number" ? ay : null, wall: res.wall_time });
     }
@@ -107,12 +129,12 @@ export default function Simulate() {
 
         <div className="stack" aria-live="polite">
           <ErrorAlert error={sim.error} />
-          {sim.loading && !sim.data ? <ResultsSkeleton /> : null}
-          {!sim.loading && !sim.data && !sim.error ? (
+          {sim.loading && !last ? <ResultsSkeleton /> : null}
+          {!sim.loading && !last && !sim.error ? (
             <div className="card"><EmptyState art="simulation" title={t("empty.simulation.title")} text={t("empty.simulation.text")}
               action={<button type="button" className="btn btn--primary" onClick={() => void run()}><Icon name="play" />{t("empty.simulation.action")}</button>} /></div>
           ) : null}
-          {sim.data ? <Results data={sim.data} lang={i18n.language} /> : null}
+          {last ? <Results data={last.data} request={last.request} lang={i18n.language} /> : null}
         </div>
       </div>
     </div>
@@ -123,8 +145,21 @@ function ResultsSkeleton() {
   return <div className="stack"><div className="grid grid--4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} height={84} />)}</div><Skeleton height={320} /></div>;
 }
 
-function Results({ data, lang }: { data: SimulateResponse; lang: string }) {
+function Results({ data, request, lang }: { data: SimulateResponse; request: SimulateRequest | null; lang: string }) {
   const { t } = useTranslation(["app", "common", "domain"]);
+  const client = useClient();
+  const reference = useQuery((sig) => (request?.maneuver ? client.trajectory({ maneuver: request.maneuver, vehicle: request.vehicle ?? "mid_size_sedan",
+    params: request.maneuver_params, max_points: 800 }, sig) : Promise.resolve(null)), [client, request]);
+  const vehicle = useQuery((sig) => client.vehicle(request?.vehicle ?? "mid_size_sedan", sig), [client, request?.vehicle]);
+  const track = useMemo<Track>(() => {
+    const p = Object.fromEntries((vehicle.data?.schema ?? []).map((q) => [q.key, q.value as number]));
+    const length = p["vehicle.length"] ?? 4.8, width = p["vehicle.width"] ?? 1.85;
+    // geometric center relative to the CoG: overhangs split evenly
+    const offset = (p["vehicle.cg_to_front"] ?? 1.25) - 0.5 * (p["vehicle.wheelbase"] ?? 2.8);
+    return { t: data.signals.t ?? [], x: data.signals.x ?? [], y: data.signals.y ?? [], psi: data.signals.psi ?? [],
+      v: data.signals.vx ?? [], length, width, centerOffset: offset };
+  }, [data, vehicle.data]);
+  const refLines = useMemo<Polyline[]>(() => (reference.data ? [{ x: reference.data.x, y: reference.data.y, kind: "road" }] : []), [reference.data]);
   const s = data.signals;
   const tt = s.t ?? [];
   const deg = useMemo(() => ({
@@ -147,8 +182,9 @@ function Results({ data, lang }: { data: SimulateResponse; lang: string }) {
       <div className="grid grid--4">
         {summary.map((k) => <KpiTile key={k.key} label={kpiLabel(t, k)} value={kpiValue(t, k)} unit={k.unit} lang={lang} badge={k.rating as "ok" | "warn" | "fail" | ""} />)}
       </div>
-      <div className="card"><div className="card__header"><h2>{t("simulate.path")}</h2></div><div className="card__body">
-        <PathPlot ariaLabel={t("simulate.path")} lines={[{ x: s.x ?? [], y: s.y ?? [], kind: "selected" }]} height={260} />
+      <div className="card"><div className="card__header"><div><h2>{t("simulate.drive")}</h2><p>{t("simulate.driveHint")}</p></div></div><div className="card__body">
+        {track.psi.length ? <TrackPlayer track={track} lines={refLines} height={280} ariaLabel={t("simulate.drive")} />
+          : <PathPlot ariaLabel={t("simulate.path")} lines={[{ x: s.x ?? [], y: s.y ?? [], kind: "selected" }]} height={260} />}
       </div></div>
       <Suspense fallback={<Skeleton height={240} />}>
         <div className="grid grid--2">

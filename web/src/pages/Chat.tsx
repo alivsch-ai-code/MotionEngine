@@ -11,6 +11,7 @@ import { Icon } from "../components/Icon";
 import { KpiTile } from "../components/KpiTile";
 import { PageHeader } from "../components/PageHeader";
 import { PathPlot, type Box, type Polyline } from "../components/PathPlot";
+import { TrackPlayer, type Track } from "../components/TrackPlayer";
 import type { ChatEvent, PlanView, PredictionView, SimulationView, ToolView } from "../lib/api";
 import { kpiLabel, kpiValue, maneuverLabel, modelLabel } from "../lib/domain";
 import { fmt } from "../lib/format";
@@ -244,6 +245,7 @@ function SimulationResult({ view }: { view: SimulationView }) {
   const s = view.signals;
   const kpis = SIM_KPIS.map((k) => view.kpis.find((x) => x.key === k)).filter((k): k is NonNullable<typeof k> => Boolean(k));
   const lines = useMemo<Polyline[]>(() => [{ x: s.x ?? [], y: s.y ?? [], kind: "physics" }], [s]);
+  const track = useMemo<Track>(() => ({ t: s.t ?? [], x: s.x ?? [], y: s.y ?? [], psi: s.psi ?? [], v: s.vx ?? [], length: 4.8, width: 1.85 }), [s]);
   const series = useMemo(() => [{ label: t("simulate.series.ay"), values: s.ay ?? [] }], [s, t]);
   return (
     <>
@@ -251,7 +253,8 @@ function SimulationResult({ view }: { view: SimulationView }) {
         {kpis.map((k) => <KpiTile key={k.key} label={kpiLabel(t, k)} value={kpiValue(t, k)} unit={k.unit} lang={i18n.language} badge={k.rating as "ok" | "warn" | "fail" | ""} />)}
       </div>
       <div className="grid grid--2">
-        <PathPlot lines={lines} height={200} ariaLabel={t("chat.drivenPath")} />
+        {track.psi.length ? <TrackPlayer track={track} height={200} followWidth={30} autoPlay={false} ariaLabel={t("chat.drivenPath")} />
+          : <PathPlot lines={lines} height={200} ariaLabel={t("chat.drivenPath")} />}
         <Chart x={s.t ?? []} series={series} xLabel="t [s]" yLabel="a_y [m/s²]" height={200} ariaLabel={t("simulate.series.ay")} />
       </div>
     </>

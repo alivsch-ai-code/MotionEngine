@@ -284,6 +284,8 @@ class TrainJob(BaseModel):
     history: list[dict] = Field(default_factory=list)
     model_id: str | None = None
     error: str | None = None
+    created: float = Field(0.0, description="Unix time the job was started")
+    name: str = ""
 
 
 class ConnectRequest(_Strict):

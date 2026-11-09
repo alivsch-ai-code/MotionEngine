@@ -172,7 +172,7 @@ for _tool in TOOLS:
     # stream tool inputs as they are generated; inputs are validated before any tool runs (see _validate)
     _tool["eager_input_streaming"] = True
 
-SIM_SIGNALS = ["t", "x", "y", "vx", "ay", "r", "delta_f", "lateral_error"]
+SIM_SIGNALS = ["t", "x", "y", "psi", "vx", "ay", "r", "delta_f", "lateral_error"]
 
 
 class ToolError(Exception):

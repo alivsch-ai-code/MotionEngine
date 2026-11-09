@@ -29,6 +29,7 @@ const PATHS: Record<string, string> = {
   send: "M22 2 11 13M22 2l-7 20-4-9-9-4z",
   stop: "M7 7h10v10H7z",
   plus: "M12 5v14M5 12h14",
+  pause: "M7 5h3v14H7zM14 5h3v14h-3z",
 };
 
 export type IconName = keyof typeof PATHS;

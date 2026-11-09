@@ -29,6 +29,8 @@
     "models": { "title": "Noch keine neuronalen Modelle", "text": "Trainiere ein Ersatzmodell der Fahrdynamik mit Daten eines Physikmodells oder schließe ein externes ONNX- oder HTTP-Modell an.", "action": "Modell trainieren" }
   },
   "simulate": {
+    "drive": "Fahrt",
+    "driveHint": "Das Fahrzeug auf der gefahrenen Bahn; gestrichelt: die Sollbahn des Manövers.",
     "title": "Simulation",
     "subtitle": "Fahrdynamik im geschlossenen Regelkreis: Trajektorie, Regler, Aktorik und Fahrzeugmodell.",
     "setup": "Konfiguration",

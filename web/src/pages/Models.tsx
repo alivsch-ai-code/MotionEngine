@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -9,7 +9,8 @@ import { Icon } from "../components/Icon";
 import { KpiTile } from "../components/KpiTile";
 import { PageHeader } from "../components/PageHeader";
 import { PathPlot } from "../components/PathPlot";
-import type { ModelMeta, TrainJob, TrainRequest } from "../lib/api";
+import type { ModelMeta, TrainRequest } from "../lib/api";
+import { isActive, useTraining } from "../lib/training";
 import { maneuverLabel } from "../lib/domain";
 import { fmt } from "../lib/format";
 import { useClient, useMutation, useQuery } from "../lib/hooks";
@@ -19,7 +20,9 @@ type Tab = "models" | "train" | "connect";
 
 export default function Models() {
   const { t } = useTranslation(["app", "common"]);
-  const [tab, setTab] = useState<Tab>("models");
+  const { job: activeJob } = useTraining();
+  const [tab, setTab] = useState<Tab>(() => (isActive(activeJob) ? "train" : "models"));
+  useEffect(() => { if (isActive(activeJob)) setTab((cur) => (cur === "models" ? "train" : cur)); }, [activeJob?.id]); // eslint-disable-line
   const client = useClient();
   const list = useQuery((s) => client.models(s), [client]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -142,29 +145,26 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
   const client = useClient();
   const [form, setForm] = useState<TrainRequest & { hiddenText: string }>({ vehicle: "mid_size_sedan", teacher: "bicycle_nonlinear", n_samples: 20000,
     hidden: [64, 64], hiddenText: "64, 64", epochs: 150, learning_rate: 0.002, seed: 0, name: "" });
-  const [job, setJob] = useState<TrainJob | null>(null);
-  const start = useMutation((body: TrainRequest) => client.train(body));
+  // the job is followed app-wide (lib/training.tsx): leaving this page does not lose it
+  const { job, starting, error: startError, start, cancel, dismiss } = useTraining();
   const catalog = useQuery((s) => client.catalog(s), [client]);
+  const handled = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!job || ["done", "failed", "cancelled"].includes(job.state)) return;
-    const timer = window.setInterval(() => {
-      void client.job(job.id).then((j) => {
-        setJob(j);
-        if (j.state === "done" && j.model_id) onDone(j.model_id);
-      }, () => undefined);
-    }, 700);
-    return () => window.clearInterval(timer);
-  }, [job, client, onDone]);
+    if (job && job.state === "done" && job.model_id && handled.current !== job.id) {
+      handled.current = job.id;
+      onDone(job.model_id);
+      dismiss();
+    }
+  }, [job, onDone, dismiss]);
 
   const submit = async () => {
     const hidden = form.hiddenText.split(/[,\s]+/).map(Number).filter((n) => Number.isFinite(n) && n > 0);
     const { hiddenText: _unused, ...body } = form;
     void _unused;
-    const j = await start.run({ ...body, hidden: hidden.length ? hidden : [64, 64] });
-    if (j) setJob(j);
+    await start({ ...body, hidden: hidden.length ? hidden : [64, 64] });
   };
-  const running = job !== null && ["queued", "running"].includes(job.state);
+  const running = isActive(job);
   const hist = job?.history ?? [];
   const last = hist[hist.length - 1];
   const chart = useMemo(() => ({ x: hist.map((h) => h.epoch), train: hist.map((h) => h.train), val: hist.map((h) => h.val) }), [hist]);
@@ -189,16 +189,16 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
               <TextField label={t("models.trainForm.name")} value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
             </div>
           </details>
-          <button type="submit" className="btn btn--primary btn--lg" disabled={running || start.loading}><Icon name="brain" />{t("models.trainForm.start")}</button>
+          <button type="submit" className="btn btn--primary btn--lg" disabled={running || starting}><Icon name="brain" />{t("models.trainForm.start")}</button>
         </div>
       </form>
       <div className="stack">
-        <ErrorAlert error={start.error} />
+        <ErrorAlert error={startError} />
         {job ? (
           <div className="card"><div className="card__body stack">
             <div className="row row--between">
               <h2>{t(`models.jobStates.${job.state}`)}{job.phase ? ` · ${t(`models.phases.${job.phase}`, { defaultValue: job.phase })}` : ""}</h2>
-              {running ? <button type="button" className="btn btn--secondary btn--sm" onClick={() => void client.cancelJob(job.id).then(setJob)}>{t("common:cancel")}</button> : null}
+              {running ? <button type="button" className="btn btn--secondary btn--sm" onClick={() => void cancel()}>{t("common:cancel")}</button> : null}
             </div>
             <div className="progress" role="progressbar" aria-valuenow={Math.round(job.progress * 100)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${job.progress * 100}%` }} /></div>
             {last ? <p className="subtle">{t("models.lastEpoch", { epoch: last.epoch, train: fmt(last.train, i18n.language, 3), val: fmt(last.val, i18n.language, 3) })}</p> : null}

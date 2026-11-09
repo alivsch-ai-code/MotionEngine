@@ -44,7 +44,7 @@ export interface ModelMeta {
   time_total_s?: number; test_metrics?: Record<string, Metric>; history?: { epoch: number; train: number; val: number }[]; url?: string;
 }
 export interface TrainRequest { vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
-export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null }
+export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null; created?: number; name?: string }
 export interface Evaluation { maneuver: string; max_position_error: number; max_yaw_rate_error: number; wall_time: { physics: number; neural: number }; kpis: Record<string, { physics: number; neural: number }>; series: Record<string, number[]> }
 
 export interface ChatStatus { available: boolean; installed: boolean; credential: boolean; model: string }
@@ -142,6 +142,8 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     catalog: (s?: AbortSignal) => request<Catalog>("GET", "/vehicle", undefined, s),
     vehicle: (name: string, s?: AbortSignal) => request<VehicleDetail>("GET", `/vehicle/${encodeURIComponent(name)}`, undefined, s),
     maneuvers: (s?: AbortSignal) => request<Record<string, ManeuverInfo>>("GET", "/trajectory/maneuvers", undefined, s),
+    trajectory: (body: { maneuver: string; vehicle: string; params?: Record<string, number | string | boolean>; max_points?: number }, s?: AbortSignal) =>
+      request<{ name: string; length: number; x: number[]; y: number[]; psi: number[]; v: number[] }>("POST", "/trajectory", body, s),
     simulate: (body: SimulateRequest, s?: AbortSignal) => request<SimulateResponse>("POST", "/simulate", body, s),
     explain: (body: PlanRequest, s?: AbortSignal) => request<ExplainResponse>("POST", "/plan/explain", body, s),
     predict: (body: { predictor: string; horizon: number; dt: number; objects: ObjectSpec[] }, s?: AbortSignal) => request<PredictResponse>("POST", "/predict", body, s),
@@ -150,6 +152,7 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     deleteModel: (id: string) => request<void>("DELETE", `/models/${encodeURIComponent(id)}`),
     train: (body: TrainRequest) => request<TrainJob>("POST", "/models/train", body),
     job: (id: string, s?: AbortSignal) => request<TrainJob>("GET", `/models/jobs/${encodeURIComponent(id)}`, undefined, s),
+    jobs: (s?: AbortSignal) => request<TrainJob[]>("GET", "/models/jobs", undefined, s),
     cancelJob: (id: string) => request<TrainJob>("POST", `/models/jobs/${encodeURIComponent(id)}/cancel`),
     connect: (body: { name: string; backend: "onnx" | "http"; onnx_base64?: string; url?: string; vehicle: string }) => request<ModelMeta>("POST", "/models/connect", body),
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
