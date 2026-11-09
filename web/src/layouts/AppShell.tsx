@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { ApiStatus, LanguageSwitcher, ThemeToggle } from "../components/HeaderControls";
 import { Icon, type IconName } from "../components/Icon";
+import { TrainingProvider, useTraining } from "../lib/training";
 import { LogoMark, Wordmark } from "../components/Logo";
 import { PageSkeleton } from "../components/PageSkeleton";
 
@@ -13,6 +14,7 @@ const NAV: { section: string; items: { to: string; key: string; icon: IconName; 
     { to: "/app/assistant", key: "nav.assistant", icon: "chat" },
     { to: "/app/simulate", key: "nav.simulate", icon: "play" },
     { to: "/app/inspector", key: "nav.inspector", icon: "sigma" },
+    { to: "/app/parking", key: "nav.parking", icon: "parking" },
     { to: "/app/predict", key: "nav.predict", icon: "radar" },
   ] },
   { section: "nav.sections.models", items: [
@@ -25,7 +27,25 @@ const NAV: { section: string; items: { to: string; key: string; icon: IconName; 
   ] },
 ];
 
+function TrainingBadge() {
+  const { t } = useTranslation();
+  const { job } = useTraining();
+  if (!job || !["queued", "running", "done"].includes(job.state)) return null;
+  const done = job.state === "done";
+  return (
+    <Link to="/app/models" className={`badge ${done ? "badge--success" : "badge--info"} training-badge`} aria-live="polite"
+      title={job.name ?? ""}>
+      {done ? <Icon name="check" size={14} /> : <span className="spinner spinner--sm" aria-hidden="true" />}
+      {done ? t("header.trainingDone") : t("header.training", { pct: Math.round(job.progress * 100) })}
+    </Link>
+  );
+}
+
 export function AppShell() {
+  return <TrainingProvider><Shell /></TrainingProvider>;
+}
+
+function Shell() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -38,6 +58,7 @@ export function AppShell() {
           aria-label={t("header.menu")} onClick={() => setOpen((o) => !o)}><Icon name="menu" /></button>
         <Link to="/" className="shell__brand" aria-label={t("header.home")}><LogoMark /><Wordmark /></Link>
         <div className="grow" />
+        <TrainingBadge />
         <ApiStatus />
         <LanguageSwitcher />
         <ThemeToggle />

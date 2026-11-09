@@ -44,9 +44,24 @@ export interface ModelMeta {
   time_total_s?: number; test_metrics?: Record<string, Metric>; history?: { epoch: number; train: number; val: number }[]; url?: string;
 }
 export interface TrainRequest { vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
-export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null }
+export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null; created?: number; name?: string }
 export interface Evaluation { maneuver: string; max_position_error: number; max_yaw_rate_error: number; wall_time: { physics: number; neural: number }; kpis: Record<string, { physics: number; neural: number }>; series: Record<string, number[]> }
 
+export interface ParkRequest {
+  vehicle?: string; kind: "parallel" | "perpendicular" | "angled"; entry: "reverse" | "forward"; side: "right" | "left";
+  steering: "front" | "rear" | "counter" | "in_phase"; layout: "fwd" | "rwd" | "awd"; ratio?: number; max_rear_angle?: number;
+  mu?: number; slope?: number; gap_length?: number; spot_width?: number; aisle_width?: number; angle_deg?: number; time_limit?: number; simulate?: boolean;
+}
+export interface ParkResponse {
+  success: boolean; message: string; compute_time: number; nodes_expanded: number;
+  geometry: { mode: string; min_radius: number; reference_from_rear_axle: number; max_front_deg: number; max_rear_deg: number; ratio: number };
+  footprint: { front: number; rear: number; width: number; length: number };
+  scenario: { kind: string; entry: string; side: string; start: number[]; goal: number[]; bounds: number[]; spot: number[][]; final_direction: number;
+    obstacles: { kind: string; polygon: number[][] }[]; info: Record<string, number> };
+  path?: { x: number[]; y: number[]; psi: number[]; direction: number[]; kappa: number[]; s: number[]; length: number; cusps: number; segments: { direction: number; length: number }[] };
+  driven?: { success: boolean; message: string; t: number[]; x: number[]; y: number[]; psi: number[]; v: number[]; delta_f: number[]; delta_r: number[];
+    e_lat: number[]; segment: number[]; traction_limited: boolean[]; kpis: Record<string, number | null> };
+}
 export interface ChatStatus { available: boolean; installed: boolean; credential: boolean; model: string }
 export interface SimulationView { kind: "simulation"; request: Record<string, unknown>; model: string; stop_code: string; simulated_time: number; wall_time: number; kpis: Kpi[]; signals: Record<string, (number | null)[]> }
 export interface PlanView {
@@ -54,7 +69,8 @@ export interface PlanView {
   driven: { x: number[]; y: number[] }; obstacles: ObjectSpec[]; ego: { x: number; y: number; psi: number; vx: number }; valid: boolean; n_candidates: number; compute_time: number; cost: number | null;
 }
 export interface PredictionView { kind: "prediction"; request: Record<string, unknown>; objects: PredictedObject[] }
-export type ToolView = SimulationView | PlanView | PredictionView;
+export type ParkingToolView = ParkResponse & { kind: "parking"; request: Record<string, unknown> };
+export type ToolView = SimulationView | PlanView | PredictionView | ParkingToolView;
 export type ChatEvent =
   | { event: "start"; data: { conversation_id: string; model: string } }
   | { event: "text"; data: { text: string } }
@@ -142,6 +158,8 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     catalog: (s?: AbortSignal) => request<Catalog>("GET", "/vehicle", undefined, s),
     vehicle: (name: string, s?: AbortSignal) => request<VehicleDetail>("GET", `/vehicle/${encodeURIComponent(name)}`, undefined, s),
     maneuvers: (s?: AbortSignal) => request<Record<string, ManeuverInfo>>("GET", "/trajectory/maneuvers", undefined, s),
+    trajectory: (body: { maneuver: string; vehicle: string; params?: Record<string, number | string | boolean>; max_points?: number }, s?: AbortSignal) =>
+      request<{ name: string; length: number; x: number[]; y: number[]; psi: number[]; v: number[] }>("POST", "/trajectory", body, s),
     simulate: (body: SimulateRequest, s?: AbortSignal) => request<SimulateResponse>("POST", "/simulate", body, s),
     explain: (body: PlanRequest, s?: AbortSignal) => request<ExplainResponse>("POST", "/plan/explain", body, s),
     predict: (body: { predictor: string; horizon: number; dt: number; objects: ObjectSpec[] }, s?: AbortSignal) => request<PredictResponse>("POST", "/predict", body, s),
@@ -150,9 +168,11 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     deleteModel: (id: string) => request<void>("DELETE", `/models/${encodeURIComponent(id)}`),
     train: (body: TrainRequest) => request<TrainJob>("POST", "/models/train", body),
     job: (id: string, s?: AbortSignal) => request<TrainJob>("GET", `/models/jobs/${encodeURIComponent(id)}`, undefined, s),
+    jobs: (s?: AbortSignal) => request<TrainJob[]>("GET", "/models/jobs", undefined, s),
     cancelJob: (id: string) => request<TrainJob>("POST", `/models/jobs/${encodeURIComponent(id)}/cancel`),
     connect: (body: { name: string; backend: "onnx" | "http"; onnx_base64?: string; url?: string; vehicle: string }) => request<ModelMeta>("POST", "/models/connect", body),
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
+    park: (body: ParkRequest, s?: AbortSignal) => request<ParkResponse>("POST", "/park", body, s),
     chatStatus: (s?: AbortSignal) => request<ChatStatus>("GET", "/chat/status", undefined, s),
     chatDelete: (id: string) => request<void>("DELETE", `/chat/${encodeURIComponent(id)}`),
     async *chat(body: { message: string; conversation_id?: string | null }, signal?: AbortSignal): AsyncGenerator<ChatEvent> {

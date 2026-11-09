@@ -36,7 +36,8 @@ DEFAULT_STACK = {
     "perception": {"component": "perception/object_sensor"},
     "prediction": {"component": "predictor/constant_acceleration"},
     "behavior": {"component": "behavior_planner/rule_based", "period": 0.1},
-    "planner": {"component": "trajectory_planner/werling", "period": 0.1},
+    # Werling planner; for a parking task of the behavior it switches to the parking planner (Hybrid A*)
+    "planner": {"component": "trajectory_planner/werling_parking", "period": 0.1},
     "controller": {"component": "tracking_controller/werling_bilevel", "period": 0.01},
     "dynamics": {"component": "vehicle_dynamics/split_range"},
     "actuators": {"component": "actuator/steering_powertrain"},

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Parking planner** (`vdsim.planning.parking`, `POST /park`, web page **Parking**, assistant tool `plan_parking`):
+  parallel, perpendicular and angled spots, forward or reverse, left or right; front, rear-only and four-wheel
+  (counter-/in-phase) steering through the side-slip-free reference point of each configuration; Reeds-Shepp curves,
+  Hybrid A* with a multi-maneuver way out of tight spots and shortcut smoothing; closed loop with the Samson
+  rear-axle law, steering-rate speed profile and traction limits per drive layout. Research and results:
+  `docs/planning/parking.md`.
+- Web app: animated playback of the driven path (Simulate page, assistant cards, Parking page); training jobs
+  are followed app-wide (`GET /models/jobs`, progress badge in the header) and survive page changes and reloads;
+  the last simulation stays when the Simulate page is left.
 - **Assistant** (`/app/assistant`, `POST /chat`): a chat in the web app where you describe a simulation or a
   planning situation in plain English or German. Claude calls the service's own simulation, planning, prediction and
   catalog functions as tools (inputs validated with the REST schemas, server limits unchanged), streams its answer as
@@ -46,13 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Known issues
 
-- `laengsparken_rueckwaerts` does not park in the full stack (standstill local optimum of the velocity mode
-  at v_ref = 1 m/s), see review finding F2.
 - `MOTIONENGINE_CONFIG_DIR` to locate `configs/` outside the source tree.
 - Review report `docs/review/2026-11-08-full-review.md`.
 
 ### Fixed
 
+- `laengsparken_rueckwaerts` parks (review finding F2): the behavior layer hands the parking maneuver to the parking
+  planner (`trajectory_planner/werling_parking`, now the default planner of the AD stack; it delegates to the Werling
+  planner for everything else) instead of running the Werling velocity mode on the reversed lane line.
 - Planner collision check: long objects were covered by at most 5 circles (a 16.5 m truck had r = 2.07 m), so a
   truck in the adjacent lane collided with every candidate and the planner fell back; the library scenario
   `einfaedeln_lkw` ended in a collision after 2.5 s. The circle count now bounds the lateral inflation (0.3 m).

@@ -29,6 +29,8 @@
     "models": { "title": "Noch keine neuronalen Modelle", "text": "Trainiere ein Ersatzmodell der Fahrdynamik mit Daten eines Physikmodells oder schließe ein externes ONNX- oder HTTP-Modell an.", "action": "Modell trainieren" }
   },
   "simulate": {
+    "drive": "Fahrt",
+    "driveHint": "Das Fahrzeug auf der gefahrenen Bahn; gestrichelt: die Sollbahn des Manövers.",
     "title": "Simulation",
     "subtitle": "Fahrdynamik im geschlossenen Regelkreis: Trajektorie, Regler, Aktorik und Fahrzeugmodell.",
     "setup": "Konfiguration",
@@ -251,7 +253,7 @@
     "tools": {
       "get_catalog": "Katalog",
       "run_simulation": "Simulation",
-      "plan_trajectory": "Trajektorienplanung",
+      "plan_parking": "Einparken", "plan_trajectory": "Trajektorienplanung",
       "predict_objects": "Prädiktion"
     },
     "plan": {
@@ -279,5 +281,90 @@
       "invalid_tool_input": "Der Assistent hat mehrfach ungültige Werkzeugeingaben gesendet.",
       "other": "Der Assistent konnte diese Antwort nicht abschließen."
     }
+  },
+  "parking": {
+    "title": "Parken",
+    "subtitle": "Einparkmanöver planen und fahren: Längs-, Quer- oder Schrägparken, vorwärts oder rückwärts, für jede Lenk- und Antriebsart.",
+    "setup": "Parkaufgabe",
+    "kindLabel": "Parklücke",
+    "entryLabel": "Einfahrt",
+    "sideLabel": "Seite",
+    "steeringLabel": "Gelenkte Räder",
+    "layoutLabel": "Angetriebene Räder",
+    "kind": {
+      "parallel": "Längs (entlang der Straße)",
+      "perpendicular": "Quer (90°)",
+      "angled": "Schräg"
+    },
+    "entry": {
+      "reverse": "Rückwärts",
+      "forward": "Vorwärts"
+    },
+    "side": {
+      "right": "Rechts",
+      "left": "Links"
+    },
+    "steering": {
+      "front": "Vorderräder",
+      "rear": "Nur Hinterräder",
+      "counter": "Allrad, gegensinnig",
+      "in_phase": "Allrad, gleichsinnig"
+    },
+    "steeringHint": {
+      "front": "Normales Auto: die Hinterachse bewegt sich schlupffrei und ist der Referenzpunkt der Planung.",
+      "rear": "Nur die Hinterräder lenken (wie beim Gabelstapler): die Vorderachse ist der Referenzpunkt, das Heck schwenkt in Kurven aus.",
+      "counter": "Hinterräder lenken gegen die Vorderräder: kleinerer Wendekreis, Referenzpunkt zwischen den Achsen. Serien-Hinterachslenkung bei niedriger Geschwindigkeit.",
+      "in_phase": "Hinterräder lenken wie die Vorderräder: größerer Wendekreis, das Fahrzeug bewegt sich stärker seitlich. Für hohe Geschwindigkeit gedacht; braucht beim Parken mehr Platz."
+    },
+    "steeringTip": "Welche Räder lenken, bestimmt, um welchen Punkt sich das Fahrzeug dreht (Momentanpol) und wie klein der Wendekreis ist.",
+    "layout": {
+      "fwd": "Frontantrieb",
+      "rwd": "Heckantrieb",
+      "awd": "Allradantrieb"
+    },
+    "layoutTip": "Welche Räder angetrieben sind, bestimmt die Traktion am Hang und bei Glätte (Achslast der Antriebsachse mal Reibwert).",
+    "gapLength": "Länge der Lücke",
+    "gapHint": "Leer = Fahrzeuglänge + 1,8 m; + 1,4 m ist eine enge Lücke mit vielen Zügen",
+    "aisleWidth": "Fahrgassenbreite",
+    "spotWidth": "Stellplatzbreite",
+    "angle": "Winkel der Stellplätze",
+    "ratio": "Lenkverhältnis hinten/vorne",
+    "ratioTip": "tan(Winkel hinten) / tan(Winkel vorne): negativ = gegensinnig, positiv = gleichsinnig.",
+    "defaultHint": "Leer = Standardwert",
+    "mu": "Reibwert",
+    "muTip": "0,9 trockener Asphalt, 0,5 nass, 0,2 Schnee.",
+    "slope": "Steigung entlang der Straße",
+    "slopeTip": "Positiv = bergauf in Fahrtrichtung der Straße.",
+    "run": "Planen und einparken",
+    "running": "Plane…",
+    "empty": {
+      "title": "Parkaufgabe wählen",
+      "text": "Der Planer sucht einen fahrbaren Weg in die Lücke (Hybrid A* mit Reeds-Shepp-Kurven), dann fährt ein Regler ihn auf einem Fahrzeugmodell für niedrige Geschwindigkeit."
+    },
+    "planned": "Weg gefunden",
+    "notPlanned": "Kein Weg",
+    "parked": "Geparkt",
+    "notParked": "Nicht geparkt",
+    "contact": "Berührung mit einem Hindernis",
+    "timing": "Geplant in {{s}} s ({{n}} Suchknoten)",
+    "failed": "Der Planer hat keinen Weg in diese Lücke gefunden.",
+    "kpi": {
+      "moves": "Züge",
+      "length": "Weglänge",
+      "radius": "Min. Wenderadius",
+      "time": "Manöverdauer",
+      "finalError": "Positionsfehler am Ende",
+      "heading": "Winkelfehler am Ende",
+      "tracking": "Max. Folgefehler",
+      "clearance": "Min. Abstand"
+    },
+    "view": "Manöver",
+    "viewHint": "Durchgezogen: vorwärts, gestrichelt: rückwärts. Grau: Bordstein und Wände, orange: geparkte Fahrzeuge, grün: Ziel-Parklücke.",
+    "steeringChart": "Radlenkwinkel",
+    "speedChart": "Geschwindigkeit",
+    "front": "Vorne",
+    "rear": "Hinten",
+    "speed": "Geschwindigkeit",
+    "geometryInfo": "Wenderadius des Referenzpunkts {{r}} m · Referenzpunkt {{p}} m vor der Hinterachse · max. Lenkwinkel vorne {{f}}°, hinten {{rr}}°"
   }
 }

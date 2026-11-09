@@ -12,11 +12,9 @@ from vdsim.ad import run_scenario
 from vdsim.planning.collision import circle_cover, circles_needed
 from vdsim.world import list_ad_scenarios
 
-KNOWN_FAILURES = {
-    # Werling velocity mode at v_ref = 1 m/s: the sampled standstill candidate (k_nu nu^2 / 2 = 10) is cheaper
-    # than accelerating to v_ref (k_tau tau ~ 11) in every cycle, so the vehicle stays beside the gap.
-    # Root cause and options: docs/review/2026-11-08-full-review.md, finding F2.
-    "laengsparken_rueckwaerts": "standstill local optimum in the reverse phase (review finding F2)",
+KNOWN_FAILURES: dict[str, str] = {
+    # laengsparken_rueckwaerts (review finding F2) parks since the parking planner took over the parking
+    # maneuver (trajectory_planner/werling_parking, vdsim.planning.parking)
 }
 SCENARIOS = [s["name"] for s in list_ad_scenarios()]
 
