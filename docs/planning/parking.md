@@ -87,8 +87,8 @@ traction limit.
 
 ## 5. Results (mid-size sedan, `PlannerSettings()` defaults, 4 vCPU)
 
-Plan, then drive: 3 spot kinds × 2 entries × 4 steering modes, with the default dimensions (6.2 m
-parallel gap in this run, 6.0 m aisles).
+Plan, then drive: 3 spot kinds × 2 entries × 4 steering modes, with a tight 6.2 m parallel gap (vehicle
+length + 1.4 m) and 6.0 m aisles.
 
 | | front | rear | counter | in_phase |
 |---|---|---|---|---|
@@ -99,8 +99,10 @@ parallel gap in this run, 6.0 m aisles).
 | angled, reverse | ok, 4 | no path | ok, 4 | no path |
 | angled, forward | ok, 3 | ok, 1 | ok, 1 | no path |
 
-For every result that drives: final position error 1-12 cm, final heading error below 3 deg, tracking
-error 2-14 cm, and planning time 0.3-12 s.
+For every result that drives (speeds 1.0 m/s forward, 0.6 m/s reverse, 0.8 s curvature preview): final position
+error 1-9 cm, final heading error below 3 deg, tracking error 2-5 cm, no contact with an obstacle. Planning
+takes 0.3-12 s. With the default 6.6 m gap, reverse parallel parking takes 4 moves: final error 2.6 cm,
+tracking error 3.1 cm, minimum clearance 10 cm.
 
 In-phase four-wheel steering is a high-speed mode. With a 7 m turning radius it does not fit standard
 6 m aisles; production systems switch to counter-phase below about 30-60 km/h.

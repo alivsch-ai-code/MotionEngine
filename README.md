@@ -59,6 +59,8 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 
 <img src="docs/images/app/simulate-dark.png" alt="Simulation page: ISO double lane change with the double-track model, KPIs and driven path" width="100%">
 
+<img src="docs/images/app/parking-dark.png" alt="Parking page: reverse parallel parking, planned moves (forward solid, reverse dashed), KPIs and the animated vehicle" width="100%">
+
 | Page | What it does |
 |---|---|
 | **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
