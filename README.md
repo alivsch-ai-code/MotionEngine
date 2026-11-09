@@ -64,6 +64,7 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 | **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
 | **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view |
 | **Trajectory inspector** | one planning cycle in seven steps, each with formula, values, source and chart |
+| **Parking** | parallel, perpendicular or angled spots, forward or in reverse; front, rear-only or four-wheel steering; front, rear or all-wheel drive; animated maneuver with KPIs |
 | **Neural models** | train an MLP surrogate in the background, connect ONNX or HTTP models, compare them closed loop with the physics model, simulate with them |
 | **Prediction, Vehicles, Settings** | object prediction, every vehicle parameter with unit and meaning, API address and key |
 
@@ -117,6 +118,7 @@ for kpi in evaluate(result):
 
 | Area | What you get |
 |---|---|
+| **Parking** | Hybrid A* with Reeds-Shepp curves and multi-maneuver way out of tight spots, for front, rear-only and four-wheel steering; closed loop with traction limits per drive layout ([docs/planning/parking.md](docs/planning/parking.md)) |
 | **Trajectory planning** | Werling planner in Frenet coordinates (quintic/quartic polynomials, jerk-optimal costs, lazy selection, time-consistent replanning, low-speed d(s) mode), circle-cover collision checking, behavior layer, object prediction |
 | **Vehicle dynamics** | kinematic, linear and nonlinear bicycle, double track (12 states), multibody (24 states); linear, Pacejka MF and brush tires; ICE and electric powertrain, gearbox, brakes with EBD |
 | **Control** | Stanley, Pure Pursuit, MPC, bi-level stabilization; ACC, AEB, lane keeping; ABS, TCS, ESP, torque vectoring, active suspension; actuator latency chains |
@@ -289,7 +291,7 @@ curl -s -X POST localhost:8000/simulate -H "Content-Type: application/json" \
 ```
 
 Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, `/trajectory`, `/simulate`, `/plan`,
-`/plan/explain`, `/predict`, `/models` (train, jobs, connect, evaluate), `/chat` (assistant, server-sent events).
+`/plan/explain`, `/park`, `/predict`, `/models` (train, jobs, connect, evaluate), `/chat` (assistant, server-sent events).
 
 | Variable | Effect |
 |---|---|
@@ -408,7 +410,7 @@ Vehicle presets: mid-size sedan (ICE/RWD), electric sedan (AWD), sports car, SUV
 14 automated driving scenarios (`configs/ad_scenarios/`, full planning and control stack in the desktop GUI's AD workbench)
 with mission and success criteria: highway overtaking and exit, merging next to a truck, cut-in, cut-out at a traffic jam,
 rural overtaking, urban driving, intersections with traffic lights and right of way, roundabout, emergency evasion,
-traffic density, the highway experiment from Werling (2011) and reverse parallel parking (known issue, see [CHANGELOG](CHANGELOG.md)).
+traffic density, the highway experiment from Werling (2011) and reverse parallel parking.
 
 ---
 

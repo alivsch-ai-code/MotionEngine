@@ -31,6 +31,7 @@ _ALIASES = {}                         # "kind/name" -> "kind/name" (renamed comp
 # packages whose import registers built-in components (missing packages are skipped)
 BUILTIN_MODULES = [
     "vdsim.planning",
+    "vdsim.planning.parking.ad",
     "vdsim.stabilization",
     "vdsim.world",
     "vdsim.perception",

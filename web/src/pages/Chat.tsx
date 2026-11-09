@@ -12,6 +12,7 @@ import { KpiTile } from "../components/KpiTile";
 import { PageHeader } from "../components/PageHeader";
 import { PathPlot, type Box, type Polyline } from "../components/PathPlot";
 import { TrackPlayer, type Track } from "../components/TrackPlayer";
+import { ParkingView } from "../components/ParkingView";
 import type { ChatEvent, PlanView, PredictionView, SimulationView, ToolView } from "../lib/api";
 import { kpiLabel, kpiValue, maneuverLabel, modelLabel } from "../lib/domain";
 import { fmt } from "../lib/format";
@@ -223,6 +224,7 @@ const ToolCard = memo(function ToolCard({ part }: { part: ToolPart }) {
         {view?.kind === "simulation" ? <SimulationResult view={view} /> : null}
         {view?.kind === "plan" ? <PlanResult view={view} /> : null}
         {view?.kind === "prediction" ? <PredictionResult view={view} /> : null}
+        {view?.kind === "parking" ? <ParkingView r={view} height={260} autoPlay={false} ariaLabel={t("parking.view")} /> : null}
         {part.input && Object.keys(part.input).length ? (
           <details className="chat__input-details">
             <summary>{t("chat.parameters")}</summary>

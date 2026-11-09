@@ -61,16 +61,20 @@ def test_box_restriction_markings():
     assert solid.d_max == pytest.approx(1.75) and solid.d_min == pytest.approx(-1.75)
 
 
-def test_parking_direction_change_only_at_standstill():
-    hist = run_closed_loop("laengsparken_rueckwaerts", duration=40.0)
-    dirs = [h["behavior"].direction for h in hist]
-    k = dirs.index(-1)
-    assert all(d == 1 for d in dirs[:k]) and all(d == -1 for d in dirs[k:])
-    assert abs(hist[k]["ego"].vx) < 0.1 and hist[k]["behavior"].reinit
-    assert hist[k - 1]["behavior"].maneuver == "park_hold"
-    assert hist[-1]["behavior"].maneuver == "parked"
-    rev = hist[k]["behavior"].reference_line
-    assert rev.theta[0] == pytest.approx(np.pi, abs=1e-6)          # reversed parking-lane reference
+def test_parking_handover_only_at_standstill():
+    # approach on the driving lane, hold beside the gap, then hand the maneuver to the parking planner
+    hist = run_closed_loop("laengsparken_rueckwaerts", duration=30.0)
+    man = [h["behavior"].maneuver for h in hist]
+    k = man.index("park_maneuver")
+    assert all(m in ("park_approach", "park_hold") for m in man[:k])
+    assert man[k - 1] == "park_hold" and abs(hist[k]["ego"].vx) < 0.1
+    task = hist[k]["behavior"].info["parking"]
+    spot = hist[k]["behavior"].info["parking"]["goal"]
+    assert task["final_direction"] == -1 and len(task["obstacles"]) >= 3      # parked cars and curbs
+    assert spot[0] == pytest.approx(70.0)                                      # gap center of the scenario
+    # the maneuver itself is driven by the parking planner, which this behavior-only loop does not contain;
+    # the full stack parks (tests/regression/test_ad_missions.py, laengsparken_rueckwaerts)
+    assert all(m == "park_maneuver" for m in man[k:])
 
 
 def test_hazard_indicator_postpones_lane_change():

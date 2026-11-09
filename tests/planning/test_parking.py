@@ -119,8 +119,7 @@ def test_plans_are_exact_collision_free_and_drivable(sedan, kind, entry, mode):
 
 
 def test_tight_parallel_spot_needs_several_moves(sedan):
-    _, _, sc, _, _, res = _plan(sedan, "parallel", "reverse", "rear")
-    assert sc.info["gap_length"] == pytest.approx(6.2)       # vehicle length + 1.4 m
+    _, _, sc, _, _, res = _plan(sedan, "parallel", "reverse", "rear", gap_length=6.2)   # vehicle length + 1.4 m
     assert res.success and res.cusps >= 2
 
 
@@ -184,10 +183,13 @@ def test_drive_layout_decides_traction_uphill_on_snow(sedan):
 @pytest.mark.slow
 @pytest.mark.parametrize("kind,entry,mode", [
     ("parallel", "reverse", "front"), ("parallel", "reverse", "counter"), ("parallel", "forward", "front"),
+    ("parallel_tight", "reverse", "front"),
     ("perpendicular", "forward", "front"), ("perpendicular", "reverse", "rear"), ("angled", "reverse", "front"),
     ("angled", "reverse", "counter"), ("parallel", "reverse", "in_phase"),
 ])
 def test_matrix_plans_and_drives(sedan, kind, entry, mode):
-    out = park(sedan, kind, entry, steering=mode, planner_settings=PlannerSettings(time_limit=30.0))
+    params = {"gap_length": 6.2} if kind == "parallel_tight" else None
+    kind = kind.replace("_tight", "")
+    out = park(sedan, kind, entry, steering=mode, scenario_params=params, planner_settings=PlannerSettings(time_limit=30.0))
     assert out.path.success, out.path.message
     assert out.driven.success and out.driven.kpis["final_position_error"] < 0.2

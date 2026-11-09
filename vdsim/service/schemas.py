@@ -258,6 +258,28 @@ class ExplainResponse(BaseModel):
     compute_time: float = Field(description="s, planner cycle")
 
 
+# ----------------------------------------------------------------------------- parking
+class ParkRequest(_Strict):
+    vehicle: str = Field("mid_size_sedan", description="vehicle preset")
+    kind: Literal["parallel", "perpendicular", "angled"] = "parallel"
+    entry: Literal["reverse", "forward"] = "reverse"
+    side: Literal["right", "left"] = "right"
+    steering: Literal["front", "rear", "counter", "in_phase"] = Field(
+        "front", description="which wheels steer: front, rear only, four-wheel counter-phase or in-phase")
+    ratio: float | None = Field(None, ge=-1.0, le=0.99, description="tan(delta_r)/tan(delta_f) for four-wheel steering")
+    max_rear_angle: float | None = Field(None, gt=0.0, le=1.0, description="rad, rear road-wheel angle limit")
+    layout: Literal["fwd", "rwd", "awd"] = Field("fwd", description="driven axle(s) in the closed loop")
+    mu: float = Field(0.9, ge=0.05, le=1.5, description="tire-road friction")
+    slope: float = Field(0.0, ge=-0.3, le=0.3, description="road gradient along the street, rise per meter")
+    gap_length: float | None = Field(None, ge=3.0, le=15.0, description="parallel: length of the gap, m")
+    spot_width: float | None = Field(None, ge=2.0, le=4.0, description="perpendicular/angled: spot width, m")
+    aisle_width: float | None = Field(None, ge=3.0, le=12.0, description="perpendicular/angled: aisle width, m")
+    angle_deg: float | None = Field(None, ge=30.0, le=75.0, description="angled: spot angle, deg")
+    time_limit: float = Field(10.0, gt=0.0, le=30.0, description="s, planning time limit")
+    simulate: bool = Field(True, description="drive the plan in closed loop")
+    max_points: int = Field(1500, ge=50, le=20000)
+
+
 # ----------------------------------------------------------------------------- chat
 class ChatRequest(_Strict):
     message: str = Field(min_length=1, max_length=4000)

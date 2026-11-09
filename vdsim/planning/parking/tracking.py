@@ -36,8 +36,8 @@ LAYOUTS = ("fwd", "rwd", "awd")
 
 @dataclass
 class DriveSettings:
-    v_forward: float = 1.5          # m/s
-    v_reverse: float = 1.0          # m/s
+    v_forward: float = 1.0          # m/s (parking assistants: 3-5 km/h)
+    v_reverse: float = 0.6          # m/s (~2 km/h)
     accel: float = 0.8              # m/s^2, comfortable start
     decel: float = 1.0              # m/s^2
     steer_rate: float = 0.6         # rad/s road-wheel angle (~520 deg/s at the steering wheel for i = 15)
@@ -51,7 +51,7 @@ class DriveSettings:
     k_e: float = 1.2                # 1/m^2
     k_v: float = 4.0                # 1/s, speed controller gain
     dt: float = 0.02                # s
-    preview: float = 0.5            # s, curvature preview (steering lag)
+    preview: float = 0.8            # s, curvature preview (steering lag)
     v_min: float = 0.03             # m/s, crawl speed where the steering must catch up with a curvature jump
     stop_tolerance: float = 0.05    # m, end of a move
     max_time: float = 240.0         # s

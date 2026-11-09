@@ -35,6 +35,7 @@
     "assistant": "Assistant",
     "simulate": "Simulation",
     "inspector": "Trajectory inspector",
+    "parking": "Parking",
     "predict": "Prediction",
     "vehicles": "Vehicles",
     "models": "Neural models",

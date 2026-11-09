@@ -31,7 +31,7 @@ from typing import Any
 from fastapi import HTTPException
 from pydantic import ValidationError
 
-from .schemas import PlanRequest, PredictRequest, SimulateRequest
+from .schemas import ParkRequest, PlanRequest, PredictRequest, SimulateRequest
 
 DEFAULT_MODEL = "claude-opus-5-5"
 MAX_CONVERSATIONS = 200
@@ -144,6 +144,35 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "plan_parking",
+        "description": "Plan a parking maneuver with the Hybrid A* / Reeds-Shepp parking planner and drive it in closed "
+                       "loop. Spot kinds: parallel, perpendicular, angled; entry reverse or forward; side right or "
+                       "left. Steering: front (normal car), rear (only the rear wheels steer), counter (four-wheel "
+                       "steering, counter-phase), in_phase (four-wheel, in-phase). Drive layout fwd/rwd/awd matters "
+                       "for traction on slopes and low friction. Returns whether a path was found, the number of moves, "
+                       "path length, turning radius, maneuver time, final position/heading error, tracking error and "
+                       "clearance.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "vehicle": {"type": "string"},
+                "kind": {"enum": ["parallel", "perpendicular", "angled"]},
+                "entry": {"enum": ["reverse", "forward"]},
+                "side": {"enum": ["right", "left"]},
+                "steering": {"enum": ["front", "rear", "counter", "in_phase"]},
+                "ratio": {"type": "number", "description": "tan(rear)/tan(front) for four-wheel steering"},
+                "layout": {"enum": ["fwd", "rwd", "awd"]},
+                "mu": {"type": "number", "description": "friction, 0.9 dry, 0.2 snow"},
+                "slope": {"type": "number", "description": "gradient along the street, rise per meter (0.1 = 10 %)"},
+                "gap_length": {"type": "number", "description": "parallel: gap length, m"},
+                "spot_width": {"type": "number", "description": "perpendicular/angled: spot width, m"},
+                "aisle_width": {"type": "number", "description": "perpendicular/angled: aisle width, m"},
+                "angle_deg": {"type": "number", "description": "angled: spot angle, deg"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "predict_objects",
         "description": "Motion prediction of traffic objects over a horizon with a constant velocity, constant "
                        "acceleration or CTRV model. Returns the predicted end state of each object.",
@@ -207,8 +236,10 @@ def _call(fn, *args):
 class ChatTools:
     """Runs the tools on the service's own endpoint functions and shapes the results."""
 
-    def __init__(self, simulate: Callable, plan: Callable, predict: Callable, catalog: Callable[[], dict]):
+    def __init__(self, simulate: Callable, plan: Callable, predict: Callable, catalog: Callable[[], dict],
+                 park: Callable | None = None):
         self._simulate, self._plan, self._predict, self._catalog = simulate, plan, predict, catalog
+        self._park = park
 
     def run(self, name: str, args: Any) -> tuple[dict, dict | None]:
         """Returns (result for the model, view for the web app)."""
@@ -278,6 +309,24 @@ class ChatTools:
                 "valid": tr.valid, "n_candidates": res.n_candidates, "compute_time": res.compute_time,
                 "cost": tr.cost}
         return result, view
+
+    def _tool_plan_parking(self, args):
+        if self._park is None:
+            raise ToolError("parking is not available")
+        req = ParkRequest.model_validate({**args, "max_points": 600})
+        res = _call(self._park, req)
+        k = (res.get("driven") or {}).get("kpis", {})
+        result = {"path_found": res["success"], "message": res["message"],
+                  "planning_time_s": _num(res["compute_time"], 3),
+                  "min_turning_radius_m": _num(res["geometry"]["min_radius"]),
+                  "reference_point_from_rear_axle_m": _num(res["geometry"]["reference_from_rear_axle"])}
+        if res.get("path"):
+            result.update(moves=len(res["path"]["segments"]), gear_changes=res["path"]["cusps"],
+                          path_length_m=_num(res["path"]["length"]))
+        if res.get("driven"):
+            result["closed_loop"] = {"parked": res["driven"]["success"], "message": res["driven"]["message"],
+                                     **{key: _num(v) for key, v in k.items()}}
+        return result, {"kind": "parking", "request": args, **res}
 
     def _tool_predict_objects(self, args):
         req = PredictRequest.model_validate(args)

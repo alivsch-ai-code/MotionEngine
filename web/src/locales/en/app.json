@@ -253,7 +253,7 @@
     "tools": {
       "get_catalog": "Catalog",
       "run_simulation": "Simulation",
-      "plan_trajectory": "Trajectory planning",
+      "plan_parking": "Parking", "plan_trajectory": "Trajectory planning",
       "predict_objects": "Prediction"
     },
     "plan": {
@@ -281,5 +281,90 @@
       "invalid_tool_input": "The assistant sent invalid tool input several times.",
       "other": "The assistant could not finish this answer."
     }
+  },
+  "parking": {
+    "title": "Parking",
+    "subtitle": "Plan and drive a parking maneuver: parallel, perpendicular or angled spots, forward or in reverse, for any steering and drive configuration.",
+    "setup": "Parking task",
+    "kindLabel": "Spot",
+    "entryLabel": "Entry",
+    "sideLabel": "Side",
+    "steeringLabel": "Steered wheels",
+    "layoutLabel": "Driven wheels",
+    "kind": {
+      "parallel": "Parallel (along the street)",
+      "perpendicular": "Perpendicular (90°)",
+      "angled": "Angled"
+    },
+    "entry": {
+      "reverse": "In reverse",
+      "forward": "Forward"
+    },
+    "side": {
+      "right": "Right",
+      "left": "Left"
+    },
+    "steering": {
+      "front": "Front wheels",
+      "rear": "Rear wheels only",
+      "counter": "Four-wheel, counter-phase",
+      "in_phase": "Four-wheel, in-phase"
+    },
+    "steeringHint": {
+      "front": "Conventional car: the rear axle moves without side slip and is the planning reference point.",
+      "rear": "Only the rear wheels steer (like a forklift): the front axle is the reference point and the rear swings out in turns.",
+      "counter": "Rear wheels steer opposite to the front: smaller turning circle, reference point between the axles. Production rear-axle steering at low speed.",
+      "in_phase": "Rear wheels steer like the front: larger turning circle, the vehicle moves more sideways. Meant for high speed; needs more space for parking."
+    },
+    "steeringTip": "Which wheels steer decides where the vehicle turns about (instantaneous center of rotation) and how small its turning circle is.",
+    "layout": {
+      "fwd": "Front-wheel drive",
+      "rwd": "Rear-wheel drive",
+      "awd": "All-wheel drive"
+    },
+    "layoutTip": "Which wheels are driven decides the traction on slopes and low friction (load on the driven axle times friction).",
+    "gapLength": "Gap length",
+    "gapHint": "Empty = vehicle length + 1.8 m; + 1.4 m is a tight spot with many moves",
+    "aisleWidth": "Aisle width",
+    "spotWidth": "Spot width",
+    "angle": "Spot angle",
+    "ratio": "Rear/front steering ratio",
+    "ratioTip": "tan(rear angle) / tan(front angle): negative = counter-phase, positive = in-phase.",
+    "defaultHint": "Empty = default",
+    "mu": "Friction coefficient",
+    "muTip": "0.9 dry asphalt, 0.5 wet, 0.2 snow.",
+    "slope": "Slope along the street",
+    "slopeTip": "Positive = uphill in the driving direction of the street.",
+    "run": "Plan and park",
+    "running": "Planning…",
+    "empty": {
+      "title": "Choose a parking task",
+      "text": "The planner searches a drivable path into the spot (Hybrid A* with Reeds-Shepp curves), then a controller drives it on a low-speed vehicle model."
+    },
+    "planned": "Path found",
+    "notPlanned": "No path",
+    "parked": "Parked",
+    "notParked": "Not parked",
+    "contact": "Contact with an obstacle",
+    "timing": "Planned in {{s}} s ({{n}} search nodes)",
+    "failed": "The planner found no path into this spot.",
+    "kpi": {
+      "moves": "Moves",
+      "length": "Path length",
+      "radius": "Min. turning radius",
+      "time": "Maneuver time",
+      "finalError": "Final position error",
+      "heading": "Final heading error",
+      "tracking": "Max. tracking error",
+      "clearance": "Min. clearance"
+    },
+    "view": "Maneuver",
+    "viewHint": "Solid: forward, dashed: reverse. Gray: curb and walls, orange: parked vehicles, green: target spot.",
+    "steeringChart": "Road-wheel angles",
+    "speedChart": "Speed",
+    "front": "Front",
+    "rear": "Rear",
+    "speed": "Speed",
+    "geometryInfo": "Turning radius of the reference point {{r}} m · reference point {{p}} m ahead of the rear axle · max. steering front {{f}}°, rear {{rr}}°"
   }
 }

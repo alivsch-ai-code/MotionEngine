@@ -508,7 +508,7 @@ class ParkingPlanner:
         open_heap = [(h_hol(start[0], start[1]), 0)]
         closed = {}
         expanded = 0
-        best = None          # (total cost, path); after the first hit the search continues a little
+        best: tuple[float, ParkingPath] | None = None   # (total cost, path); after the first hit the search continues a little
         stop_at = None
         while open_heap:
             if expanded >= cfg.max_nodes or time.perf_counter() - tic > cfg.time_limit:
@@ -572,9 +572,10 @@ class ParkingPlanner:
                               False])
                 heapq.heappush(open_heap, (ng + h_hol(nx_, ny_), len(nodes) - 1))
         if best is not None:
-            best[1].nodes_expanded = expanded
-            best[1].compute_time = time.perf_counter() - tic
-            return best[1]
+            found: ParkingPath = best[1]
+            found.nodes_expanded = expanded
+            found.compute_time = time.perf_counter() - tic
+            return found
         return ParkingPath(False, "no path found within the search limits", nodes_expanded=expanded,
                            compute_time=time.perf_counter() - tic)
 

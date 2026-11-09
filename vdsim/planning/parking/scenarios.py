@@ -14,6 +14,7 @@ point P of a steering geometry.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 KINDS = ("parallel", "perpendicular", "angled")
@@ -68,7 +69,8 @@ def _mirror(sc: ParkingScenario) -> ParkingScenario:
 
 def parallel(vehicle_length=4.8, vehicle_width=1.85, gap_length=None, spot_depth=2.2, lane_width=3.5,
              entry="reverse", neighbor_length=4.6, neighbor_width=1.85, curb_offset=0.25, lanes=2):
-    gap = gap_length if gap_length is not None else (vehicle_length + 1.4 if entry == "reverse" else
+    # default: comfortable gap (two to three moves); vehicle_length + 1.4 m is a tight spot with many moves
+    gap = gap_length if gap_length is not None else (vehicle_length + 1.8 if entry == "reverse" else
                                                      vehicle_length + 2.6)
     obstacles = [Obstacle("curb", [(-40, -1.0), (40, -1.0), (40, 0.0), (-40, 0.0)])]
     yc = 0.5 * spot_depth
@@ -148,7 +150,9 @@ def build_scenario(kind="parallel", entry="reverse", side="right", **kw) -> Park
         raise ValueError(f"unknown entry '{entry}', available: {ENTRIES}")
     if side not in SIDES:
         raise ValueError(f"unknown side '{side}', available: {SIDES}")
-    sc = {"parallel": parallel, "perpendicular": perpendicular, "angled": angled}[kind](entry=entry, **kw)
+    builders: dict[str, Callable[..., ParkingScenario]] = {"parallel": parallel, "perpendicular": perpendicular,
+                                                           "angled": angled}
+    sc = builders[kind](entry=entry, **kw)
     return _mirror(sc) if side == "left" else sc
 
 

@@ -43,6 +43,7 @@ from .schemas import (
     HealthResponse,
     KPIModel,
     ParameterInfo,
+    ParkRequest,
     PlanCycle,
     PlannedTrajectoryModel,
     PlanRequest,
@@ -616,6 +617,68 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             except (TypeError, ValueError) as exc:
                 raise HTTPException(status_code=422, detail=str(exc)) from None
 
+    # ------------------------------------------------------------------------- parking
+    @app.post("/park", tags=["planning"], dependencies=secured,
+              summary="Plan (and drive) a parking maneuver: parallel, perpendicular or angled, any steering configuration")
+    def park(req: ParkRequest):
+        from ..core.parameters import load_vehicle_preset
+        from ..planning.parking import DriveSettings, PlannerSettings, reference_to_center
+        from ..planning.parking import park as run_park
+
+        vehicle = load_vehicle_preset(_require(req.vehicle, catalog["presets"], "vehicle preset"))
+        params = {k: getattr(req, k) for k in ("gap_length", "spot_width", "aisle_width", "angle_deg")
+                  if getattr(req, k) is not None}
+        if req.kind != "parallel":
+            params.pop("gap_length", None)
+        if req.kind == "parallel":
+            for k in ("spot_width", "aisle_width", "angle_deg"):
+                params.pop(k, None)
+        if req.kind != "angled":
+            params.pop("angle_deg", None)
+        with limiter.slot():
+            try:
+                out = run_park(vehicle, req.kind, req.entry, req.side, req.steering, req.layout, ratio=req.ratio,
+                               max_rear_angle=req.max_rear_angle, scenario_params=params,
+                               planner_settings=PlannerSettings(time_limit=req.time_limit),
+                               drive_settings=DriveSettings(mu=req.mu, slope=req.slope), simulate=req.simulate)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from None
+        sc, fp, path = out.scenario, out.footprint, out.path
+
+        def centers(x, y, th):
+            pts = [reference_to_center(a, b, c, fp) for a, b, c in zip(x, y, th, strict=False)]
+            return [p[0] for p in pts], [p[1] for p in pts]
+
+        result = {
+            "success": bool(path.success), "message": path.message, "compute_time": path.compute_time,
+            "nodes_expanded": path.nodes_expanded, "geometry": out.geometry.to_dict(),
+            "footprint": {"front": fp.front, "rear": fp.rear, "width": fp.width, "length": fp.length,
+                          "center_offset": 0.5 * (fp.front - fp.rear)},
+            "scenario": {"kind": sc.kind, "entry": sc.entry, "side": sc.side, "start": list(sc.start), "goal": list(sc.goal),
+                         "bounds": list(sc.bounds), "spot": [list(p) for p in sc.spot], "final_direction": sc.final_direction,
+                         "obstacles": [{"kind": o.kind, "polygon": [list(p) for p in o.polygon]} for o in sc.obstacles],
+                         "info": sc.info},
+        }
+        if path.success:
+            idx = _decimate_index(len(path.x), req.max_points)
+            cx, cy = centers(path.x[idx], path.y[idx], path.theta[idx])
+            result["path"] = {"x": _list(np.asarray(cx)), "y": _list(np.asarray(cy)), "psi": _list(path.theta[idx]),
+                              "direction": [int(d) for d in path.direction[idx]], "kappa": _list(path.kappa[idx]),
+                              "s": _list(path.s[idx]), "length": path.length, "cusps": path.cusps,
+                              "segments": [{"direction": int(sg["direction"]), "length": sg["length"]}
+                                           for sg in path.segments]}
+        if out.driven is not None:
+            d = out.driven
+            idx = _decimate_index(len(d.t), req.max_points)
+            cx, cy = centers(d.x[idx], d.y[idx], d.theta[idx])
+            result["driven"] = {"success": d.success, "message": d.message, "t": _list(d.t[idx]),
+                                "x": _list(np.asarray(cx)), "y": _list(np.asarray(cy)), "psi": _list(d.theta[idx]),
+                                "v": _list(d.v[idx]), "delta_f": _list(d.delta_f[idx]), "delta_r": _list(d.delta_r[idx]),
+                                "e_lat": _list(d.e_lat[idx]), "segment": [int(v) for v in d.segment[idx]],
+                                "traction_limited": [bool(v) for v in d.traction_limited[idx]],
+                                "kpis": {k: _finite(v) for k, v in d.kpis.items()}}
+        return result
+
     # ------------------------------------------------------------------------- chat assistant
     from .chat import ChatTools, ConversationStore, chat_events
 
@@ -632,7 +695,7 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                 "planner_configs": catalog["planner_configs"], "tire_models": catalog["tire_model"],
                 "limits": {"max_simulated_time_s": max_sim_time}}
 
-    chat_tools = ChatTools(simulate=simulate, plan=plan, predict=predict, catalog=_chat_catalog)
+    chat_tools = ChatTools(simulate=simulate, plan=plan, predict=predict, catalog=_chat_catalog, park=park)
     conversations = ConversationStore()
     chat_state = {"client": chat_client}
 

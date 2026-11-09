@@ -20,6 +20,8 @@ leading bumper must not pass; k0 is a bumper-to-bumper distance.
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from ..framework.knowledge import ComponentDoc, trace
@@ -862,7 +864,6 @@ class RuleBasedBehavior(BehaviorPlannerBase):
             self.park = {"phase": "park_approach", "t_hold": None}
             self._set_lane(road, drive, force=True)
         ph = self.park["phase"]
-        reinit = False
         v_now = abs(ego.vx)
         if ph in ("park_approach", "park_hold"):
             ref = self.ref
@@ -880,39 +881,63 @@ class RuleBasedBehavior(BehaviorPlannerBase):
                     self.park["t_hold"] = t
                 ph = self.park["phase"] = "park_hold"
                 if t - self.park["t_hold"] >= p.park_hold:
-                    ph = self.park["phase"] = "park_reverse"
-                    reinit = True
-                    self.ref = road.reversed_line(plane)
-                    self.chain = (plane,)
-                    self._s_hint = None
+                    # hand over to the parking planner (Hybrid A* / Reeds-Shepp, vdsim.planning.parking)
+                    ph = self.park["phase"] = "park_maneuver"
+                    self.park["task"] = self._parking_task(t, road, spot, plane, ego, objs, cfg)
             else:
                 self.park["t_hold"] = None
                 if ph == "park_hold":
                     ph = self.park["phase"] = "park_approach"
-            if ph != "park_reverse":
+            if ph not in ("park_reverse", "park_maneuver"):
                 a, b = road.corridor(drive, s_e - ref.lane_offsets.get(drive, 0.0))
                 info.update({"phase": ph, "s": s_e, "s_stop": s_stop})
                 return BehaviorCommand(t=t, reference_line=ref, lane_id=self.chain[0],
                                        target_speed=cfg.get("v_approach", 2.5), modes=modes, d_ref=0.0, d_min=a,
                                        d_max=max(b, d_e + 0.5 * g.width + 0.1), direction=1, maneuver=ph,
                                        info={"state": ph, "reason": "Anfahrt neben die Lücke", **info})
-        # reverse phase on the reversed parking-lane center line
-        ref = self.ref
-        Lp = ref.length
-        s_c = Lp - road.lanes[plane].center.project(spot.x, spot.y)[0]
-        s_e, d_e = self._project(ref, ego.x, ego.y, self._s_hint)
-        self._s_hint = s_e
-        s_stop = s_c + g.rear                    # rear bumper leads when reversing
-        a, b = road.corridor(plane, Lp - s_e)
-        d_min, d_max = -b, -a
-        d_min, d_max = min(d_min, d_e - 0.5 * g.width - 0.1), max(d_max, d_e + 0.5 * g.width + 0.1)
-        if ph == "park_reverse" and v_now < p.standstill_v and abs(s_e - s_c) < p.park_tol and \
-                abs(d_e) < p.park_tol and not reinit:
+        # parking maneuver: the parking planner drives the moves, the behavior only watches the goal
+        task = self.park["task"]
+        gx, gy, gpsi = task["goal"]
+        err = math.hypot(ego.x - gx, ego.y - gy)
+        yaw = abs(wrap_angle(ego.psi - gpsi))
+        if ph == "park_maneuver" and v_now < p.standstill_v and err < min(p.park_tol, 0.3) and yaw < 0.1:
             ph = self.park["phase"] = "parked"
-        modes = [LongitudinalMode("velocity", {"v_ref": 0.0 if ph == "parked" else cfg.get("v_reverse", 1.0)}),
-                 LongitudinalMode("stopping", {"s_stop": s_stop, "reason": "Lückenmitte", "source": cfg["spot"]})]
-        return BehaviorCommand(t=t, reference_line=ref, lane_id=plane, target_speed=0.0 if ph == "parked" else
-                               cfg.get("v_reverse", 1.0), modes=modes, d_ref=0.0, d_min=d_min, d_max=d_max,
-                               direction=-1, reinit=reinit, maneuver=ph,
-                               info={"state": ph, "reason": "Rückwärts in die Lücke" if ph != "parked" else "geparkt",
-                                     "s": s_e, "d": d_e, "s_stop": s_stop, "phase": ph})
+        return BehaviorCommand(t=t, reference_line=self.ref, lane_id=self.chain[0], target_speed=0.0,
+                               modes=[LongitudinalMode("velocity", {"v_ref": 0.0})], d_ref=0.0,
+                               direction=int(task["final_direction"]), maneuver=ph,
+                               info={"state": ph, "reason": "Einparken (Parkplaner)" if ph != "parked" else "geparkt",
+                                     "phase": ph, "parking": task, "goal_error": err, "yaw_error": yaw})
+
+    def _parking_task(self, t, road, spot, plane, ego, objs, cfg):
+        # goal (CoG in the spot center), obstacles (perceived objects and curbs) and map bounds for the planner
+        cx, cy, psi = spot.x, spot.y, spot.psi
+        xs = [ego.x, cx]
+        ys = [ego.y, cy]
+        lo_x, hi_x = min(xs) - 25.0, max(xs) + 25.0
+        lo_y, hi_y = min(ys) - 12.0, max(ys) + 12.0
+        polys = []
+        for o in objs or []:
+            if lo_x - 5 <= o.x <= hi_x + 5 and lo_y - 5 <= o.y <= hi_y + 5:
+                c, s_ = math.cos(o.psi), math.sin(o.psi)
+                hl, hw = 0.5 * o.length, 0.5 * o.width
+                polys.append([(o.x + c * a - s_ * b, o.y + s_ * a + c * b)
+                              for a, b in ((hl, hw), (hl, -hw), (-hl, -hw), (-hl, hw))])
+        # curbs: strips outside the lane boundaries marked "curb"
+        for lane in road.lanes.values():
+            for side, mark in ((-1, lane.marking_right), (1, lane.marking_left)):
+                if mark != "curb":
+                    continue
+                try:
+                    edge = lane.center.offset(side * 0.5 * lane.width)
+                    outer = lane.center.offset(side * (0.5 * lane.width + 1.0))
+                except ValueError:
+                    continue
+                keep = (edge.x >= lo_x - 2) & (edge.x <= hi_x + 2) & (edge.y >= lo_y - 2) & (edge.y <= hi_y + 2)
+                if keep.sum() < 2:
+                    continue
+                ex, ey = edge.x[keep], edge.y[keep]
+                ox, oy = outer.x[keep], outer.y[keep]
+                polys.append(list(zip(ex, ey, strict=False)) + list(zip(ox[::-1], oy[::-1], strict=False)))
+        return {"id": f"{cfg['spot']}@{t:.1f}", "goal": (cx, cy, psi), "obstacles": polys,
+                "bounds": (lo_x, hi_x, lo_y, hi_y), "final_direction": -1 if cfg.get("entry", "reverse") == "reverse" else 1,
+                "v_reverse": cfg.get("v_reverse", 1.0), "v_forward": cfg.get("v_approach", 1.5)}

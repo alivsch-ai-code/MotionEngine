@@ -55,8 +55,18 @@ function sampleAt(track: Track, time: number) {
   return { i: lo, x: f(track.x), y: f(track.y), psi: ((track.psi[lo] ?? 0) as number) + w * dpsi, v: track.v ? f(track.v) : null };
 }
 
-function TrackPlayerImpl({ track, lines = [], boxes = [], height = 300, followWidth = 40, ariaLabel, autoPlay = true }:
-  { track: Track; lines?: Polyline[]; boxes?: Box[]; height?: number; followWidth?: number; ariaLabel: string; autoPlay?: boolean }) {
+export interface Area { points: [number, number][]; kind: "car" | "curb" | "wall" | "spot" }
+const AREA_STYLE: Record<Area["kind"], { fill: string; opacity: number; stroke?: string; dash?: string }> = {
+  car: { fill: "var(--me-warning)", opacity: 0.75 },
+  curb: { fill: "var(--me-text-subtle)", opacity: 0.45 },
+  wall: { fill: "var(--me-text-subtle)", opacity: 0.45 },
+  spot: { fill: "var(--me-success)", opacity: 0.12, stroke: "var(--me-success)", dash: "4 3" },
+};
+
+function TrackPlayerImpl({ track, lines = [], boxes = [], areas = [], height = 300, followWidth = 40, ariaLabel, autoPlay = true,
+  follow: followInit = true }:
+  { track: Track; lines?: Polyline[]; boxes?: Box[]; areas?: Area[]; height?: number; followWidth?: number; ariaLabel: string;
+    autoPlay?: boolean; follow?: boolean }) {
   const { t, i18n } = useTranslation("common");
   const tt = track.t as number[];
   const t0 = tt[0] ?? 0, t1 = tt[tt.length - 1] ?? 0;
@@ -64,7 +74,7 @@ function TrackPlayerImpl({ track, lines = [], boxes = [], height = 300, followWi
   const [time, setTime] = useState(t0);
   const [playing, setPlaying] = useState(autoPlay && !reduced);
   const [speed, setSpeed] = useState(1);
-  const [follow, setFollow] = useState(true);
+  const [follow, setFollow] = useState(followInit);
   const raf = useRef<number | null>(null);
   const last = useRef<number | null>(null);
 
@@ -95,10 +105,11 @@ function TrackPlayerImpl({ track, lines = [], boxes = [], height = 300, followWi
     };
     track.x.forEach((x, i) => take(x, track.y[i]));
     boxes.forEach((b) => take(b.x, b.y));
+    areas.filter((a) => a.kind === "spot" || a.kind === "car").forEach((a) => a.points.forEach(([x, y]) => take(x, y)));
     const pad = Math.max(track.length, 4);
     if (!Number.isFinite(xmin)) return { x: -10, y: -10, w: 20, h: 20 };
     return { x: xmin - pad, y: -(ymax + pad), w: xmax - xmin + 2 * pad, h: ymax - ymin + 2 * pad };
-  }, [track, boxes]);
+  }, [track, boxes, areas]);
   const aspectH = Math.max(height, 120);
   const view = useMemo(() => {
     if (!follow || full.w <= followWidth * 1.2) return full;
@@ -109,6 +120,11 @@ function TrackPlayerImpl({ track, lines = [], boxes = [], height = 300, followWi
 
   const staticLayer = useMemo(() => (
     <g>
+      {areas.map((a, i) => {
+        const st = AREA_STYLE[a.kind];
+        return <polygon key={`a${i}`} points={a.points.map(([x, y]) => `${x.toFixed(2)},${(-y).toFixed(2)}`).join(" ")}
+          fill={st.fill} fillOpacity={st.opacity} stroke={st.stroke ?? "none"} strokeDasharray={st.dash} vectorEffect="non-scaling-stroke" />;
+      })}
       {lines.map((l, i) => {
         const st = STROKE[l.kind];
         return <polyline key={i} points={pts(l.x, l.y)} fill="none" stroke={st.stroke} strokeWidth={st.width} strokeDasharray={st.dash}
@@ -121,7 +137,7 @@ function TrackPlayerImpl({ track, lines = [], boxes = [], height = 300, followWi
       <polyline points={pts(track.x, track.y)} fill="none" stroke="var(--me-text-subtle)" strokeWidth={1} strokeDasharray="3 4"
         vectorEffect="non-scaling-stroke" />
     </g>
-  ), [lines, boxes, track]);
+  ), [lines, boxes, areas, track]);
 
   const off = track.centerOffset ?? 0;
   const cx = cur.x + off * Math.cos(cur.psi), cy = cur.y + off * Math.sin(cur.psi);

@@ -53,7 +53,7 @@ class RSPath:
     @property
     def length(self) -> float:
         """Total path length in m."""
-        return sum(abs(s) for _, s in self.segments)
+        return float(sum(abs(s) for _, s in self.segments))
 
     @property
     def cusps(self) -> int:
@@ -63,7 +63,7 @@ class RSPath:
 
     @property
     def reverse_length(self) -> float:
-        return sum(-s for _, s in self.segments if s < 0)
+        return float(sum(-s for _, s in self.segments if s < 0))
 
     def word(self) -> str:
         return " ".join(f"{c}{'+' if s > 0 else '-'}" for c, s in self.segments)

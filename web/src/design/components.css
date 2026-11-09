@@ -268,3 +268,4 @@ details.expert[open] > summary { margin-bottom: var(--me-space-3); color: var(--
 .player__scrub { flex: 1; min-width: 120px; accent-color: var(--me-primary); }
 .player__readout { font-size: var(--me-text-sm); color: var(--me-text-muted); min-width: 120px; }
 .select--sm { height: 28px; padding: 0 var(--me-space-2); width: auto; }
+.grid--2-tight { display: grid; grid-template-columns: 1fr 1fr; gap: var(--me-space-3); }

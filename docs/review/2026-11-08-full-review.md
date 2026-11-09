@@ -23,7 +23,7 @@ Fehler**, **mehrere Software-, Packaging- und Konverterfehler**, **zwei Sicherhe
 | # | Schwere | Befund | Status |
 |---|---|---|---|
 | F1 | **kritisch** | Kreisüberdeckung: 16,5 m-Lkw mit max. 5 Kreisen (r = 2,07 m statt W/2 = 1,25 m) → Lkw auf der Nachbarspur „kollidiert“ mit jedem Kandidaten, Planer im Fallback → **Kollision im Bibliotheksszenario `einfaedeln_lkw` nach 2,5 s, für jeden Seed** (auch auf `722eeec`) | behoben |
-| F2 | hoch (nicht sicherheitskritisch) | `laengsparken_rueckwaerts`: Ego bleibt neben der Lücke stehen (Kostengleichstand Stillstand vs. Anfahren bei v_ref = 1 m/s) | offen, analysiert |
+| F2 | hoch (nicht sicherheitskritisch) | `laengsparken_rueckwaerts`: Ego bleibt neben der Lücke stehen (Kostengleichstand Stillstand vs. Anfahren bei v_ref = 1 m/s) | behoben (Parkplaner, siehe F2) |
 | F3 | mittel | Missionskriterien der Szenarien (`reach_goal`, `parked`, `final_lane`, …) wurden nie ausgewertet | behoben (`metadata["mission"]`, KPI `mission_passed`) |
 | P1 | hoch | Pacejka (Standard-Reifenmodell) verletzt im kombinierten Schlupf den Reibkreis: bis +6 % bei μ = 1, bis **+37 %** bei μ = 0,2 | behoben |
 | P2 | mittel | Windvorzeichen: Doku und GUI („Gegenwind“) sagen *Gegenwind > 0*, alle Modelle rechneten `v_rel = vx − w` (Rückenwind) | behoben |
@@ -409,7 +409,7 @@ def circles_needed(length, width, max_inflation):
   aber das gleichzeitige Verlegen der Referenzkurve nach Werling so stark, dass der bestehende Test
   `test_merge_selects_gap_and_moves_reference` fehlschlug. Der Parameter bleibt unbenutzt (Roadmap).
 
-### F2 – Längsparken bleibt im Stillstand (Planung, offen)
+### F2 – Längsparken bleibt im Stillstand (Planung, behoben am 2026-11-09)
 
 - **Beobachtung:** Im vollständigen Stack (Regler + Strecke) endet `laengsparken_rueckwaerts` 9,37 m neben
   der Lücke; mit idealer Folgeregelung (`tests/behavior`) wird geparkt.
@@ -423,6 +423,13 @@ def circles_needed(length, width, max_inflation):
 - **Empfehlung:** Anhaltekandidaten des Geschwindigkeitsmodus unterdrücken, wenn ein Haltemodus aktiv
   ist, oder k_ν bei kleinem v_ref auf die Geschwindigkeit normieren; danach den `xfail` in
   `tests/regression/test_ad_missions.py` entfernen. Sicherheitsbewertung: Ego bleibt stehen, keine Kollision.
+
+- **Behebung (2026-11-09):** Das Einparkmanöver übernimmt jetzt der Parkplaner `vdsim.planning.parking`
+  (Hybrid A* mit Reeds-Shepp-Kurven, mehrzügiger Weg aus engen Lücken). Die Verhaltensplanung hält wie bisher
+  neben der Lücke und übergibt dann Ziel, erkannte Fahrzeuge und Bordsteine an
+  `trajectory_planner/werling_parking`; der Planer gibt dem Regler die Züge einzeln vor (Referenzpunkt
+  Hinterachse). Ergebnis: geparkt mit 0,21 m und 0,3° Abweichung von der Lückenmitte, alle Kriterien erfüllt,
+  `xfail` entfernt. Details: `docs/planning/parking.md`.
 
 ### F3 – Missionskriterien wurden nie ausgewertet (Simulation, mittel)
 
