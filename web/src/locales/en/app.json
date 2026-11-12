@@ -366,5 +366,187 @@
     "rear": "Rear",
     "speed": "Speed",
     "geometryInfo": "Turning radius of the reference point {{r}} m · reference point {{p}} m ahead of the rear axle · max. steering front {{f}}°, rear {{rr}}°"
+  },
+  "workbench": {
+    "p95": "95th percentile",
+    "maxTime": "Maximum",
+    "title": "Workbench",
+    "subtitle": "Run the complete automated-driving stack on a scenario and look into every planning cycle: candidates, costs, controller, events and runtime.",
+    "setup": "Run",
+    "scenario": "Scenario",
+    "seed": "Seed",
+    "duration": "Duration",
+    "defaultValue": "Empty = {{v}}",
+    "run": "Run scenario",
+    "running": "Running {{name}}…",
+    "failed": "The run failed.",
+    "invalidParams": "The parameter overrides of the layer \"{{layer}}\" are not a valid JSON object.",
+    "history": "Recent runs ({{n}})",
+    "empty": {
+      "title": "No run yet",
+      "text": "Choose a scenario and start. The stack runs perception, prediction, behavior, trajectory planning, control, actuators and the vehicle in closed loop."
+    },
+    "missionPassed": "Mission passed",
+    "missionFailed": "Mission not passed",
+    "collision": "Collision",
+    "timing": "{{sim}} s simulated in {{wall}} s",
+    "download": "Download result",
+    "scene": "Top view of the run",
+    "candidates": "Candidates",
+    "legend": "Blue: selected trajectory. Green: valid candidates, gray: rejected by a restriction, red: collision. Dashed orange: predicted objects. Gray line: driven path.",
+    "details": "Details of the run",
+    "tabs": {
+      "planner": "Planner and controller",
+      "signals": "Signals",
+      "kpis": "KPIs and mission",
+      "events": "Events",
+      "profile": "Runtime"
+    },
+    "cycle": "Planning cycle",
+    "cycleTime": "Cycle start",
+    "maneuver": "Maneuver",
+    "mode": "Longitudinal mode",
+    "nCandidates": "Candidates / checked",
+    "computeTime": "Compute time",
+    "controller": "Active controller",
+    "flags": "Flags",
+    "fallback": "fallback",
+    "reinit": "re-initialized",
+    "costTerms": "Cost terms of the selected trajectory",
+    "charts": {
+      "speed": "Speed",
+      "accel": "Acceleration",
+      "errors": "Tracking errors",
+      "steering": "Steering angle",
+      "cost": "Cost of the selected trajectory",
+      "planTime": "Planner compute time"
+    },
+    "series": {
+      "actual": "Actual",
+      "planned": "Planned",
+      "target": "Target"
+    },
+    "mission": "Mission criteria",
+    "noMission": "This scenario defines no mission criteria.",
+    "eventType": "Event",
+    "eventDetail": "Details",
+    "node": "Node",
+    "calls": "Calls",
+    "mean": "Mean",
+    "total": "Total",
+    "stack": {
+      "title": "Stack",
+      "changed": "{{n}} changed",
+      "text": "One component per layer. Parameter overrides are a JSON object; the defaults are shown below each field.",
+      "default": "default",
+      "params": "Parameters ({{n}} groups)",
+      "overrides": "Parameter overrides (JSON)",
+      "placeholder": "{\"cost\": {\"k_lat\": 2.0}}"
+    },
+    "layers": {
+      "world": "World",
+      "perception": "Perception",
+      "prediction": "Prediction",
+      "behavior": "Behavior planning",
+      "planner": "Trajectory planning",
+      "controller": "Vehicle control",
+      "dynamics": "Vehicle dynamics control",
+      "actuators": "Actuators",
+      "plant": "Vehicle"
+    }
+  },
+  "research": {
+    "title": "Research",
+    "subtitle": "Batch experiments on the automated-driving stack: compare components, sweep a parameter or sample it at random, and compare the KPIs.",
+    "setup": "Experiment",
+    "kindLabel": "Type",
+    "kind": {
+      "compare": "Compare components",
+      "sweep": "Parameter sweep",
+      "monte_carlo": "Monte Carlo"
+    },
+    "kindHint": {
+      "compare": "Runs the scenario once per selected component of a layer.",
+      "sweep": "Runs the scenario once per value of a parameter.",
+      "monte_carlo": "Draws the parameter uniformly between two bounds."
+    },
+    "layer": "Layer",
+    "variants": "Components",
+    "path": "Parameter path",
+    "pathHint": "For example stack.planner.params.cost.k_lat or scenario_params.lead_speed",
+    "values": "Values",
+    "valuesHint": "Comma separated",
+    "low": "Lower bound",
+    "high": "Upper bound",
+    "samples": "Runs",
+    "stackNote": "Uses the stack of the workbench ({{n}} layers changed).",
+    "run": "Start experiment",
+    "empty": {
+      "title": "No experiment yet",
+      "text": "Each run is deterministic for its seed, so results are reproducible."
+    },
+    "variant": "Run",
+    "chart": "KPI over the runs",
+    "metric": "KPI",
+    "runIndex": "Run"
+  },
+  "architecture": {
+    "title": "Architecture",
+    "subtitle": "The signal flow of the automated-driving stack: one node per layer, connected through typed ports. Click a node for its documentation.",
+    "valid": "Graph valid: {{nodes}} nodes, {{conns}} connections.",
+    "stackHint": "Changes apply to the workbench and to experiments.",
+    "inputs": "Inputs",
+    "outputs": "Outputs",
+    "doc": {
+      "purpose": "Purpose",
+      "theory": "Theory",
+      "references": "References"
+    },
+    "noDoc": "This component has no documentation."
+  },
+  "matlab": {
+    "title": "MATLAB",
+    "subtitle": "Analyze MATLAB functions and convert them to Python or C, for example to bring an existing controller into the stack.",
+    "source": "MATLAB source",
+    "target": "Target language",
+    "targets": {
+      "python": "Python",
+      "c": "C"
+    },
+    "convert": "Analyze and convert",
+    "sample": "Load example",
+    "empty": {
+      "title": "Paste MATLAB code",
+      "text": "The converter reports functions, variables with roles and types, used built-ins, and generates the code."
+    },
+    "ok": "Converted",
+    "warnings": "Converted with warnings",
+    "analysis": "Analysis",
+    "function": "Function",
+    "variable": "Variable",
+    "role": "Role",
+    "type": "Type",
+    "builtins": "Built-ins used"
+  },
+  "knowledge": {
+    "title": "Knowledge",
+    "subtitle": "What the library knows about itself: components, concepts, classes, equations and the literature they come from.",
+    "tabs": {
+      "graph": "Knowledge graph",
+      "references": "References"
+    },
+    "search": "Search",
+    "noHits": "No matching entries.",
+    "linked": "Linked entries",
+    "empty": {
+      "title": "Pick an entry",
+      "text": "Search on the left and select an entry to see how it works and what it is linked to."
+    },
+    "ref": {
+      "id": "Key",
+      "authors": "Authors",
+      "title": "Title",
+      "year": "Year"
+    }
   }
 }

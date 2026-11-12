@@ -12,6 +12,11 @@ const Inspector = lazy(() => import("./pages/Inspector"));
 const Predict = lazy(() => import("./pages/Predict"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Parking = lazy(() => import("./pages/Parking"));
+const Workbench = lazy(() => import("./pages/Workbench"));
+const Research = lazy(() => import("./pages/Research"));
+const Architecture = lazy(() => import("./pages/Architecture"));
+const Matlab = lazy(() => import("./pages/Matlab"));
+const Knowledge = lazy(() => import("./pages/Knowledge"));
 const Vehicles = lazy(() => import("./pages/Vehicles"));
 const Models = lazy(() => import("./pages/Models"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -29,6 +34,11 @@ export default function App() {
           <Route path="assistant" element={<Chat />} />
           <Route path="inspector" element={<Inspector />} />
           <Route path="parking" element={<Parking />} />
+          <Route path="workbench" element={<Workbench />} />
+          <Route path="research" element={<Research />} />
+          <Route path="architecture" element={<Architecture />} />
+          <Route path="matlab" element={<Matlab />} />
+          <Route path="knowledge" element={<Knowledge />} />
           <Route path="predict" element={<Predict />} />
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="models" element={<Models />} />

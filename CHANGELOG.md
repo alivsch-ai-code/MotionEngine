@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Development environment in the web app** (the functions of the desktop workbench `run_gui.py`): pages
+  **Workbench** (full AD stack on a scenario, stack editor per layer, animated planner view with candidates per cycle,
+  cost terms, signals, KPIs, mission, events, runtime profile, result download), **Research** (compare components,
+  parameter sweep, Monte Carlo), **Architecture** (stack graph, validation, component documentation), **MATLAB**
+  (analysis, conversion to Python or C) and **Knowledge** (knowledge graph, references). Endpoints `/workbench/*`,
+  `/matlab/*`, `/knowledge/*` on `vdsim.api`; runs and experiments are background jobs that survive page changes.
 - **Parking planner** (`vdsim.planning.parking`, `POST /park`, web page **Parking**, assistant tool `plan_parking`):
   parallel, perpendicular and angled spots, forward or reverse, left or right; front, rear-only and four-wheel
   (counter-/in-phase) steering through the side-slip-free reference point of each configuration; Reeds-Shepp curves,

@@ -194,7 +194,8 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         description="Vehicle dynamics simulation, Werling trajectory planning and motion prediction. "
                     "SI units, ISO 8855 axes (x forward, y left, z up).",
         openapi_tags=[{"name": "service"}, {"name": "vehicle"}, {"name": "trajectory"}, {"name": "simulation"},
-                      {"name": "planning"}, {"name": "prediction"}],
+                      {"name": "planning"}, {"name": "prediction"}, {"name": "learning"},
+                      {"name": "workbench"}, {"name": "matlab"}, {"name": "knowledge"}, {"name": "chat"}],
     )
     app.state.metrics = metrics
     app.state.limits = {"max_concurrency": max_concurrency, "max_sim_time": max_sim_time,
@@ -678,6 +679,11 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                                 "traction_limited": [bool(v) for v in d.traction_limited[idx]],
                                 "kpis": {k: _finite(v) for k, v in d.kpis.items()}}
         return result
+
+    # ------------------------------------------------------------------------- development environment
+    from .workbench import create_router as _workbench_router
+
+    app.include_router(_workbench_router(secured, limiter, max_sim_time, max_wall_time))
 
     # ------------------------------------------------------------------------- chat assistant
     from .chat import ChatTools, ConversationStore, chat_events

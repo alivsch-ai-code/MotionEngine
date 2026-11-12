@@ -269,3 +269,14 @@ details.expert[open] > summary { margin-bottom: var(--me-space-3); color: var(--
 .player__readout { font-size: var(--me-text-sm); color: var(--me-text-muted); min-width: 120px; }
 .select--sm { height: 28px; padding: 0 var(--me-space-2); width: auto; }
 .grid--2-tight { display: grid; grid-template-columns: 1fr 1fr; gap: var(--me-space-3); }
+
+/* ---------------------------------------------------------------- development environment */
+.stack-params summary { cursor: pointer; color: var(--me-text-muted); font-size: var(--me-text-sm); margin-top: 4px; }
+.stack-params__input { height: auto; padding: var(--me-space-2); font-size: var(--me-text-xs); resize: vertical; margin-top: 4px; }
+.stack-params__defaults { font-size: var(--me-text-xs); color: var(--me-text-subtle); max-height: 160px; overflow: auto; margin-top: 4px;
+  background: var(--me-surface-2); padding: var(--me-space-2); border-radius: var(--me-radius-sm); }
+.check { display: flex; align-items: center; gap: var(--me-space-2); font-size: var(--me-text-sm); padding: 2px 0; }
+.code-editor { height: auto; min-height: 320px; padding: var(--me-space-3); font-size: var(--me-text-sm); resize: vertical; white-space: pre; }
+.code-block--scroll { max-height: 420px; overflow: auto; white-space: pre; }
+.knowledge-list { max-height: 70vh; overflow: auto; }
+.knowledge-item { justify-content: flex-start; height: auto; min-height: 28px; text-align: left; white-space: normal; gap: var(--me-space-2); }

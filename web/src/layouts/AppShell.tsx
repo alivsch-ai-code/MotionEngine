@@ -17,6 +17,13 @@ const NAV: { section: string; items: { to: string; key: string; icon: IconName; 
     { to: "/app/parking", key: "nav.parking", icon: "parking" },
     { to: "/app/predict", key: "nav.predict", icon: "radar" },
   ] },
+  { section: "nav.sections.develop", items: [
+    { to: "/app/workbench", key: "nav.workbench", icon: "route" },
+    { to: "/app/research", key: "nav.research", icon: "layers" },
+    { to: "/app/architecture", key: "nav.architecture", icon: "plug" },
+    { to: "/app/matlab", key: "nav.matlab", icon: "code" },
+    { to: "/app/knowledge", key: "nav.knowledge", icon: "book" },
+  ] },
   { section: "nav.sections.models", items: [
     { to: "/app/vehicles", key: "nav.vehicles", icon: "car" },
     { to: "/app/models", key: "nav.models", icon: "brain" },

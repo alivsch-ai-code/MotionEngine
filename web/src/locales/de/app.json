@@ -366,5 +366,187 @@
     "rear": "Hinten",
     "speed": "Geschwindigkeit",
     "geometryInfo": "Wenderadius des Referenzpunkts {{r}} m · Referenzpunkt {{p}} m vor der Hinterachse · max. Lenkwinkel vorne {{f}}°, hinten {{rr}}°"
+  },
+  "workbench": {
+    "p95": "95. Perzentil",
+    "maxTime": "Maximum",
+    "title": "Workbench",
+    "subtitle": "Den kompletten Fahrstack auf einem Szenario ausführen und in jeden Planungszyklus schauen: Kandidaten, Kosten, Regler, Ereignisse und Laufzeit.",
+    "setup": "Lauf",
+    "scenario": "Szenario",
+    "seed": "Seed",
+    "duration": "Dauer",
+    "defaultValue": "Leer = {{v}}",
+    "run": "Szenario starten",
+    "running": "{{name}} läuft…",
+    "failed": "Der Lauf ist fehlgeschlagen.",
+    "invalidParams": "Die Parameter-Überschreibungen der Schicht „{{layer}}“ sind kein gültiges JSON-Objekt.",
+    "history": "Letzte Läufe ({{n}})",
+    "empty": {
+      "title": "Noch kein Lauf",
+      "text": "Szenario wählen und starten. Der Stack führt Wahrnehmung, Prädiktion, Verhalten, Trajektorienplanung, Regelung, Aktorik und Fahrzeug im geschlossenen Kreis aus."
+    },
+    "missionPassed": "Mission erfüllt",
+    "missionFailed": "Mission nicht erfüllt",
+    "collision": "Kollision",
+    "timing": "{{sim}} s simuliert in {{wall}} s",
+    "download": "Ergebnis herunterladen",
+    "scene": "Draufsicht des Laufs",
+    "candidates": "Kandidaten",
+    "legend": "Blau: gewählte Trajektorie. Grün: gültige Kandidaten, grau: durch Restriktion verworfen, rot: Kollision. Orange gestrichelt: prädizierte Objekte. Graue Linie: gefahrene Bahn.",
+    "details": "Details des Laufs",
+    "tabs": {
+      "planner": "Planer und Regler",
+      "signals": "Signale",
+      "kpis": "Kennwerte und Mission",
+      "events": "Ereignisse",
+      "profile": "Laufzeit"
+    },
+    "cycle": "Planungszyklus",
+    "cycleTime": "Zyklusbeginn",
+    "maneuver": "Manöver",
+    "mode": "Längsmodus",
+    "nCandidates": "Kandidaten / geprüft",
+    "computeTime": "Rechenzeit",
+    "controller": "Aktiver Regler",
+    "flags": "Merker",
+    "fallback": "Rückfall",
+    "reinit": "neu initialisiert",
+    "costTerms": "Kostenterme der gewählten Trajektorie",
+    "charts": {
+      "speed": "Geschwindigkeit",
+      "accel": "Beschleunigung",
+      "errors": "Folgefehler",
+      "steering": "Lenkwinkel",
+      "cost": "Kosten der gewählten Trajektorie",
+      "planTime": "Rechenzeit des Planers"
+    },
+    "series": {
+      "actual": "Ist",
+      "planned": "Geplant",
+      "target": "Ziel"
+    },
+    "mission": "Missionskriterien",
+    "noMission": "Dieses Szenario definiert keine Missionskriterien.",
+    "eventType": "Ereignis",
+    "eventDetail": "Details",
+    "node": "Knoten",
+    "calls": "Aufrufe",
+    "mean": "Mittel",
+    "total": "Gesamt",
+    "stack": {
+      "title": "Stack",
+      "changed": "{{n}} geändert",
+      "text": "Eine Komponente je Schicht. Parameter-Überschreibungen sind ein JSON-Objekt; die Standardwerte stehen unter jedem Feld.",
+      "default": "Standard",
+      "params": "Parameter ({{n}} Gruppen)",
+      "overrides": "Parameter-Überschreibungen (JSON)",
+      "placeholder": "{\"cost\": {\"k_lat\": 2.0}}"
+    },
+    "layers": {
+      "world": "Welt",
+      "perception": "Wahrnehmung",
+      "prediction": "Prädiktion",
+      "behavior": "Verhaltensplanung",
+      "planner": "Trajektorienplanung",
+      "controller": "Fahrzeugregelung",
+      "dynamics": "Fahrdynamikregelung",
+      "actuators": "Aktorik",
+      "plant": "Fahrzeug"
+    }
+  },
+  "research": {
+    "title": "Forschung",
+    "subtitle": "Serienversuche mit dem Fahrstack: Komponenten vergleichen, einen Parameter variieren oder zufällig ziehen und die Kennwerte vergleichen.",
+    "setup": "Versuch",
+    "kindLabel": "Art",
+    "kind": {
+      "compare": "Komponenten vergleichen",
+      "sweep": "Parametervariation",
+      "monte_carlo": "Monte Carlo"
+    },
+    "kindHint": {
+      "compare": "Führt das Szenario einmal je gewählter Komponente einer Schicht aus.",
+      "sweep": "Führt das Szenario einmal je Parameterwert aus.",
+      "monte_carlo": "Zieht den Parameter gleichverteilt zwischen zwei Grenzen."
+    },
+    "layer": "Schicht",
+    "variants": "Komponenten",
+    "path": "Parameterpfad",
+    "pathHint": "Zum Beispiel stack.planner.params.cost.k_lat oder scenario_params.lead_speed",
+    "values": "Werte",
+    "valuesHint": "Durch Komma getrennt",
+    "low": "Untere Grenze",
+    "high": "Obere Grenze",
+    "samples": "Läufe",
+    "stackNote": "Verwendet den Stack der Workbench ({{n}} Schichten geändert).",
+    "run": "Versuch starten",
+    "empty": {
+      "title": "Noch kein Versuch",
+      "text": "Jeder Lauf ist für seinen Seed deterministisch, die Ergebnisse sind also reproduzierbar."
+    },
+    "variant": "Lauf",
+    "chart": "Kennwert über die Läufe",
+    "metric": "Kennwert",
+    "runIndex": "Lauf"
+  },
+  "architecture": {
+    "title": "Architektur",
+    "subtitle": "Der Signalfluss des Fahrstacks: ein Knoten je Schicht, verbunden über typisierte Ports. Ein Klick auf einen Knoten zeigt seine Dokumentation.",
+    "valid": "Graph gültig: {{nodes}} Knoten, {{conns}} Verbindungen.",
+    "stackHint": "Änderungen gelten für die Workbench und für Versuche.",
+    "inputs": "Eingänge",
+    "outputs": "Ausgänge",
+    "doc": {
+      "purpose": "Zweck",
+      "theory": "Theorie",
+      "references": "Quellen"
+    },
+    "noDoc": "Diese Komponente hat keine Dokumentation."
+  },
+  "matlab": {
+    "title": "MATLAB",
+    "subtitle": "MATLAB-Funktionen analysieren und nach Python oder C umwandeln, zum Beispiel um einen vorhandenen Regler in den Stack zu bringen.",
+    "source": "MATLAB-Quelltext",
+    "target": "Zielsprache",
+    "targets": {
+      "python": "Python",
+      "c": "C"
+    },
+    "convert": "Analysieren und umwandeln",
+    "sample": "Beispiel laden",
+    "empty": {
+      "title": "MATLAB-Code einfügen",
+      "text": "Der Konverter nennt Funktionen, Variablen mit Rolle und Typ sowie verwendete Built-ins und erzeugt den Code."
+    },
+    "ok": "Umgewandelt",
+    "warnings": "Mit Warnungen umgewandelt",
+    "analysis": "Analyse",
+    "function": "Funktion",
+    "variable": "Variable",
+    "role": "Rolle",
+    "type": "Typ",
+    "builtins": "Verwendete Built-ins"
+  },
+  "knowledge": {
+    "title": "Wissen",
+    "subtitle": "Was die Bibliothek über sich selbst weiß: Komponenten, Konzepte, Klassen, Gleichungen und die Literatur dahinter.",
+    "tabs": {
+      "graph": "Wissensgraph",
+      "references": "Literatur"
+    },
+    "search": "Suchen",
+    "noHits": "Keine passenden Einträge.",
+    "linked": "Verknüpfte Einträge",
+    "empty": {
+      "title": "Eintrag wählen",
+      "text": "Links suchen und einen Eintrag wählen, um zu sehen, wie er funktioniert und womit er verknüpft ist."
+    },
+    "ref": {
+      "id": "Schlüssel",
+      "authors": "Autoren",
+      "title": "Titel",
+      "year": "Jahr"
+    }
   }
 }

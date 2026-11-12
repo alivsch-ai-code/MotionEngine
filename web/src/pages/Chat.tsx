@@ -1,6 +1,6 @@
 // Assistant: type what to simulate; Claude runs the tools of the API and answers with the results.
 // Tool results arrive as structured views and are drawn with the same components as the other pages.
-import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -10,6 +10,7 @@ import { ErrorAlert } from "../components/ErrorAlert";
 import { Icon } from "../components/Icon";
 import { KpiTile } from "../components/KpiTile";
 import { PageHeader } from "../components/PageHeader";
+import { RichText } from "../components/RichText";
 import { PathPlot, type Box, type Polyline } from "../components/PathPlot";
 import { TrackPlayer, type Track } from "../components/TrackPlayer";
 import { ParkingView } from "../components/ParkingView";
@@ -164,42 +165,6 @@ const TurnView = memo(function TurnView({ turn, pending }: { turn: Turn; pending
           </div>
         ) : null}
       </div>
-    </div>
-  );
-});
-
-// Minimal Markdown for the assistant's text: paragraphs, bullet and numbered lists, **bold** and `code`.
-// Rendered as React elements, never as HTML.
-function inline(text: string): ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((s, i) => {
-    if (s.startsWith("**") && s.endsWith("**") && s.length > 4) return <strong key={i}>{s.slice(2, -2)}</strong>;
-    if (s.startsWith("`") && s.endsWith("`") && s.length > 2) return <code key={i} className="mono">{s.slice(1, -1)}</code>;
-    return <Fragment key={i}>{s}</Fragment>;
-  });
-}
-
-const RichText = memo(function RichText({ text }: { text: string }) {
-  const blocks = useMemo(() => {
-    const out: { kind: "p" | "ul" | "ol"; lines: string[] }[] = [];
-    for (const raw of text.split("\n")) {
-      const line = raw.trimEnd();
-      const bullet = /^\s*[-*•]\s+(.*)$/.exec(line);
-      const numbered = /^\s*\d+[.)]\s+(.*)$/.exec(line);
-      const kind = bullet ? "ul" : numbered ? "ol" : "p";
-      const content = bullet?.[1] ?? numbered?.[1] ?? line.replace(/^#+\s*/, "");
-      if (!line.trim()) { out.push({ kind: "p", lines: [] }); continue; }
-      const last = out[out.length - 1];
-      if (last && last.kind === kind && (kind !== "p" || last.lines.length)) last.lines.push(content);
-      else out.push({ kind, lines: [content] });
-    }
-    return out.filter((b) => b.lines.length);
-  }, [text]);
-  return (
-    <div className="chat__text">
-      {blocks.map((b, i) => b.kind === "p"
-        ? <p key={i}>{b.lines.map((l, j) => <Fragment key={j}>{j ? <br /> : null}{inline(l)}</Fragment>)}</p>
-        : b.kind === "ul" ? <ul key={i}>{b.lines.map((l, j) => <li key={j}>{inline(l)}</li>)}</ul>
-          : <ol key={i}>{b.lines.map((l, j) => <li key={j}>{inline(l)}</li>)}</ol>)}
     </div>
   );
 });
