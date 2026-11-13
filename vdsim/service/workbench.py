@@ -17,6 +17,7 @@ the catalogs are accepted (scenarios, components); the service never opens a pat
 
 from __future__ import annotations
 
+import logging
 import math
 import threading
 import time
@@ -28,6 +29,8 @@ import numpy as np
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
+
+logger = logging.getLogger(__name__)
 
 LAYER_KINDS = {"world": "world", "perception": "perception", "prediction": "predictor",
                "behavior": "behavior_planner", "planner": "trajectory_planner", "controller": "tracking_controller",
@@ -200,8 +203,9 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
         g = api.build_graph(check_stack(req.stack))
         try:
             issues = api.validate_graph(g)
-        except Exception as exc:  # reported to the client
-            issues = [str(exc)]
+        except Exception:  # the details stay in the server log
+            logger.exception("graph validation failed")
+            issues = ["the graph could not be validated"]
         ports = {n["id"]: {"inputs": sorted((components.get(n["component"], {}).get("inputs") or {}).keys()),
                            "outputs": sorted((components.get(n["component"], {}).get("outputs") or {}).keys())}
                  for n in g["nodes"]}
