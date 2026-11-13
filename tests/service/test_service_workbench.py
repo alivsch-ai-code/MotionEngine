@@ -88,3 +88,63 @@ def test_matlab_and_knowledge(client):
     assert client.get("/knowledge/explain", params={"id": "does-not-exist-xyz"}).status_code == 404
     doc = client.get("/knowledge/components/trajectory_planner/werling").json()
     assert doc["doc"]["summary"] and client.get("/knowledge/components/x/y").status_code == 404
+
+
+def test_rewired_graph(client):
+    g = client.post("/workbench/graph", json={"stack": {}}).json()
+    assert g["default_connections"] == g["connections"]
+    assert g["ports"]["planner"]["input_types"]["prediction"] == {"type": "Prediction", "optional": False}
+    optional_removed = [c for c in g["connections"] if c["to"] != "planner.status"]
+    assert not client.post("/workbench/graph", json={"stack": {}, "connections": optional_removed}).json()["issues"]
+    required_removed = [c for c in g["connections"] if c["to"] != "planner.prediction"]
+    issues = client.post("/workbench/graph", json={"stack": {}, "connections": required_removed}).json()["issues"]
+    assert len(issues) == 1 and "planner.prediction" in issues[0]
+    r = client.post("/workbench/runs", json={"scenario": "einscherer", "connections": required_removed})
+    assert r.status_code == 422 and "planner.prediction" in r.json()["detail"]
+    assert client.post("/workbench/graph", json={"connections": [{"from": "a b", "to": "x.y"}]}).status_code == 422
+
+
+def test_live_session_matches_batch_run_and_import(client):
+    body = {"scenario": "einscherer", "duration": 2.0}
+    live = client.post("/workbench/live", json=body)
+    assert live.status_code == 201
+    sid, dt = live.json()["id"], live.json()["base_dt"]
+    assert live.json()["frame"]["t"] == 0.0 and live.json()["road"]["lanes"]
+
+    one = client.post(f"/workbench/live/{sid}/advance", json={"steps": 1}).json()        # single step
+    assert one["n_steps"] == 1 and one["snapshot"] is not None and not one["stopped"]
+    half = client.post(f"/workbench/live/{sid}/advance", json={"seconds": 0.5, "known_snapshots": 99}).json()
+    assert half["t"] == pytest.approx(0.5, abs=1.5 * dt) and half["snapshot"] is None and "ego_x" in half["row"]
+    end = client.post(f"/workbench/live/{sid}/advance", json={"seconds": 2.0}).json()
+    assert end["stopped"] and end["t"] == pytest.approx(2.0, abs=dt)
+
+    job = client.post(f"/workbench/live/{sid}/finish").json()
+    assert job["state"] == "done" and job["kind"] == "live" and job["summary"]["duration"] == pytest.approx(2.0)
+    assert client.post(f"/workbench/live/{sid}/advance", json={"steps": 1}).status_code == 404
+    live_result = client.get(f"/workbench/runs/{job['id']}/result").json()
+
+    batch = client.post("/workbench/runs", json=body).json()
+    assert _wait(client, f"/workbench/runs/{batch['id']}")["state"] == "done"
+    batch_result = client.get(f"/workbench/runs/{batch['id']}/result").json()
+    assert live_result["signals"]["ego_x"][-1] == pytest.approx(batch_result["signals"]["ego_x"][-1], abs=1e-9)
+    assert live_result["kpis"]["min_distance"] == batch_result["kpis"]["min_distance"]
+
+    # the download is one file and loads again
+    saved = client.get(f"/workbench/runs/{job['id']}/download").json()
+    assert saved["format"] == "motionengine-ad-result"
+    loaded = client.post("/workbench/runs/import", json={"meta": saved["meta"], "npz": saved["npz"], "name": "loaded"})
+    assert loaded.status_code == 201 and loaded.json()["kind"] == "import" and loaded.json()["name"] == "loaded"
+    again = client.get(f"/workbench/runs/{loaded.json()['id']}/result").json()
+    assert again["signals"]["ego_x"] == live_result["signals"]["ego_x"] and again["kpis"] == live_result["kpis"]
+    assert client.get(f"/workbench/runs/{loaded.json()['id']}/snapshots/3").json()["trajectory"]["x"]
+    assert client.post("/workbench/runs/import", json={"meta": {}, "npz": "AAAA"}).status_code == 422
+    assert client.post("/workbench/runs/import", json={"meta": {}, "npz": saved["npz"]}).status_code == 422
+
+
+def test_live_session_limits(client):
+    assert client.post("/workbench/live", json={"scenario": "nope"}).status_code == 422
+    assert client.post("/workbench/live/unknown/advance", json={"steps": 1}).status_code == 404
+    sid = client.post("/workbench/live", json={"scenario": "einscherer"}).json()["id"]
+    assert client.post(f"/workbench/live/{sid}/advance", json={"seconds": 5.0}).status_code == 422
+    assert client.delete(f"/workbench/live/{sid}").status_code == 204
+    assert client.post(f"/workbench/live/{sid}/advance", json={"steps": 1}).status_code == 404

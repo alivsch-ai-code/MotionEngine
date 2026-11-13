@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   parameter sweep, Monte Carlo), **Architecture** (stack graph, validation, component documentation), **MATLAB**
   (analysis, conversion to Python or C) and **Knowledge** (knowledge graph, references). Endpoints `/workbench/*`,
   `/matlab/*`, `/knowledge/*` on `vdsim.api`; runs and experiments are background jobs that survive page changes.
+- **Remaining desktop functions in the web app:**
+  - **Live mode** of the Workbench: play, pause, single step and 10 steps with live telemetry; a live run can be kept
+    as a normal run (`vdsim.ad.live.LiveSession`, `api.live()`, `/workbench/live`).
+  - **Load a saved result:** the download is now one file with metadata and arrays, and `/workbench/runs/import`
+    loads it again (also the `.json` + `.npz` pair the library writes).
+  - **Parameter dialog** per stack component, built from the component schema; only changed values are sent.
+  - **Connection editor** on the Architecture page: remove and add connections; the server validates the wiring and
+    the Workbench runs the rewired stack (`connections` in `api.run`, `/workbench/graph`, `/workbench/runs`).
+  - **Trajectory editor** (new page): draggable waypoints, corner radii, speed profile limited by lateral
+    acceleration, friction map; the path drives the simulation (`/trajectory/waypoints`, `waypoints` in `/simulate`).
+  - **Run comparison and report** on the Simulate page: KPI table side by side, overlaid paths and signals, PDF
+    report and Markdown summary (`/simulate/report`), save and load a run.
 - **Parking planner** (`vdsim.planning.parking`, `POST /park`, web page **Parking**, assistant tool `plan_parking`):
   parallel, perpendicular and angled spots, forward or reverse, left or right; front, rear-only and four-wheel
   (counter-/in-phase) steering through the side-slip-free reference point of each configuration; Reeds-Shepp curves,

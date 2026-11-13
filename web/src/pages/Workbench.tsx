@@ -8,13 +8,14 @@ import { ErrorAlert } from "../components/ErrorAlert";
 import { NumberField, SelectField } from "../components/Field";
 import { Icon } from "../components/Icon";
 import { KpiTile } from "../components/KpiTile";
+import { LivePanel } from "../components/LivePanel";
 import { PageHeader } from "../components/PageHeader";
 import { indexAt, SceneView } from "../components/SceneView";
 import { StackEditor } from "../components/StackEditor";
-import type { JobView, PlannerSnapshot, RunResult, WorkbenchCatalog } from "../lib/api";
+import type { JobView, LiveSession, PlannerSnapshot, RunRequest, RunResult, SavedRun, WorkbenchCatalog } from "../lib/api";
 import { fmt, toDeg } from "../lib/format";
 import { useClient, usePersistentState, useQuery } from "../lib/hooks";
-import { stackSpecs, useStack } from "../lib/stack";
+import { downloadBlob, fileToBase64, stackSpecs, useConnections, useStack } from "../lib/stack";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 const ACTIVE = ["queued", "running"];
@@ -23,6 +24,7 @@ type Tab = (typeof TABS)[number];
 const HEAD_KPIS = ["min_ttc", "min_distance", "max_ay", "max_e_n", "max_jerk"];
 
 interface Form { scenario: string; seed: number; duration: number }
+interface SavedFile extends Partial<SavedRun> { [key: string]: unknown }
 
 export default function Workbench() {
   const { t, i18n } = useTranslation(["app", "common", "domain"]);
@@ -34,6 +36,10 @@ export default function Workbench() {
   const [result, setResult] = useState<RunResult | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [history, setHistory] = useState<JobView[]>([]);
+  const [connections] = useConnections();
+  const [live, setLive] = useState<LiveSession | null>(null);
+  const [starting, setStarting] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
   const lang = i18n.language;
 
   const loadResult = useCallback(async (id: string) => {
@@ -65,22 +71,60 @@ export default function Workbench() {
   }, [id, active, client, loadResult]);
 
   const scenario = catalog.data?.scenarios.find((s) => s.name === form.scenario);
-  const start = async () => {
+  const request = (): RunRequest | null => {
     const { specs, invalid } = stackSpecs(stack);
-    if (invalid) { setError(new Error(t("workbench.invalidParams", { layer: invalid }))); return; }
+    if (invalid) { setError(new Error(t("workbench.invalidParams", { layer: invalid }))); return null; }
+    return { scenario: form.scenario, seed: Number.isFinite(form.seed) ? form.seed : null, duration: Number.isFinite(form.duration) ? form.duration : null,
+      stack: specs, ...(connections ? { connections } : {}) };
+  };
+  const start = async () => {
+    const body = request();
+    if (!body) return;
     try {
       setError(null);
-      setJob(await client.startRun({ scenario: form.scenario, seed: Number.isFinite(form.seed) ? form.seed : null,
-        duration: Number.isFinite(form.duration) ? form.duration : null, stack: specs }));
+      setLive(null);
+      setJob(await client.startRun(body));
     } catch (err) { setError(err); }
+  };
+  const startLive = async () => {
+    const body = request();
+    if (!body) return;
+    setStarting(true);
+    try {
+      setError(null);
+      setLive(await client.liveStart(body));
+    } catch (err) { setError(err); } finally { setStarting(false); }
+  };
+  const adopt = (j: JobView) => {
+    setLive(null);
+    setJob(j);
+    void loadResult(j.id);
+    client.runs().then(setHistory, () => undefined);
   };
   const download = async () => {
     if (!result) return;
     const data = await client.runDownload(result.id);
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
-    const a = document.createElement("a");
-    a.href = url; a.download = `${result.name}-${result.id}.json`; a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(new Blob([JSON.stringify(data)], { type: "application/json" }), `${result.name}-${result.id}.json`);
+  };
+  // a saved result: the single file of the download, or the .json + .npz pair the library writes
+  const loadFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    try {
+      setError(null);
+      const list = Array.from(files);
+      const json = list.find((f) => f.name.toLowerCase().endsWith(".json"));
+      const npz = list.find((f) => f.name.toLowerCase().endsWith(".npz"));
+      if (!json) throw new Error(t("workbench.load.needJson"));
+      const parsed = JSON.parse(await json.text()) as SavedFile;
+      const name = json.name.replace(/\.json$/i, "");
+      if (typeof parsed.npz === "string" && parsed.meta) adopt(await client.importRun({ meta: parsed.meta, npz: parsed.npz, name: parsed.name ?? name }));
+      else if (npz) adopt(await client.importRun({ meta: parsed, npz: await fileToBase64(npz), name }));
+      else throw new Error(t("workbench.load.needNpz"));
+    } catch (err) {
+      setError(err instanceof SyntaxError ? new Error(t("workbench.load.needJson")) : err);
+    } finally {
+      if (fileInput.current) fileInput.current.value = "";
+    }
   };
 
   return (
@@ -104,15 +148,23 @@ export default function Workbench() {
               <button type="button" className="btn btn--secondary btn--lg" onClick={() => job && void client.cancelRun(job.id).then(setJob)}>
                 <Icon name="stop" />{t("common:cancel")}</button>
             ) : (
-              <button type="submit" className="btn btn--primary btn--lg" disabled={!catalog.data}><Icon name="play" />{t("workbench.run")}</button>
+              <div className="row">
+                <button type="submit" className="btn btn--primary btn--lg" style={{ flex: 1 }} disabled={!catalog.data || starting}><Icon name="play" />{t("workbench.run")}</button>
+                <button type="button" className="btn btn--secondary btn--lg" disabled={!catalog.data || starting} onClick={() => void startLive()}>
+                  {starting ? <span className="spinner" /> : <Icon name="radar" />}{t("live.start")}</button>
+              </div>
             )}
+            {connections ? <p className="subtle"><Icon name="plug" size={14} /> {t("workbench.rewired", { n: connections.length })}</p> : null}
+            <input ref={fileInput} type="file" accept=".json,.npz" multiple hidden onChange={(e) => void loadFiles(e.target.files)} />
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => fileInput.current?.click()} title={t("workbench.load.hint")}>
+              <Icon name="upload" size={14} />{t("workbench.load.button")}</button>
             {history.length ? (
               <details className="expert"><summary><Icon name="layers" />{t("workbench.history", { n: history.length })}</summary>
                 <div className="stack stack--sm">
                   {history.map((h) => (
                     <button key={h.id} type="button" className={`btn btn--sm ${h.id === result?.id ? "btn--secondary" : "btn--ghost"}`} disabled={h.state !== "done"}
-                      onClick={() => { setJob(h); void loadResult(h.id); }}>
-                      {h.name} · {new Date(h.created * 1000).toLocaleTimeString(lang)} · {t(`models.jobStates.${h.state}`)}</button>
+                      onClick={() => { setLive(null); setJob(h); void loadResult(h.id); }}>
+                      {h.name} · {new Date(h.created * 1000).toLocaleTimeString(lang)} · {h.kind === "run" ? t(`models.jobStates.${h.state}`) : t(`workbench.kinds.${h.kind}`, { defaultValue: h.kind })}</button>
                   ))}
                 </div>
               </details>
@@ -130,9 +182,10 @@ export default function Workbench() {
           ) : null}
           {job?.state === "failed" ? <div className="alert alert--danger" role="alert"><Icon name="alert" /><div><strong>{t("workbench.failed")}</strong>
             <div className="mono subtle">{job.error}</div></div></div> : null}
-          {!result && !active ? <div className="card"><EmptyState art="scenario" title={t("workbench.empty.title")} text={t("workbench.empty.text")}
+          {live ? <LivePanel key={live.id} session={live} lang={lang} onFinished={adopt} onClosed={() => setLive(null)} /> : null}
+          {!result && !active && !live ? <div className="card"><EmptyState art="scenario" title={t("workbench.empty.title")} text={t("workbench.empty.text")}
             action={<button type="button" className="btn btn--primary" onClick={() => void start()}><Icon name="play" />{t("workbench.run")}</button>} /></div> : null}
-          {result ? <RunView result={result} catalog={catalog.data} lang={lang} onDownload={download} /> : null}
+          {result && !live ? <RunView result={result} catalog={catalog.data} lang={lang} onDownload={download} /> : null}
         </div>
       </div>
     </div>

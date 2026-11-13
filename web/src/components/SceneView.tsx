@@ -11,7 +11,7 @@ const poly = (p: number[][], reverse = false) => {
 };
 const line = (x: (number | null)[], y: (number | null)[], n = x.length) => {
   const out: string[] = [];
-  for (let i = 0; i < n; i++) { const a = x[i], b = y[i]; if (a !== null && b !== null) out.push(`${a.toFixed(2)},${(-b).toFixed(2)}`); }
+  for (let i = 0; i < n; i++) { const a = x[i], b = y[i]; if (a != null && b != null) out.push(`${a.toFixed(2)},${(-b).toFixed(2)}`); }
   return out.join(" ");
 };
 

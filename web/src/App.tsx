@@ -8,6 +8,7 @@ import { AppShell } from "./layouts/AppShell";
 const Landing = lazy(() => import("./pages/Landing"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Simulate = lazy(() => import("./pages/Simulate"));
+const TrajectoryEditor = lazy(() => import("./pages/TrajectoryEditor"));
 const Inspector = lazy(() => import("./pages/Inspector"));
 const Predict = lazy(() => import("./pages/Predict"));
 const Chat = lazy(() => import("./pages/Chat"));
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/app" element={<AppShell />}>
           <Route index element={<Dashboard />} />
           <Route path="simulate" element={<Simulate />} />
+          <Route path="trajectory" element={<TrajectoryEditor />} />
           <Route path="assistant" element={<Chat />} />
           <Route path="inspector" element={<Inspector />} />
           <Route path="parking" element={<Parking />} />

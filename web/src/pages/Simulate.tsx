@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { EmptyState, Skeleton } from "../components/EmptyState";
 import { ErrorAlert } from "../components/ErrorAlert";
@@ -9,11 +9,13 @@ import { Icon } from "../components/Icon";
 import { KpiTile } from "../components/KpiTile";
 import { PageHeader } from "../components/PageHeader";
 import { PathPlot, type Polyline } from "../components/PathPlot";
+import { RunCompare } from "../components/RunCompare";
 import { TrackPlayer, type Track } from "../components/TrackPlayer";
 import type { SimulateRequest, SimulateResponse } from "../lib/api";
 import { controllerLabel, kpiLabel, kpiValue, maneuverDescription, maneuverLabel, maneuverParamLabel, modelLabel } from "../lib/domain";
 import { fmt, toDeg } from "../lib/format";
 import { useClient, useMutation, usePersistentState, useQuery } from "../lib/hooks";
+import { addRun, APPLIED_KEY, useRuns, type AppliedTrajectory } from "../lib/simRuns";
 import { addRecentRun } from "./recentRuns";
 
 const Chart = lazy(() => import("../components/Chart"));
@@ -57,6 +59,8 @@ export default function Simulate() {
   const sim = useMutation((body: SimulateRequest) => client.simulate(body));
   // the last result stays when the page is left and opened again (memory + session storage)
   const [last, setLast] = useState<{ request: SimulateRequest; data: SimulateResponse } | null>(readLastRun);
+  const [applied, setApplied] = usePersistentState<AppliedTrajectory | null>(APPLIED_KEY, null);
+  const runs = useRuns();
 
   const maneuverOptions = useMemo(() => Object.keys(maneuvers.data ?? {}).filter((m) => m !== "custom")
     .map((m) => ({ value: m, label: maneuverLabel(t, m) })), [maneuvers.data, t]);
@@ -72,11 +76,14 @@ export default function Simulate() {
       lateral_controller: form.lateral, longitudinal_controller: form.longitudinal, solver: form.solver, dt_control: form.dt,
       duration: form.duration || undefined, vehicle_overrides: { "tires.mu": form.mu, "systems.esp_enabled": form.esp },
       signals: SIGNALS, max_points: 1500,
+      ...(applied?.waypoints ? { waypoints: { waypoints: applied.waypoints, ay_max: applied.ay_max || null } } : {}),
+      ...(applied?.patches.length ? { environment: { friction: { base: form.mu, patches: applied.patches } } } : {}),
     };
     const res = await sim.run(body);
     if (res) {
       setLast({ request: body, data: res });
       storeLastRun({ request: body, data: res });
+      addRun({ label: `${runs.length + 1}: ${applied?.waypoints ? t("simulate.editorPath") : maneuverLabel(t, form.maneuver)} · ${modelLabel(t, form.model)}`, at: Date.now(), request: body, data: res });
       const ay = res.kpis.find((k) => k.key === "max_ay")?.value;
       addRecentRun({ at: Date.now(), maneuver: form.maneuver, model: form.model, maxAy: typeof ay === "number" ? ay : null, wall: res.wall_time });
     }
@@ -98,6 +105,14 @@ export default function Simulate() {
               <NumberField key={p} label={maneuverParamLabel(t, p)} unit={info?.params[p][1]} value={form.params[p] ?? NaN}
                 onChange={(v) => set({ params: { ...form.params, [p]: v } })} hint={t("simulate.defaultHint")} />
             ))}
+            {applied ? (
+              <div className="alert alert--info"><Icon name="route" /><div>
+                <strong>{applied.waypoints ? t("simulate.editorActive", { n: applied.waypoints.length }) : t("simulate.editorFriction")}</strong>
+                {applied.patches.length ? <div className="subtle">{t("simulate.editorPatches", { n: applied.patches.length })}</div> : null}
+                <div className="row"><Link className="btn btn--ghost btn--sm" to="/app/trajectory">{t("simulate.editorEdit")}</Link>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setApplied(null)}>{t("simulate.editorRemove")}</button></div>
+              </div></div>
+            ) : <Link className="subtle" to="/app/trajectory">{t("simulate.editorLink")}</Link>}
             <SelectField label={t("simulate.model")} value={form.model} onChange={(v) => set({ model: v })} options={modelOptions}
               tip={t("simulate.modelTip")} />
             <details className="expert">
@@ -135,6 +150,7 @@ export default function Simulate() {
               action={<button type="button" className="btn btn--primary" onClick={() => void run()}><Icon name="play" />{t("empty.simulation.action")}</button>} /></div>
           ) : null}
           {last ? <Results data={last.data} request={last.request} lang={i18n.language} /> : null}
+          {runs.length ? <RunCompare lang={i18n.language} /> : null}
         </div>
       </div>
     </div>
@@ -148,7 +164,7 @@ function ResultsSkeleton() {
 function Results({ data, request, lang }: { data: SimulateResponse; request: SimulateRequest | null; lang: string }) {
   const { t } = useTranslation(["app", "common", "domain"]);
   const client = useClient();
-  const reference = useQuery((sig) => (request?.maneuver ? client.trajectory({ maneuver: request.maneuver, vehicle: request.vehicle ?? "mid_size_sedan",
+  const reference = useQuery((sig) => (request?.waypoints ? client.waypointTrajectory(request.waypoints, sig) : request?.maneuver ? client.trajectory({ maneuver: request.maneuver, vehicle: request.vehicle ?? "mid_size_sedan",
     params: request.maneuver_params, max_points: 800 }, sig) : Promise.resolve(null)), [client, request]);
   const vehicle = useQuery((sig) => client.vehicle(request?.vehicle ?? "mid_size_sedan", sig), [client, request?.vehicle]);
   const track = useMemo<Track>(() => {

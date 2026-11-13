@@ -13,6 +13,7 @@ const NAV: { section: string; items: { to: string; key: string; icon: IconName; 
   { section: "nav.sections.work", items: [
     { to: "/app/assistant", key: "nav.assistant", icon: "chat" },
     { to: "/app/simulate", key: "nav.simulate", icon: "play" },
+    { to: "/app/trajectory", key: "nav.trajectory", icon: "route" },
     { to: "/app/inspector", key: "nav.inspector", icon: "sigma" },
     { to: "/app/parking", key: "nav.parking", icon: "parking" },
     { to: "/app/predict", key: "nav.predict", icon: "radar" },

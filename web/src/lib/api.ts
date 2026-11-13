@@ -23,8 +23,13 @@ export interface SimulateRequest {
   lateral_controller?: string; longitudinal_controller?: string; duration?: number; dt_control?: number;
   solver?: "euler" | "heun" | "rk4" | "adaptive"; environment?: Record<string, unknown>;
   vehicle_overrides?: Record<string, number | string | boolean>; signals?: string[]; max_points?: number;
+  waypoints?: WaypointPath;
 }
-export interface SimulateResponse { name: string; model: string; stop_reason: string; stop_code: string; simulated_time: number; wall_time: number; n_samples: number; kpis: Kpi[]; signals: Record<string, (number | null)[]> }
+export interface Waypoint { x: number; y: number; v_kmh: number; radius: number }
+export interface WaypointPath { waypoints: Waypoint[]; ay_max?: number | null }
+export interface TrajectoryData { name: string; length: number; s: number[]; x: number[]; y: number[]; psi: number[]; kappa: number[]; v: number[] }
+export interface FrictionPatch { x_min: number; x_max: number; y_min: number; y_max: number; mu: number }
+export interface SimulateResponse { run_id?: string; name: string; model: string; stop_reason: string; stop_code: string; simulated_time: number; wall_time: number; n_samples: number; kpis: Kpi[]; signals: Record<string, (number | null)[]> }
 export interface ObjectSpec { id: number; type?: string; x: number; y: number; psi?: number; v: number; a?: number; yaw_rate?: number; length?: number; width?: number }
 export interface RoadSegment { kind: "straight" | "arc"; length: number; curvature?: number }
 export interface PlanRequest {
@@ -63,14 +68,20 @@ export interface ParkResponse {
     e_lat: number[]; segment: number[]; traction_limited: boolean[]; kpis: Record<string, number | null> };
 }
 // ---- development environment (workbench, research, MATLAB, knowledge)
-export interface ComponentParam { name: string; default: unknown; unit?: string; description?: string; label?: string }
+export interface ComponentParam { name: string; default: unknown; unit?: string; description?: string; label?: string; choices?: (string | number)[]; min?: number; max?: number; step?: number }
 export interface ComponentOption { spec: string; label: string; version?: string; language?: string; params: ComponentParam[]; inputs: string[]; outputs: string[] }
 export interface LayerInfo { layer: string; kind: string; default: string | null; components: ComponentOption[] }
 export interface AdScenario { name: string; type: string; label: string; description: string; duration: number; seed: number }
 export interface WorkbenchCatalog { scenarios: AdScenario[]; layers: LayerInfo[]; default_stack: Record<string, { component: string }>;
   kpi_info: Record<string, [string, string, string, string]>; limits: { max_duration: number } }
 export interface LayerSpec { component: string; params?: Record<string, unknown> }
-export interface RunRequest { scenario: string; seed?: number | null; duration?: number | null; stack?: Record<string, LayerSpec>; name?: string }
+export interface Connection { from: string; to: string }
+export interface RunRequest { scenario: string; seed?: number | null; duration?: number | null; stack?: Record<string, LayerSpec>; name?: string; connections?: Connection[] | null }
+export interface LiveActor { type: string; length: number; width: number; t: number; x: number; y: number; psi: number; v?: number }
+export interface LiveFrame { t: number; t_end: number; stopped: boolean; stop_reason: string; row: Record<string, number | string | null>; objects: Record<string, LiveActor>;
+  n_steps: number; n_snapshots: number; n_events: number; snapshot: PlannerSnapshot | null; events: ({ t: number; type: string } & Record<string, unknown>)[] }
+export interface LiveSession { id: string; name: string; base_dt: number; road: RunResult["road"]; ego: { length: number; width: number }; frame: LiveFrame }
+export interface SavedRun { format?: string; name?: string; meta: Record<string, unknown>; npz: string }
 export interface MissionResult { passed: boolean; criteria: Record<string, { ok: boolean; detail: string }> }
 export interface JobView { id: string; kind: string; name: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; progress: number; error: string | null;
   created: number; finished: number | null; request: Record<string, unknown>;
@@ -93,7 +104,8 @@ export interface PlannerSnapshot {
   prediction: { id: number; t: number[]; x: number[]; y: number[] }[] | null; controller: Record<string, unknown> | null;
 }
 export interface StackGraph { nodes: { id: string; component: string; label: string; position: [number, number]; period?: number }[];
-  connections: { from: string; to: string }[]; issues: string[]; ports: Record<string, { inputs: string[]; outputs: string[] }> }
+  connections: Connection[]; default_connections: Connection[]; issues: string[];
+  ports: Record<string, { inputs: string[]; outputs: string[]; input_types: Record<string, { type: string; optional: boolean }>; output_types: Record<string, { type: string; optional: boolean }> }> }
 export interface ExperimentRecord { label: string; ok: boolean; error: string | null; kpis: Record<string, number | null>; wall_time: number | null }
 export interface ExperimentRequest { kind: "compare" | "sweep" | "monte_carlo"; base: RunRequest; layer?: string; variants?: Record<string, LayerSpec>;
   grid?: Record<string, (number | string | boolean)[]>; distributions?: Record<string, number[]>; n?: number; seed?: number }
@@ -204,6 +216,18 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     trajectory: (body: { maneuver: string; vehicle: string; params?: Record<string, number | string | boolean>; max_points?: number }, s?: AbortSignal) =>
       request<{ name: string; length: number; x: number[]; y: number[]; psi: number[]; v: number[] }>("POST", "/trajectory", body, s),
     simulate: (body: SimulateRequest, s?: AbortSignal) => request<SimulateResponse>("POST", "/simulate", body, s),
+    waypointTrajectory: (body: WaypointPath, s?: AbortSignal) => request<TrajectoryData>("POST", "/trajectory/waypoints", { ...body, max_points: 1500 }, s),
+    waypointsFromManeuver: (body: { maneuver: string; vehicle: string; n_points: number }) => request<{ waypoints: Waypoint[] }>("POST", "/trajectory/waypoints/from-maneuver", body),
+    async report(runIds: string[], format: "pdf" | "summary", title: string): Promise<Blob> {
+      let res: Response;
+      try {
+        res = await fetch(`${base}/simulate/report`, { method: "POST", headers: headers(true), body: JSON.stringify({ run_ids: runIds, format, title }) });
+      } catch (err) {
+        throw new ApiError("errors.network", 0, String(err));
+      }
+      if (!res.ok) throw await failure(res);
+      return res.blob();
+    },
     explain: (body: PlanRequest, s?: AbortSignal) => request<ExplainResponse>("POST", "/plan/explain", body, s),
     predict: (body: { predictor: string; horizon: number; dt: number; objects: ObjectSpec[] }, s?: AbortSignal) => request<PredictResponse>("POST", "/predict", body, s),
     models: (s?: AbortSignal) => request<ModelMeta[]>("GET", "/models", undefined, s),
@@ -217,7 +241,14 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
     park: (body: ParkRequest, s?: AbortSignal) => request<ParkResponse>("POST", "/park", body, s),
     workbenchCatalog: (s?: AbortSignal) => request<WorkbenchCatalog>("GET", "/workbench/catalog", undefined, s),
-    stackGraph: (stack: Record<string, LayerSpec>, s?: AbortSignal) => request<StackGraph>("POST", "/workbench/graph", { stack }, s),
+    stackGraph: (stack: Record<string, LayerSpec>, s?: AbortSignal, connections?: Connection[] | null) =>
+      request<StackGraph>("POST", "/workbench/graph", { stack, ...(connections ? { connections } : {}) }, s),
+    liveStart: (body: RunRequest) => request<LiveSession>("POST", "/workbench/live", body),
+    liveAdvance: (id: string, body: { seconds?: number; steps?: number; known_snapshots: number }, s?: AbortSignal) =>
+      request<LiveFrame>("POST", `/workbench/live/${encodeURIComponent(id)}/advance`, body, s),
+    liveFinish: (id: string) => request<JobView>("POST", `/workbench/live/${encodeURIComponent(id)}/finish`),
+    liveDelete: (id: string) => request<void>("DELETE", `/workbench/live/${encodeURIComponent(id)}`),
+    importRun: (body: { meta: Record<string, unknown>; npz: string; name?: string }) => request<JobView>("POST", "/workbench/runs/import", body),
     startRun: (body: RunRequest) => request<JobView>("POST", "/workbench/runs", body),
     runs: (s?: AbortSignal) => request<JobView[]>("GET", "/workbench/runs", undefined, s),
     run: (id: string, s?: AbortSignal) => request<JobView>("GET", `/workbench/runs/${encodeURIComponent(id)}`, undefined, s),
@@ -225,7 +256,7 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     runResult: (id: string, s?: AbortSignal) => request<RunResult>("GET", `/workbench/runs/${encodeURIComponent(id)}/result`, undefined, s),
     runSnapshot: (id: string, k: number, s?: AbortSignal) => request<PlannerSnapshot>("GET", `/workbench/runs/${encodeURIComponent(id)}/snapshots/${k}`, undefined, s),
     runDownloadUrl: (id: string) => `${base}/workbench/runs/${encodeURIComponent(id)}/download`,
-    runDownload: (id: string) => request<unknown>("GET", `/workbench/runs/${encodeURIComponent(id)}/download`),
+    runDownload: (id: string) => request<SavedRun>("GET", `/workbench/runs/${encodeURIComponent(id)}/download`),
     startExperiment: (body: ExperimentRequest) => request<ExperimentView>("POST", "/workbench/experiments", body),
     experiment: (id: string, s?: AbortSignal) => request<ExperimentView>("GET", `/workbench/experiments/${encodeURIComponent(id)}`, undefined, s),
     cancelExperiment: (id: string) => request<JobView>("POST", `/workbench/experiments/${encodeURIComponent(id)}/cancel`),

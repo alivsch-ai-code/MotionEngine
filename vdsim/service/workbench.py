@@ -37,6 +37,8 @@ LAYER_KINDS = {"world": "world", "perception": "perception", "prediction": "pred
                "dynamics": "vehicle_dynamics", "actuators": "actuator", "plant": "vehicle_plant"}
 MAX_RUNS = 12
 MAX_EXPERIMENT_JOBS = 40
+MAX_LIVE = 3
+LIVE_IDLE_SECONDS = 600.0
 
 
 class _Strict(BaseModel):
@@ -48,6 +50,12 @@ class LayerSpec(_Strict):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
+class Connection(_Strict):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    from_: str = Field(alias="from", max_length=80, pattern=r"^[A-Za-z0-9_]+\.[A-Za-z0-9_]+$")
+    to: str = Field(max_length=80, pattern=r"^[A-Za-z0-9_]+\.[A-Za-z0-9_]+$")
+
+
 class RunRequest(_Strict):
     scenario: str
     seed: int | None = Field(None, ge=0, le=2**31 - 1)
@@ -55,10 +63,25 @@ class RunRequest(_Strict):
     stack: dict[str, LayerSpec] = Field(default_factory=dict)
     scenario_params: dict[str, float | int | bool | str] = Field(default_factory=dict)
     name: str = Field("", max_length=80)
+    connections: list[Connection] | None = Field(None, max_length=200,
+                                                 description="rewired stack: replaces the default connections")
 
 
 class GraphRequest(_Strict):
     stack: dict[str, LayerSpec] = Field(default_factory=dict)
+    connections: list[Connection] | None = Field(None, max_length=200)
+
+
+class AdvanceRequest(_Strict):
+    seconds: float | None = Field(None, gt=0.0, le=2.0, description="simulated time to advance")
+    steps: int | None = Field(None, ge=1, le=200, description="base steps to advance (single step: 1)")
+    known_snapshots: int = Field(0, ge=0, description="planner snapshots the client already has")
+
+
+class ImportRequest(_Strict):
+    meta: dict[str, Any]
+    npz: str = Field(max_length=60_000_000, description="base64 of the .npz file")
+    name: str = Field("", max_length=80)
 
 
 class ExperimentRequest(_Strict):
@@ -103,6 +126,63 @@ def _decimate(n, max_points):
     if n <= max_points:
         return np.arange(n)
     return np.unique(np.linspace(0, n - 1, max_points).round().astype(int))
+
+
+def _snapshot_view(snap, max_candidates=100):
+    """One planning cycle with at most `max_candidates` candidates (the selected one is kept)."""
+    s = dict(snap)
+    n = len(s.get("candidates_cost", []))
+    keep = _decimate(n, int(min(max(max_candidates, 10), 400))).tolist()
+    best = int(s.get("best_index", -1))
+    if 0 <= best < n and best not in keep:
+        keep.append(best)
+    for key in ("candidates_x", "candidates_y", "candidates_s", "candidates_d", "candidates_cost",
+                "candidates_status"):
+        if key in s and len(s[key]):
+            s[key] = np.asarray(s[key])[keep]
+    if s.get("candidates_reason"):
+        s["candidates_reason"] = [s["candidates_reason"][i] for i in keep if i < len(s["candidates_reason"])]
+    s["best_index"] = keep.index(best) if best in keep else -1
+    return _clean(s)
+
+
+def _connections(items):
+    return None if items is None else [{"from": c.from_, "to": c.to} for c in items]
+
+
+MAX_NPZ_BYTES = 300_000_000     # uncompressed size of an imported result
+
+
+def _load_result(meta, npz_base64):
+    """ADResult from the two files the library writes (meta JSON + arrays), without pickle."""
+    import base64
+    import binascii
+    import io
+    import json
+    import tempfile
+    import zipfile
+    from pathlib import Path
+
+    from ..ad.results import ADResult
+
+    try:
+        raw = base64.b64decode(npz_base64, validate=True)
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            if sum(i.file_size for i in z.infolist()) > MAX_NPZ_BYTES:
+                raise ValueError("result too large")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "result"
+            path.with_suffix(".npz").write_bytes(raw)
+            path.with_suffix(".json").write_text(json.dumps(meta), encoding="utf-8")
+            res = ADResult.load(path)
+        if "t" not in res.signals or not len(res.t):
+            raise ValueError("no time signal")
+        if not isinstance(res.metadata, dict) or not isinstance(res.kpis, dict) or not isinstance(res.events, list):
+            raise ValueError("unexpected metadata")
+        return res
+    except (binascii.Error, zipfile.BadZipFile, KeyError, ValueError, TypeError, IndexError, AttributeError,
+            OSError) as exc:
+        raise HTTPException(status_code=422, detail=f"not a result file: {type(exc).__name__}") from None
 
 
 class _Jobs:
@@ -174,8 +254,22 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
             raise HTTPException(status_code=422, detail=f"unknown scenario '{req.scenario}', available: "
                                                         f"{sorted(scenario_names)}")
         duration = min(req.duration, max_sim_time) if req.duration else None
-        return {"scenario": req.scenario, "seed": req.seed, "duration": duration, "stack": check_stack(req.stack),
-                "scenario_params": dict(req.scenario_params) or None}
+        stack = check_stack(req.stack)
+        out = {"scenario": req.scenario, "seed": req.seed, "duration": duration, "stack": stack,
+               "scenario_params": dict(req.scenario_params) or None}
+        if req.connections is not None:
+            out["connections"] = _connections(req.connections)
+            issues = graph_issues({**api.build_graph(stack), "connections": out["connections"]})
+            if issues:
+                raise HTTPException(status_code=422, detail="invalid connections: " + "; ".join(issues[:5]))
+        return out
+
+    def graph_issues(g):
+        try:
+            return api.validate_graph(g)
+        except Exception:  # the details stay in the server log
+            logger.exception("graph validation failed")
+            return ["the graph could not be validated"]
 
     # ------------------------------------------------------------------ catalog and architecture
     @router.get("/workbench/catalog", tags=["workbench"], summary="Scenarios, components per layer, default stack")
@@ -201,17 +295,28 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
     @router.post("/workbench/graph", tags=["workbench"], summary="Signal-flow graph of a stack, with validation")
     def graph(req: GraphRequest):
         g = api.build_graph(check_stack(req.stack))
-        try:
-            issues = api.validate_graph(g)
-        except Exception:  # the details stay in the server log
-            logger.exception("graph validation failed")
-            issues = ["the graph could not be validated"]
-        ports = {n["id"]: {"inputs": sorted((components.get(n["component"], {}).get("inputs") or {}).keys()),
-                           "outputs": sorted((components.get(n["component"], {}).get("outputs") or {}).keys())}
+        default = [dict(c) for c in g["connections"]]
+        if req.connections is not None:
+            g["connections"] = _connections(req.connections)
+        issues = graph_issues(g)
+        def port_types(node, side):
+            return {k: {"type": v.get("type", ""), "optional": bool(v.get("optional"))}
+                    for k, v in (components.get(node["component"], {}).get(side) or {}).items()}
+
+        ports = {n["id"]: {"inputs": sorted(port_types(n, "inputs")), "outputs": sorted(port_types(n, "outputs")),
+                           "input_types": port_types(n, "inputs"), "output_types": port_types(n, "outputs")}
                  for n in g["nodes"]}
-        return _clean({**g, "issues": issues, "ports": ports})
+        return _clean({**g, "issues": issues, "ports": ports, "default_connections": default})
 
     # ------------------------------------------------------------------ runs
+    def store(job, result):
+        job["result"] = result
+        job["summary"] = {"duration": result.duration, "n_snapshots": len(result.snapshots),
+                          "n_events": len(result.events), "mission": result.metadata.get("mission"),
+                          "stop_reason": result.metadata.get("stop_reason"),
+                          "wall_time": result.metadata.get("wall_time")}
+        job.update(state="done", progress=1.0, finished=time.time())
+
     def execute(job):
         def progress(t, t_end):
             if job["cancel"]:
@@ -226,13 +331,9 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
             try:
                 r = job["request"]
                 result = api.run(r["scenario"], stack=r["stack"] or None, seed=r["seed"], duration=r["duration"],
-                                 scenario_params=r["scenario_params"], progress=progress)
-                job["result"] = result
-                job["summary"] = {"duration": result.duration, "n_snapshots": len(result.snapshots),
-                                  "n_events": len(result.events), "mission": result.metadata.get("mission"),
-                                  "stop_reason": result.metadata.get("stop_reason"),
-                                  "wall_time": result.metadata.get("wall_time")}
-                job.update(state="done", progress=1.0, finished=time.time())
+                                 scenario_params=r["scenario_params"], progress=progress,
+                                 connections=r.get("connections"))
+                store(job, result)
             except _Cancelled:
                 job.update(state="cancelled", finished=time.time())
             except Exception as exc:  # reported to the client
@@ -318,33 +419,121 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
         _, res = result_of(job_id)
         if not 0 <= k < len(res.snapshots):
             raise HTTPException(status_code=404, detail="unknown snapshot")
-        s = dict(res.snapshots[k])
-        n = len(s.get("candidates_cost", []))
-        keep = _decimate(n, int(min(max(max_candidates, 10), 400))).tolist()
-        best = int(s.get("best_index", -1))
-        if 0 <= best < n and best not in keep:
-            keep.append(best)
-        for key in ("candidates_x", "candidates_y", "candidates_s", "candidates_d", "candidates_cost",
-                    "candidates_status"):
-            if key in s and len(s[key]):
-                s[key] = np.asarray(s[key])[keep]
-        if s.get("candidates_reason"):
-            s["candidates_reason"] = [s["candidates_reason"][i] for i in keep if i < len(s["candidates_reason"])]
-        s["best_index"] = keep.index(best) if best in keep else -1
-        return _clean(s)
+        return _snapshot_view(res.snapshots[k], max_candidates)
 
-    @router.get("/workbench/runs/{job_id}/download", tags=["workbench"], summary="Complete result as JSON")
+    @router.get("/workbench/runs/{job_id}/download", tags=["workbench"],
+                summary="Complete result as one JSON file (metadata + arrays), accepted by /workbench/runs/import")
     def run_download(job_id: str):
+        import base64
         import json
         import tempfile
         from pathlib import Path
 
         job, res = result_of(job_id)
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "result.json"
+            path = Path(tmp) / "result"
             res.save(path)
-            data = json.loads(path.read_text())
-        return JSONResponse(_clean(data), headers={"Content-Disposition": f'attachment; filename="{job["id"]}.json"'})
+            meta = json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))
+            npz = base64.b64encode(path.with_suffix(".npz").read_bytes()).decode("ascii")
+        return JSONResponse({"format": "motionengine-ad-result", "version": 1, "name": job["name"],
+                             "meta": _clean(meta), "npz": npz},
+                            headers={"Content-Disposition": f'attachment; filename="{job["id"]}.json"'})
+
+    @router.post("/workbench/runs/import", status_code=201, tags=["workbench"],
+                 summary="Load a saved result (download of this service, or the .json + .npz pair of the library)")
+    def import_run(req: ImportRequest):
+        res = _load_result(req.meta, req.npz)
+        scenario = res.scenario.get("name") if isinstance(res.scenario, dict) else str(res.scenario)
+        job = runs.add("import", req.name or str(res.name or scenario), {
+            "scenario": str(scenario), "seed": res.seed, "duration": None, "scenario_params": None,
+            "stack": {k: {"component": str(v["component"]), **({"params": v["params"]} if v.get("params") else {})}
+                      for k, v in (res.stack or {}).items() if isinstance(v, dict) and "component" in v}})
+        store(job, res)
+        return runs.view(job)
+
+    # ------------------------------------------------------------------ live mode
+    live: OrderedDict[str, dict] = OrderedDict()
+    live_lock = threading.Lock()
+
+    def live_get(session_id):
+        with live_lock:
+            entry = live.get(session_id)
+        if entry is None:
+            raise HTTPException(status_code=404, detail="unknown live session")
+        entry["used"] = time.time()
+        return entry
+
+    def live_frame(entry, known_snapshots=0):
+        session = entry["session"]
+        frame = session.frame()
+        snaps = session.result.snapshots
+        frame["snapshot"] = _snapshot_view(snaps[-1], 60) if len(snaps) > known_snapshots else None
+        frame["events"] = session.result.events[-20:]
+        return _clean(frame)
+
+    @router.post("/workbench/live", status_code=201, tags=["workbench"],
+                 summary="Start a live session: the client advances the run (play, pause, single step)")
+    def live_start(req: RunRequest):
+        r = check_run(req)
+        now = time.time()
+        with live_lock:
+            for key in [k for k, e in live.items() if now - e["used"] > LIVE_IDLE_SECONDS]:
+                live.pop(key)
+            if len(live) >= MAX_LIVE:
+                live.popitem(last=False)
+        try:
+            session = api.live(r["scenario"], stack=r["stack"] or None, seed=r["seed"],
+                               duration=r["duration"], scenario_params=r["scenario_params"],
+                               connections=r.get("connections"))
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"{type(exc).__name__}: could not start the run") from None
+        session.t_end = min(session.t_end, max_sim_time)
+        entry = {"id": uuid.uuid4().hex[:12], "session": session, "request": r, "name": req.name or req.scenario,
+                 "used": now, "lock": threading.Lock()}
+        with live_lock:
+            live[entry["id"]] = entry
+        ego = {"length": float(session.ego_dims["length"]), "width": float(session.ego_dims["width"])}
+        return _clean({"id": entry["id"], "name": entry["name"], "base_dt": session.base_dt, "road": session.road,
+                       "ego": ego, "frame": live_frame(entry)})
+
+    @router.post("/workbench/live/{session_id}/advance", tags=["workbench"],
+                 summary="Advance a live session by simulated seconds or base steps")
+    def live_advance(session_id: str, req: AdvanceRequest):
+        entry = live_get(session_id)
+        session = entry["session"]
+        with entry["lock"]:
+            if session.finished:
+                raise HTTPException(status_code=409, detail="the session is finished")
+            if req.steps:
+                for _ in range(req.steps):
+                    if not session.step():
+                        break
+            else:
+                session.advance(req.seconds or 0.1, max_wall_time=5.0)
+            return live_frame(entry, req.known_snapshots)
+
+    @router.post("/workbench/live/{session_id}/finish", tags=["workbench"],
+                 summary="End a live session and keep its result as a run")
+    def live_finish(session_id: str):
+        entry = live_get(session_id)
+        with entry["lock"]:
+            result = entry["session"].finish()
+        with live_lock:
+            live.pop(session_id, None)
+        job = runs.add("live", entry["name"], entry["request"])
+        store(job, result)
+        return runs.view(job)
+
+    @router.delete("/workbench/live/{session_id}", status_code=204, tags=["workbench"])
+    def live_delete(session_id: str):
+        with live_lock:
+            entry = live.pop(session_id, None)
+        if entry is not None:
+            with entry["lock"]:
+                try:
+                    entry["session"].executor.close()
+                except Exception:  # nothing to keep
+                    pass
 
     # ------------------------------------------------------------------ research
     def run_experiment(job, jobs_spec):
@@ -377,7 +566,7 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
     def start_experiment(req: ExperimentRequest):
         from ..research import compare_components, monte_carlo, parameter_sweep
 
-        base = {k: v for k, v in check_run(req.base).items() if v is not None}
+        base = {k: v for k, v in check_run(req.base).items() if v is not None and k != "connections"}
         base["snapshots"] = False
         if req.kind == "compare":
             if not req.layer or not req.variants:
