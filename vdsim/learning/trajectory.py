@@ -304,6 +304,24 @@ class Situation:
                  "y": [y, y + v * t_end * math.sin(psi)], "psi": psi} for i, x, y, psi, v, length, width in self.objects]
 
 
+def _box(x, y, psi, length, width):
+    # corners of a rectangle with center (x, y) and heading psi
+    c, s = math.cos(psi), math.sin(psi)
+    return [(x + a * c - b * s, y + a * s + b * c) for a, b in ((length / 2, width / 2), (length / 2, -width / 2),
+                                                                 (-length / 2, -width / 2), (-length / 2, width / 2))]
+
+
+def _overlap(a, b):
+    # separating axis test of two convex polygons (true contact of the outlines, no safety margin)
+    for poly in (a, b):
+        for i in range(len(poly)):
+            nx, ny = poly[i][1] - poly[i - 1][1], poly[i - 1][0] - poly[i][0]
+            pa, pb = [nx * x + ny * y for x, y in a], [nx * x + ny * y for x, y in b]
+            if max(pa) < min(pb) or max(pb) < min(pa):
+                return False
+    return True
+
+
 def rollout(planner, situation, cycles, dt=0.1, on_cycle=None, t0=0.0):
     """Closed loop with ideal tracking: the ego follows each planned trajectory for dt. Returns the log."""
     ego, t = situation.ego, float(t0)
@@ -319,9 +337,12 @@ def rollout(planner, situation, cycles, dt=0.1, on_cycle=None, t0=0.0):
             break
         t = round(t + dt, 10)
         ego = ego_from_point(traj.sample(t), planner.geometry, traj.reference_point, t)
-        for _, x, y, psi, v, length, _w in situation.objects:
-            ox, oy = x + v * t * math.cos(psi), y + v * t * math.sin(psi)
-            if math.hypot(ego.x - ox, ego.y - oy) < 0.5 * (length + planner.geometry.width) * 0.6:
+        front, rear = planner.geometry.extent("cog")            # bumpers relative to the center of gravity
+        mid = 0.5 * (front - rear)
+        ego_box = _box(ego.x + mid * math.cos(ego.psi), ego.y + mid * math.sin(ego.psi), ego.psi, front + rear,
+                       planner.geometry.width)
+        for _, x, y, psi, v, length, width in situation.objects:
+            if _overlap(ego_box, _box(x + v * t * math.cos(psi), y + v * t * math.sin(psi), psi, length, width)):
                 log["collision"] = True
     return log
 

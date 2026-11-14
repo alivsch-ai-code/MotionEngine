@@ -142,7 +142,7 @@ export interface ControlRunRequest {
 }
 export interface ControlKpis { max_e_n: number; rms_e_n: number; final_e_n: number; max_e_theta_deg: number; max_steer_deg: number; max_steer_rate_deg_s: number; max_ay: number;
   settled_after: number | null; compute_time_ms: number }
-export interface ControlRun { name: string; label: string; params: Record<string, unknown>; stable: boolean; kpis: ControlKpis | null;
+export interface ControlRun { name: string; label: string; params: Record<string, unknown>; stable: boolean; on_path: boolean; kpis: ControlKpis | null;
   signals: Record<string, (number | null)[]>; terms: Record<string, (number | null)[]>; active: string }
 export interface ControlResult { path: { kind: string; x: number[]; y: number[]; kappa: number[]; s: number[]; maneuver_start: number }; speed: number; duration: number; plant: string; mu: number;
   vehicle: { wheelbase: number; length: number; width: number }; runs: ControlRun[] }

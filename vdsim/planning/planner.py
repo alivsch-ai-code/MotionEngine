@@ -210,6 +210,9 @@ class WerlingPlanner(TrajectoryPlannerBase):
         t_s = float(t) + p.timing.t_comp
         old = self.plan
         start = self._start_state(t, t_s, ego, behavior, status, direction)
+        problem = self._start_state_problem(start, ref)
+        if problem:
+            return self._emergency_stop(t, t_s, start, ref, problem, tic)
         timings = {"start": time.perf_counter() - tic}
         ctx = PlanningContext(t=float(t), t_start=t_s, reference_line=ref, behavior=behavior, prediction=prediction,
                               geometry=self.geometry, vehicle=self.vehicle, reference_point=start.reference_point,
@@ -390,6 +393,59 @@ class WerlingPlanner(TrajectoryPlannerBase):
         if self.regime == "slow" and v > sp.v_switch + sp.hysteresis:
             return "fast"
         return self.regime
+
+    # ------------------------------------------------------------------ validity of the Frenet start state
+    def _start_state_problem(self, start, ref):
+        """Reason why no trajectory can be planned from this start state, or "".
+
+        The Frenet transformation (A.1) divides by 1 - kappa_r d and by cos(delta theta). Near the center of
+        curvature of the reference line, or with the vehicle almost across the lane (a slide), it is singular:
+        s_dot and its derivatives grow without bound and every candidate would be meaningless.
+        """
+        f = start.frenet
+        values = (f.s, f.s_d, f.s_dd, f.d, f.d_d, f.d_dd, f.d_p, f.d_pp)
+        if not all(np.isfinite(v) for v in values):
+            return "Startzustand nicht endlich"
+        if 1.0 - ref.evaluate(f.s)[3] * f.d < 0.15:
+            return "Fahrzeug nahe am Krümmungsmittelpunkt der Referenzlinie"
+        if abs(f.d_p) > 5.7:                                   # more than about 80 deg to the lane
+            return "Fahrzeug quer zur Referenzlinie"
+        if abs(f.s_d) > 2.0 * abs(start.world["v"]) + 3.0:
+            return "Frenet-Geschwindigkeit unplausibel"
+        return ""
+
+    def _emergency_stop(self, t, t_s, start, ref, reason, tic):
+        """Straight braking along the current direction of motion (no valid Frenet start state).
+
+        The trajectory is marked invalid; the next cycle starts again from the measured vehicle state.
+        """
+        p = self.params
+        n = int(round(p.timing.output_horizon / p.timing.dt_out))
+        t_out = float(t) + np.arange(n + 1) * p.timing.dt_out
+        w = start.world
+        v0 = abs(float(w["v"])) if np.isfinite(w["v"]) else 0.0
+        decel = min(p.constraints.max_longitudinal_acceleration.a_decel_max, 6.0)
+        tau = np.clip(t_out - t_s, 0.0, v0 / decel)
+        dist = v0 * tau - 0.5 * decel * tau**2
+        v = np.maximum(v0 - decel * np.clip(t_out - t_s, 0.0, None), 0.0)
+        theta = float(w["theta"]) if np.isfinite(w["theta"]) else 0.0
+        x, y = w["x"] + dist * np.cos(theta), w["y"] + dist * np.sin(theta)
+        s_ref, d_ref = ref.project_many(x, y)
+        traj = PlannedTrajectory(t=t_out, x=x, y=y, theta=np.full_like(t_out, theta), kappa=np.zeros_like(t_out),
+                                 dkappa=np.zeros_like(t_out), v=v, a=np.where(v > 0.0, -decel, 0.0), s=s_ref, d=d_ref,
+                                 direction=start.direction, reference_point=start.reference_point,
+                                 lateral_mode=start.lateral_mode, longitudinal_mode="stopping", cost=0.0, valid=False,
+                                 reinitialized=True, plan=None, reference_line=ref,
+                                 metadata={"mode_label": "Notstopp", "emergency": reason, "t_start": t_s})
+        debug = PlannerDebug(t=float(t), mode="emergency", fallback=True, reinitialized=True,
+                             info={"emergency": reason, "reasons": list(start.reasons)})
+        debug.compute_time = time.perf_counter() - tic
+        traj.metadata["compute_time"] = debug.compute_time
+        self.plan, self.last_trajectory, self.last_debug = None, traj, debug        # re-initialize next cycle
+        self.cycle += 1
+        self.signals.update({"cost": 0.0, "valid": 0.0, "reinit": 1.0, "compute_time": debug.compute_time})
+        log.warning("planner %s: Notstopp (%s)", self.instance_name, reason)
+        return traj, debug
 
     # ------------------------------------------------------------------ hooks for a guided search
     def _lateral_focus(self, ctx):

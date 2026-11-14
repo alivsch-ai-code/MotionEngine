@@ -191,8 +191,11 @@ def create_router(secured, limiter, presets, max_wall_time):
                     if any(key in info for info in infos):
                         for j in range(n):
                             terms[f"{key}{j + 1}"] = [float(info[key][j]) if key in info else None for info in infos]
+                kpis = _kpis(log, dt) if finite else None
+                # on_path: the vehicle stays within 3 m of the reference (beyond that it has left any lane)
                 runs.append({"name": spec.name, "label": spec.label or spec.name, "params": spec.params, "stable": bool(finite),
-                             "kpis": _kpis(log, dt) if finite else None, "signals": series, "terms": terms,
+                             "on_path": bool(finite and kpis["max_e_n"] < 3.0),
+                             "kpis": kpis, "signals": series, "terms": terms,
                              "active": [log["active"][i] for i in idx][-1]})
         step = max(1, len(path.s) // 500)
         s_end = req.speed * duration

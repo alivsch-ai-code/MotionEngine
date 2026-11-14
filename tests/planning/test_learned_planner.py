@@ -112,3 +112,13 @@ def test_dataset_and_scope():
     beh.modes.append(LongitudinalMode("stopping", {"s_stop": 200.0}))
     learned.plan_cycle(0.0, sit.ego, beh, sit.prediction(0.0))
     assert learned.source == "out_of_scope"
+
+
+def test_collision_check_of_the_evaluation_uses_the_outlines():
+    from vdsim.learning.trajectory import _box, _overlap
+
+    ego = _box(0.0, 0.0, 0.0, 4.8, 1.9)
+    assert _overlap(ego, _box(4.0, 0.0, 0.0, 4.5, 1.8))                 # 0.65 m overlap in length
+    assert not _overlap(ego, _box(4.8, 0.0, 0.0, 4.5, 1.8))             # 0.15 m gap
+    assert not _overlap(ego, _box(0.0, 2.0, 0.0, 4.5, 1.8))             # side by side, 0.15 m gap
+    assert _overlap(ego, _box(3.0, 1.5, 0.8, 4.5, 1.8))                 # turned into the ego's corner
