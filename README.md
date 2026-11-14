@@ -66,10 +66,12 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 | Page | What it does |
 |---|---|
 | **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
+| **Learn** | nine lessons on tracking control, planning and the whole system: a question, a real experiment, the numbers, the answer |
+| **Controller lab** | Pure Pursuit, Stanley, LQR, MPC and the Werling controller on the same path and vehicle; KPIs, signals and the control law with the value of every term at any moment; friction, actuator dynamics, side force |
 | **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view; run comparison (KPI table, overlaid paths and signals), PDF report, save and load runs |
 | **Trajectory editor** | draw a path through draggable waypoints with corner radii, limit the speed by lateral acceleration, add a friction map, then drive it in the simulation |
 | **Trajectory inspector** | one planning cycle in seven steps, each with formula, values, source and chart |
-| **Workbench** | run the complete automated-driving stack on one of 14 scenarios; choose the component and parameters of every layer; animated top view with candidates and selected trajectory of each planning cycle; cost terms, signals, KPIs, mission criteria, events and runtime per node; live mode with pause and single step; parameter dialog per component; download a result and load it again |
+| **Workbench** | run the complete automated-driving stack on one of 14 scenarios; choose the component and parameters of every layer; animated top view with candidates and selected trajectory of each planning cycle; cost terms, signals, KPIs, mission criteria, events and runtime per node; live mode with pause and single step; conditions from ideal to realistic (double-track vehicle, actuator dynamics, sensor noise and latency, friction); parameter dialog per component; download a result and load it again |
 | **Research** | compare components of a layer, sweep a parameter or run Monte Carlo, with a KPI table and chart |
 | **Architecture** | signal-flow graph of the stack with validation and the documentation of each component; remove and add connections, the Workbench runs the rewired stack |
 | **MATLAB** | analyze MATLAB functions and convert them to Python or C |
@@ -217,7 +219,8 @@ The planning module implements the Werling optimal trajectory generation approac
 <img src="docs/images/vehicle_dynamics.svg" alt="Vehicle Dynamics Models" width="85%">
 </div>
 
-Five fidelity levels, all validated against analytical solutions:
+Five fidelity levels, all validated against analytical solutions. The single-track model is also compared with
+46 hours of measurements from four production cars ([method and results](docs/validation/measured_data.md)):
 
 | Model | States | Capabilities |
 |---|---|---|

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Learning environment:**
+  - **Controller lab** (page, `/control/catalog`, `/control/run`): several tracking controllers on the same path and
+    plant, with KPIs, signals and the control law as a formula with the value of every term at the chosen time.
+  - **Learn** page: nine lessons, each with a question, a prepared experiment on the real controllers and planner, and
+    the answer.
+  - **Conditions** for stack runs: friction and wind (`environment` in `api.run`, `friction` in `/workbench/runs`) and
+    Workbench presets (ideal, realistic, wet road, ice and poor sensors) with the double-track model, actuator
+    dynamics, sensor noise and latency.
+  - **English texts of the stack library** in the web app: scenarios, KPIs, mission criteria, component labels,
+    validation messages.
+- **Validation against measured data** (`vdsim.validation`, `scripts/validate_measured.py`): the single-track model
+  replayed with the measured steering angle and speed of four production cars (46 hours, commaSteeringControl) and
+  public vehicle specifications. Without any fit it explains 40 to 95 % of the measured lateral acceleration, with
+  the steering angle offset calibrated 88 to 97 %. Method, results and limits: `docs/validation/measured_data.md`.
 - **Learned trajectory planner** (`vdsim.learning.trajectory`, stack component `trajectory_planner/learned`): a network
   learns from the Werling planner which trajectory it selects (end offset, end speed and end times). The planner
   builds only the candidates next to this proposal and checks them with the teacher's restrictions and collision
