@@ -138,7 +138,7 @@ export interface ControlCatalog {
 }
 export interface ControlRunRequest {
   controllers: { name: string; params?: Record<string, unknown>; label?: string }[]; path: string; path_params?: Record<string, number>; speed: number;
-  plant?: string; mu?: number; lateral_offset?: number; heading_offset_deg?: number; disturbance?: { t: number; duration: number; fy: number; mz?: number } | null; duration?: number;
+  plant?: string; mu?: number; actuator?: "ideal" | "realistic"; lateral_offset?: number; heading_offset_deg?: number; disturbance?: { t: number; duration: number; fy: number; mz?: number } | null; duration?: number;
 }
 export interface ControlKpis { max_e_n: number; rms_e_n: number; final_e_n: number; max_e_theta_deg: number; max_steer_deg: number; max_steer_rate_deg_s: number; max_ay: number;
   settled_after: number | null; compute_time_ms: number }
@@ -285,7 +285,8 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     runs: (s?: AbortSignal) => request<JobView[]>("GET", "/workbench/runs", undefined, s),
     run: (id: string, s?: AbortSignal) => request<JobView>("GET", `/workbench/runs/${encodeURIComponent(id)}`, undefined, s),
     cancelRun: (id: string) => request<JobView>("POST", `/workbench/runs/${encodeURIComponent(id)}/cancel`),
-    runResult: (id: string, s?: AbortSignal) => request<RunResult>("GET", `/workbench/runs/${encodeURIComponent(id)}/result`, undefined, s),
+    runResult: (id: string, s?: AbortSignal, maxPoints?: number) =>
+      request<RunResult>("GET", `/workbench/runs/${encodeURIComponent(id)}/result${maxPoints ? `?max_points=${maxPoints}` : ""}`, undefined, s),
     runSnapshot: (id: string, k: number, s?: AbortSignal) => request<PlannerSnapshot>("GET", `/workbench/runs/${encodeURIComponent(id)}/snapshots/${k}`, undefined, s),
     runDownloadUrl: (id: string) => `${base}/workbench/runs/${encodeURIComponent(id)}/download`,
     runDownload: (id: string) => request<SavedRun>("GET", `/workbench/runs/${encodeURIComponent(id)}/download`),

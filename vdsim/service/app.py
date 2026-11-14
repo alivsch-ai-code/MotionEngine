@@ -819,8 +819,8 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         return result
 
     # ------------------------------------------------------------------------- development environment
-    from .workbench import create_router as _workbench_router
     from .control import create_router as _control_router
+    from .workbench import create_router as _workbench_router
 
     app.include_router(_control_router(secured, limiter, catalog["presets"], max_wall_time))
 

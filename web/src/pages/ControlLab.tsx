@@ -20,7 +20,7 @@ const Chart = lazy(() => import("../components/Chart"));
 export const CONTROL_FORM_KEY = "me.control.form";
 export interface ControlForm {
   controllers: string[]; params: Record<string, Record<string, unknown>>; path: string; speed: number; plant: string; mu: number;
-  lateralOffset: number; gust: number; gustTime: number; autorun?: boolean;
+  lateralOffset: number; gust: number; gustTime: number; actuator?: "ideal" | "realistic"; autorun?: boolean;
 }
 export const CONTROL_DEFAULT: ControlForm = { controllers: ["pure_pursuit", "stanley", "lqr"], params: {}, path: "lane_change", speed: 15, plant: "werling_desm", mu: 1,
   lateralOffset: 0, gust: 0, gustTime: 3 };
@@ -55,7 +55,7 @@ export default function ControlLab() {
 
   const start = (f: ControlForm = form) => run.run({
     controllers: f.controllers.map((name) => ({ name, params: f.params[name] ?? {}, label: t(`control.names.${name}`) })),
-    path: f.path, speed: f.speed, plant: f.plant, mu: f.mu, lateral_offset: f.lateralOffset,
+    path: f.path, speed: f.speed, plant: f.plant, mu: f.mu, actuator: f.actuator ?? "ideal", lateral_offset: f.lateralOffset,
     disturbance: f.gust ? { t: f.gustTime, duration: 0.5, fy: f.gust } : null,
   });
   // a lesson can open this page with a prepared experiment that starts at once
@@ -93,11 +93,13 @@ export default function ControlLab() {
               options={Object.keys(catalog.data?.paths ?? { [form.path]: {} }).map((p) => ({ value: p, label: t(`control.paths.${p}`) }))} />
             <NumberField label={t("control.speed")} unit="m/s" value={form.speed} min={2} max={50} step={1} onChange={(v) => set({ speed: v })}
               hint={t("control.speedHint", { kmh: fmt(form.speed * 3.6, lang, 3) })} />
-            <details className="expert" open={form.plant !== "werling_desm" || form.mu !== 1 || form.lateralOffset !== 0 || form.gust !== 0}>
+            <details className="expert" open={form.plant !== "werling_desm" || (form.actuator ?? "ideal") !== "ideal" || form.mu !== 1 || form.lateralOffset !== 0 || form.gust !== 0}>
               <summary><Icon name="settings" />{t("control.conditions")}</summary>
               <div className="stack">
                 <SelectField label={t("control.plant")} value={form.plant} onChange={(v) => set({ plant: v })} tip={t("control.plantTip")}
                   options={(catalog.data?.plants ?? [form.plant]).map((p) => ({ value: p, label: t(`control.plants.${p}`) }))} />
+                <SelectField label={t("control.actuator")} value={form.actuator ?? "ideal"} onChange={(v) => set({ actuator: v })} hint={t("control.actuatorHint")}
+                  options={(["ideal", "realistic"] as const).map((a) => ({ value: a, label: t(`control.actuators.${a}`) }))} />
                 <NumberField label={t("control.mu")} value={form.mu} min={0.05} max={1.5} step={0.05} onChange={(v) => set({ mu: v })} hint={t("control.muHint")} />
                 <NumberField label={t("control.offset")} unit="m" value={form.lateralOffset} min={-3} max={3} step={0.1} onChange={(v) => set({ lateralOffset: v })} hint={t("control.offsetHint")} />
                 <div className="grid grid--2-tight">
@@ -151,7 +153,7 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
               <td className="num">{fmt(r.kpis?.max_ay ?? null, lang, 3)} m/s²</td><td className="num">{fmt(r.kpis?.compute_time_ms ?? null, lang, 2)} ms</td></tr>
           ))}</tbody></table>
           <p className="subtle">{t("control.kpi.note")}</p></div></div>
-      <div className="card"><div className="card__body"><PathPlot height={220} ariaLabel={t("control.paths")} lines={lines} /></div></div>
+      <div className="card"><div className="card__body"><PathPlot height={220} ariaLabel={t("control.pathsPlot")} lines={lines} /></div></div>
       <Suspense fallback={<Skeleton height={220} />}>
         <div className="grid grid--2">
           {SERIES.map(([key, unit, label]) => (

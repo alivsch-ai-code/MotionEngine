@@ -387,7 +387,7 @@
     "conditions": {
       "label": "Conditions",
       "ideal": "Ideal (design model, perfect sensors)",
-      "realistic": "Realistic (double track, sensor noise, 0.1 s latency)",
+      "realistic": "Realistic (double track, actuator dynamics, sensor noise, 0.1 s latency)",
       "wet": "Wet road (realistic, friction 0.5)",
       "harsh": "Ice and poor sensors (friction 0.3, 0.2 s latency)",
       "hint": {
@@ -762,6 +762,7 @@
     "useInWorkbench": "Use in the Workbench"
   },
   "control": {
+    "actuator": "Steering actuator", "actuatorHint": "Realistic: 30 ms dead time, 50 ms lag and at most 0.6 rad/s at the wheels; drive and brake with a lag.", "actuators": {"ideal": "Ideal (follows the command at once)", "realistic": "Realistic (dead time, lag, rate limit)"},
     "title": "Controller lab",
     "subtitle": "Run several tracking controllers on the same path and vehicle, compare how well they follow it, and see how each term of a control law contributes at any moment.",
     "setup": "Experiment",
@@ -778,7 +779,8 @@
       "mpc": "MPC (linear time-varying)",
       "werling_bilevel": "Werling (exact linearization)"
     },
-    "paths": "Reference path and driven paths",
+    "paths": {"lane_change": "Lane change", "double_lane_change": "Double lane change", "curve_entry": "Curve entry", "s_curve": "S-curve", "slalom": "Slalom", "straight": "Straight"},
+    "pathsPlot": "Reference path and driven paths",
     "pathHints": {
       "lane_change": "3.5 m to the left over 50 m.",
       "double_lane_change": "To the left and back, 40 m each.",
@@ -848,6 +850,130 @@
       "lqr": "The LQR uses the linear single-track model in error coordinates. The gain K minimizes a weighted sum of errors and steering effort and is recomputed for each speed; the feedforward holds the vehicle on a curve without error.",
       "mpc": "The MPC plans the steering rate over a horizon by solving an optimization with the error model and limits on angle and rate, applies the first part of the plan and plans again.",
       "werling_bilevel": "The Werling controller inverts the nonlinear single-track model so that the lateral error follows a chosen linear second-order equation. At low speed it switches to a kinematic law; a large deviation triggers a re-initialization of the planner."
+    }
+  },
+  "learn": {
+    "title": "Learn",
+    "subtitle": "Nine short lessons on trajectory tracking and planning. Each one asks a question, runs a real experiment with the library's controllers and planner, and shows the numbers that answer it.",
+    "progress": "{{done}} of {{n}} lessons done",
+    "note": "Every experiment is computed when you start it; nothing is pre-recorded.",
+    "topics": {
+      "control": "Control: following a path",
+      "planning": "Planning: choosing a trajectory",
+      "system": "The whole system"
+    },
+    "done": "done",
+    "experiment": "The experiment",
+    "watch": "What to look at",
+    "run": "Run the experiment",
+    "takes": "Runs of the complete stack take 10 to 40 seconds.",
+    "open": {
+      "control": "Continue in the Controller lab",
+      "experiment": "Continue in Research",
+      "runs": "Continue in the Workbench"
+    },
+    "variant": "Variant",
+    "failed": "failed",
+    "yes": "yes",
+    "no": "no",
+    "lost": "leaves the path", "showAnswer": "Show the answer",
+    "kpis": {
+      "max_e_n": "Largest lateral error",
+      "rms_e_n": "RMS lateral error",
+      "steer_rate": "Largest steering rate",
+      "max_ay": "Largest lateral acceleration",
+      "max_jerk": "Largest jerk",
+      "rms_jerk_lat": "Lateral jerk (RMS)",
+      "mean_speed": "Mean speed",
+      "min_distance": "Smallest distance to objects",
+      "mission_passed": "Mission passed"
+    },
+    "labels": {
+      "on": "feedforward on",
+      "off": "feedforward off",
+      "werling_desm": "design model",
+      "double_track": "double-track model",
+      "ideal": "ideal actuator",
+      "realistic": "realistic actuator",
+      "k_lat=0.05": "jerk weight 0.05",
+      "k_lat=1": "jerk weight 1",
+      "k_lat=20": "jerk weight 20",
+      "k_lat=1.0": "jerk weight 1",
+      "k_lat=20.0": "jerk weight 20"
+    },
+    "lessons": {
+      "lookahead": {
+        "title": "1 · The look-ahead distance of Pure Pursuit",
+        "goal": "Understand the one parameter that decides how Pure Pursuit behaves.",
+        "experiment": "Pure Pursuit drives an S-curve at 54 km/h with three look-ahead gains: the look-ahead distance is 0.4, 0.8 or 1.5 seconds of travel.",
+        "watch": "The largest lateral error and the steering rate. Compare the three error curves in the chart.",
+        "question": "Why does the long look-ahead give the largest error although it steers most calmly?",
+        "answer": "With a long look-ahead the target point lies far ahead on the path, so the vehicle aims at where the path will be and cuts the corner. A short look-ahead follows closely; at higher speed or with delays it starts to oscillate. The look-ahead trades accuracy against calm steering."
+      },
+      "feedforward": {
+        "title": "2 · Feedback alone or with feedforward",
+        "goal": "See what the curvature feedforward contributes to a controller.",
+        "experiment": "Stanley enters a curve with a 60 m radius at 54 km/h, once with and once without the curvature feedforward.",
+        "watch": "The lateral error at the end, inside the steady curve.",
+        "question": "Why does an error remain in the curve, and why is it larger without the feedforward?",
+        "answer": "A curve needs a constant steering angle. Without feedforward only the feedback can produce it, and a proportional feedback gives an output only when there is an error. The feedforward supplies the angle the curvature needs, so the feedback only has to correct what is left."
+      },
+      "disturbance": {
+        "title": "3 · A gust of side wind",
+        "goal": "Compare how fast controllers reject a disturbance.",
+        "experiment": "Four controllers drive straight at 90 km/h. After 2 s a side force of 4000 N pushes the vehicle for half a second.",
+        "watch": "The largest lateral error and the steering rate each controller uses.",
+        "question": "Two controllers stay within 7 cm, two drift 20 cm. What do the two better ones do differently?",
+        "answer": "Stanley and LQR react with a high gain on the lateral error and steer quickly (4 to 5 °/s). Pure Pursuit only looks at a far point and the Werling law is tuned for a smooth, slower return, so both steer gently (0.5 °/s) and drift further. Fast rejection costs steering activity."
+      },
+      "model": {
+        "title": "4 · The controller meets a more realistic vehicle",
+        "goal": "See what happens when the vehicle differs from the model the controller was designed with.",
+        "experiment": "LQR and the Werling controller drive a double lane change at 90 km/h, first on the simple design model, then on the double-track model with load transfer and tire saturation.",
+        "watch": "How much the largest lateral error of each controller grows on the double-track model.",
+        "question": "Why does the Werling controller lose more accuracy than the LQR?",
+        "answer": "The Werling controller inverts its design model exactly, so on that model it is nearly perfect (5 cm). Every difference between model and vehicle becomes a tracking error (20 cm on the double-track model). The LQR relies on feedback more than on an exact model, so it changes less. Model-based precision is only as good as the model."
+      },
+      "actuator": {
+        "title": "5 · A steering actuator is not instant",
+        "goal": "See the effect of dead time, lag and a rate limit in the steering.",
+        "experiment": "Stanley and LQR drive a double lane change at 90 km/h, once with an ideal actuator and once with 30 ms dead time, 50 ms lag and a rate limit.",
+        "watch": "The largest lateral error and whether the error curve starts to oscillate.",
+        "question": "Why does a delay in the loop make a controller with high gain oscillate?",
+        "answer": "With a delay the controller sees the effect of its steering late and keeps correcting in the same direction for too long. The higher the gain, the larger the overshoot. Here the maneuver is also near the limit of the tires (8.5 m/s²), so Stanley's error grows fourfold and the LQR leaves the path completely. Controllers that work well with an ideal actuator need lower gains or a model of the delay on a real vehicle."
+      },
+      "friction": {
+        "title": "6 · The limit of the tires",
+        "goal": "See that no controller can follow a path the tires cannot hold.",
+        "experiment": "The Werling controller enters a 60 m curve at 65 km/h on the double-track model, on a dry (1.0), wet (0.5) and icy (0.3) road.",
+        "watch": "The lateral acceleration the curve needs (about 5.4 m/s²) against what the road allows (friction × 9.81 m/s²).",
+        "question": "On the wet road the error is meters, not centimeters. Is the controller wrong?",
+        "answer": "No. The curve needs 5.4 m/s² and a wet road gives at most about 4.9 m/s². The vehicle slides whatever the controller does. The planner has to choose a speed the friction allows: v² / R must stay below μ·g. This is why planning and control cannot be designed separately."
+      },
+      "jerk": {
+        "title": "7 · The jerk weight shapes the trajectory",
+        "goal": "See how one cost weight changes what the planner selects.",
+        "experiment": "The complete stack overtakes on the highway three times; the weight of the lateral jerk in the cost function is 0.05, 1 and 20.",
+        "watch": "The largest lateral acceleration and the lateral jerk.",
+        "question": "The low weight changes lanes with 3.9 m/s², the high one with 0.7 m/s². What does the planner trade?",
+        "answer": "The cost of a candidate is the jerk integral plus the duration plus the end deviation. With a small jerk weight the time term dominates and the planner selects a short, sharp lane change. With a large one it selects a long, gentle one. All candidates are the same polynomials; the weights only decide which one is cheapest."
+      },
+      "stack": {
+        "title": "8 · Five controllers in the roundabout",
+        "goal": "Compare controllers inside the complete automated-driving stack.",
+        "experiment": "The stack drives through a roundabout five times. Only the tracking controller changes.",
+        "watch": "The largest lateral error, the jerk and whether the mission is passed.",
+        "question": "The LQR was good on the lane change but fails here. Why?",
+        "answer": "The roundabout is slow and tightly curved. The LQR is designed with the linear single-track model for small angles and higher speeds, and it has no special law for slow driving. The Werling stabilization switches to a kinematic law at low speed and the MPC plans with the limits, so both stay within 20 cm. A controller is only good in the range it was designed for."
+      },
+      "conditions": {
+        "title": "9 · From ideal to realistic",
+        "goal": "See how much of the performance comes from ideal conditions.",
+        "experiment": "The stack avoids an obstacle three times: with ideal conditions, with a realistic vehicle, actuators and sensors, and on a wet road.",
+        "watch": "The largest lateral error and the jerk.",
+        "question": "Under ideal conditions the error is below 1 cm. Where do the 20 cm under realistic conditions come from?",
+        "answer": "From everything the ideal run leaves out: the double-track vehicle differs from the design model, the steering needs time and has a rate limit, and the own position is measured with noise and 0.1 s late. Each effect is small; together they set the accuracy a real vehicle reaches. Always test an algorithm under realistic conditions before trusting its numbers."
+      }
     }
   }
 }

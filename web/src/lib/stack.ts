@@ -55,6 +55,7 @@ export function fileToBase64(file: File): Promise<string> {
 export const CONDITIONS = ["ideal", "realistic", "wet", "harsh"] as const;
 export type Conditions = (typeof CONDITIONS)[number];
 const SENSOR = { latency: 0.1, pos_sigma: 0.15, vel_sigma: 0.3, ego_pos_sigma: 0.05, ego_heading_sigma_deg: 0.2 };
+const ACTUATOR = { steering: { dead_time: 0.03, tau: 0.05, rate_limit: 0.6 }, drive_tau: 0.2, brake_tau: 0.1 };
 const PRESETS: Record<Conditions, { plant?: string; sensor?: Record<string, number>; friction?: number }> = {
   ideal: {},
   realistic: { plant: "double_track", sensor: SENSOR, friction: 1.0 },
@@ -66,5 +67,6 @@ export function applyConditions(specs: Record<string, LayerSpec>, conditions: Co
   const stack = { ...specs };
   if (preset.plant && !stack.plant) stack.plant = { component: "vehicle_plant/vehicle_model", params: { model: preset.plant } };
   if (preset.sensor && !stack.perception) stack.perception = { component: "perception/object_sensor", params: preset.sensor };
+  if (preset.plant && !stack.actuators) stack.actuators = { component: "actuator/steering_powertrain", params: ACTUATOR };
   return { stack, friction: preset.friction ?? null };
 }

@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 CONTROLLERS = ["pure_pursuit", "stanley", "lqr", "mpc", "werling_bilevel"]
 PLANTS = ["werling_desm", "bicycle_nonlinear", "double_track", "multibody"]
+REALISTIC_ACTUATOR = {"steering": {"dead_time": 0.03, "tau": 0.05, "rate_limit": 0.6}, "drive_tau": 0.2, "brake_tau": 0.1}
 PATHS = {
     "lane_change": {"offset": 3.5, "length": 50.0},
     "double_lane_change": {"offset": 3.5, "length": 40.0},
@@ -60,6 +61,8 @@ class ControlRunRequest(_Strict):
     lateral_offset: float = Field(0.0, ge=-3.0, le=3.0, description="start beside the path, m")
     heading_offset_deg: float = Field(0.0, ge=-20.0, le=20.0)
     disturbance: Disturbance | None = None
+    actuator: Literal["ideal", "realistic"] = Field("ideal", description="realistic: steering with 30 ms dead time, "
+                                                    "50 ms lag and a rate limit of 0.6 rad/s at the wheels")
     duration: float | None = Field(None, gt=0.5, le=40.0)
     max_points: int = Field(600, ge=50, le=4000)
 
@@ -168,6 +171,7 @@ def create_router(secured, limiter, presets, max_wall_time):
                 try:
                     log, _ = run_closed_loop(spec.name, traj, cfg, duration=duration, dt=dt, plant=req.plant,
                                              plant_params=plant_params, controller_params=dict(spec.params),
+                                             actuator_params=REALISTIC_ACTUATOR if req.actuator == "realistic" else None,
                                              environment=env, ego_initial=start)
                 except (TypeError, ValueError, KeyError, AttributeError) as exc:
                     raise HTTPException(status_code=422, detail=f"{spec.name}: invalid parameters "
@@ -195,7 +199,7 @@ def create_router(secured, limiter, presets, max_wall_time):
         keep = path.s <= s_end + 5.0
         return _clean({"path": {"kind": req.path, "x": path.x[keep][::step], "y": path.y[keep][::step],
                                 "kappa": path.kappa[keep][::step], "s": path.s[keep][::step], "maneuver_start": lead},
-                       "speed": req.speed, "duration": duration, "plant": req.plant, "mu": req.mu,
+                       "speed": req.speed, "duration": duration, "plant": req.plant, "mu": req.mu, "actuator": req.actuator,
                        "vehicle": {"wheelbase": float(cfg.vehicle.wheelbase), "length": float(cfg.vehicle.length),
                                    "width": float(cfg.vehicle.width)},
                        "runs": runs})

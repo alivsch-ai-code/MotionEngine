@@ -25,7 +25,7 @@ const SCREENS = process.argv.includes("--screens");
 const OUT = new URL("./output/", import.meta.url).pathname;
 if (SCREENS) mkdirSync(OUT, { recursive: true });
 
-const PAGES = ["/", "/app", "/app/assistant", "/app/simulate", "/app/trajectory", "/app/inspector", "/app/parking", "/app/workbench", "/app/research", "/app/architecture", "/app/matlab", "/app/knowledge", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
+const PAGES = ["/", "/app", "/app/assistant", "/app/learn", "/app/simulate", "/app/trajectory", "/app/inspector", "/app/control", "/app/parking", "/app/workbench", "/app/research", "/app/architecture", "/app/matlab", "/app/knowledge", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
 // raw i18n keys look like "simulate.title" or "app:models.x": letters, dots, no spaces
 const RAW_KEY = /(^|\s)(common|app|domain|inspector|landing):[a-z]|(^|\s)[a-z]+(\.[a-zA-Z_]+){2,}(\s|$)/;
 const failures = [];
@@ -147,6 +147,21 @@ timings["workflow planner training"] = Date.now() - t0;
 await page.getByRole("button", { name: "Slower vehicle ahead" }).click();
 await page.getByText("Largest path difference").waitFor({ timeout: 60000 });
 await checkText(page, "planner model");
+
+// controller lab: compare the default controllers, control law with terms
+await page.goto(BASE + "/app/control", { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "Run comparison" }).first().click();
+await page.getByText("smallest error").waitFor({ timeout: 60000 });
+await page.locator(".katex").first().waitFor({ timeout: 20000 });
+await checkText(page, "controller lab");
+
+// lessons: the first one runs a real experiment and reveals its answer
+await page.goto(BASE + "/app/learn", { waitUntil: "networkidle" });
+const lesson = page.locator("article.lesson").first();
+await lesson.getByRole("button", { name: "Run the experiment" }).click();
+await lesson.getByRole("button", { name: "Show the answer" }).click({ timeout: 60000 });
+await lesson.getByText(/cuts the corner/).waitFor();
+await checkText(page, "lessons");
 
 // German workflow labels
 const de = await newPage("de", "dark");

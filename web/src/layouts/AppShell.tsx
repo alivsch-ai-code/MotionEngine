@@ -9,7 +9,7 @@ import { LogoMark, Wordmark } from "../components/Logo";
 import { PageSkeleton } from "../components/PageSkeleton";
 
 const NAV: { section: string; items: { to: string; key: string; icon: IconName; end?: boolean }[] }[] = [
-  { section: "nav.sections.overview", items: [{ to: "/app", key: "nav.dashboard", icon: "dashboard", end: true }] },
+  { section: "nav.sections.overview", items: [{ to: "/app", key: "nav.dashboard", icon: "dashboard", end: true }, { to: "/app/learn", key: "nav.learn", icon: "book" }] },
   { section: "nav.sections.work", items: [
     { to: "/app/assistant", key: "nav.assistant", icon: "chat" },
     { to: "/app/simulate", key: "nav.simulate", icon: "play" },
