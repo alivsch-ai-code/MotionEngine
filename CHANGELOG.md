@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Learned planner, more ways to learn:** approach selectable (`regression`, `classification` over the teacher's
+  grid, `dagger` with the learner driving and the teacher labeling), training situations configurable (speed range,
+  objects, curves, lane changes), and your own planner model connectable as ONNX or HTTP
+  (`POST /models/connect` with `kind: "trajectory_planner"`), compared with the teacher when connected.
+- English summaries of the stack components; own documentation and references for the learned planner and the
+  parking planner; `CITATION.cff`; chat rate limit per client (`MOTIONENGINE_CHAT_RATE`).
 - **Learning environment:**
   - **Controller lab** (page, `/control/catalog`, `/control/run`): several tracking controllers on the same path and
     plant, with KPIs, signals and the control law as a formula with the value of every term at the chosen time.
@@ -100,6 +106,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Planner: from a singular Frenet start state (vehicle sliding toward the center of curvature of the reference line,
+  or across the lane) it emitted fallback trajectories with speeds of several hundred m/s. It now plans a straight
+  emergency stop and starts again from the measured state.
 - `laengsparken_rueckwaerts` parks (review finding F2): the behavior layer hands the parking maneuver to the parking
   planner (`trajectory_planner/werling_parking`, now the default planner of the AD stack; it delegates to the Werling
   planner for everything else) instead of running the Werling velocity mode on the reversed lane line.

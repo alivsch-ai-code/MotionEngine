@@ -43,6 +43,11 @@ export function PlannerModel({ model }: { model: ModelMeta }) {
 
   return (
     <div className="stack">
+      <div className="row">
+        <span className="badge badge--info">{t(`models.approaches.${model.approach ?? "regression"}`, { defaultValue: model.approach ?? "" })}</span>
+        {model.situations ? <span className="subtle">{t("plannerModel.situations", { vmin: fmt(model.situations.speed_min, lang, 3), vmax: fmt(model.situations.speed_max, lang, 3),
+          objects: model.situations.max_objects, curves: fmt(model.situations.curve_share * 100, lang, 3) })}</span> : null}
+      </div>
       {m ? (
         <>
           <div className="grid grid--4">

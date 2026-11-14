@@ -109,7 +109,33 @@ What the numbers say:
 - The gain in computing time is about 30 %. It is limited because the teacher is already lazy: it sorts
   the candidates by cost and checks only until it has enough valid ones.
 
-## 6. Use
+## 6. Learning approaches
+
+`train_planner(approach=...)` and the training form offer three approaches. Same budget (4000 demonstrations,
+hidden layers 96-96), same 60 held-out situations:
+
+| Approach | Idea | Cycles solved by the network | Same trajectory as the teacher | Cost within 5 % | Cost in closed loop | Training time |
+|---|---|---|---|---|---|---|
+| Regression | predict the four numbers of the teacher's choice | 99.0 % | 91 % | 93 % | +7.1 % | 113 s |
+| Classification | end offset and end speed as classes of the teacher's grid, end times as numbers | 96.4 % | 82 % | 89 % | +9.3 % | 120 s |
+| DAgger | regression; then the learned planner drives and the teacher labels the states it reaches (2 rounds); training on all data | 97.7 % | 91 % | 95 % | +7.0 % | 131 s |
+
+- Regression is the default. It is the best or equal in every column.
+- Classification avoids averaging two valid choices, but it needs more data per class: most demonstrations
+  have the class "lane center, target speed", the others are rare.
+- DAgger (Ross et al. 2011) brings no clear gain here. The local search and the fallback to the teacher
+  already keep the learned planner close to the teacher's states, so the states it visits differ little
+  from the demonstrations.
+
+**Training situations** can be set (`situations`): speed range, largest number of objects, share of curves,
+share of lane changes. Train on the situations the model will meet.
+
+**Your own model:** any model that maps the 31 inputs to the 4 outputs can be connected as an ONNX file or an
+HTTP endpoint (`POST /models/connect` with `kind: "trajectory_planner"`, or the Connect tab). It is compared
+with the Werling planner on 20 situations when it is connected. Every proposal is verified by the planner,
+so a poor model costs computing time, not safety.
+
+## 7. Use
 
 ```python
 from vdsim.learning import ModelStore, train_planner
@@ -125,7 +151,7 @@ result = api.run("einscherer", stack={"planner": {"component": "trajectory_plann
 Each planner snapshot records where the trajectory came from (`info["source"]`: `network`, `teacher`,
 `out_of_scope` or `infeasible`).
 
-## 7. Limits
+## 8. Limits
 
 - The model imitates one planner configuration and one vehicle. Train again after changing cost weights,
   sampling grids or the vehicle.
@@ -134,7 +160,7 @@ Each planner snapshot records where the trajectory came from (`info["source"]`: 
 - Training situations are synthetic. Situations far from them (dense traffic, very narrow corridors)
   fall back to the teacher more often.
 
-## 8. References
+## 9. References
 
 - M. Werling: Ein neues Konzept für die Trajektoriengenerierung und -stabilisierung in zeitkritischen
   Verkehrsszenarien. KIT Scientific Publishing, 2011.

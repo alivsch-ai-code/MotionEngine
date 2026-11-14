@@ -23,6 +23,7 @@ import math
 
 import numpy as np
 
+from ...framework.knowledge import ComponentDoc
 from ...framework.plugins import component
 from ...framework.types import PlannedTrajectory, PlannerDebug
 from ..planner import WerlingPlanner
@@ -35,6 +36,17 @@ from .tracking import DriveSettings, _speed_profile
 class ParkingAwarePlanner(WerlingPlanner):
     NAME, VERSION = "werling_parking", "1.0.0"
     LABEL = "Trajektorienplaner (Werling + Parkplaner)"
+    DOC = ComponentDoc(
+        summary="Werling-Planer für normale Fahrt; bei einer Parkaufgabe plant ein Hybrid-A*-/Reeds-Shepp-Planer den "
+                "Parkpfad und gibt ihn Zug für Zug an den Regler.",
+        purpose="Parkmanöver mit Richtungswechseln, die der Frenet-Planer auf der Referenzlinie nicht darstellen kann.",
+        theory="Reeds-Shepp-Kurven, Hybrid A*, Mehrzug-Ausparken; Zeitparametrierung mit Lenkratengrenze.",
+        assumptions=["Vorderachslenkung, niedrige Geschwindigkeit im Parkmodus"],
+        limitations=["Im Stack nur Längsparken rückwärts"],
+        references=["werling2011", "dolgov2010", "reeds1990"],
+        validation=["tests/planning/test_parking.py", "tests/regression/test_ad_missions.py"],
+        concepts=["hybrid_a_star"],
+        expert="docs/planning/parking.md")
 
     def reset(self, context=None):
         super().reset(context)

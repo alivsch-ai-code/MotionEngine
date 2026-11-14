@@ -119,6 +119,12 @@
     "parameters": "Parameters"
   },
   "models": {
+    "approaches": {
+      "regression": "Regression",
+      "classification": "Classification",
+      "dagger": "DAgger (data aggregation)",
+      "external": "Connected model"
+    },
     "title": "Neural models",
     "subtitle": "Train a neural surrogate of the vehicle dynamics or a network that proposes the planned trajectory, or connect your own model. Every model is compared with its teacher before you use it.",
     "tabs": { "models": "Models", "train": "Train", "connect": "Connect external model" },
@@ -147,6 +153,19 @@
       "neural": "Neural model"
     },
     "trainForm": {
+      "approach": "Learning approach",
+      "approachHint": {
+        "regression": "The network predicts the four numbers of the teacher's choice. Best result in our comparison.",
+        "classification": "End offset and end speed as classes of the teacher's grid, so two valid choices are not averaged to an invalid one.",
+        "dagger": "After a first training the learned planner drives itself and the teacher labels the states it reaches; the network is trained again on all data."
+      },
+      "situations": "Training situations",
+      "speedMin": "Slowest speed",
+      "speedMax": "Fastest speed",
+      "maxObjects": "Objects at most",
+      "curveShare": "Share of curves",
+      "laneChangeShare": "Share starting on the neighbor lane",
+      "situationsHint": "Train on the situations the model will meet: a model trained without objects proposes nothing useful behind a slow vehicle.",
       "kind": "What to train",
       "kindHint": {
         "vehicle_dynamics": "A network that replaces the vehicle model in simulations.",
@@ -177,6 +196,7 @@
       "validation": "After training, the test-set R² and RMSE per output are shown, and a closed-loop comparison checks the error that matters for planning."
     },
     "connect": {
+      "plannerHint": "The model is compared with the Werling planner on 20 situations when you connect it. Every proposal is verified by the planner, so a poor model costs computing time, not safety.",
       "title": "Connect a model",
       "text": "Use a model trained in PyTorch, TensorFlow or JAX: as an ONNX file, or as an HTTP service.",
       "backend": "Model type",
@@ -555,7 +575,7 @@
     "stackHint": "Changes apply to the workbench and to experiments.",
     "inputs": "Inputs",
     "outputs": "Outputs",
-    "doc": {
+    "doc": { "german": "The theory notes of the library are written in German.",
       "purpose": "Purpose",
       "theory": "Theory",
       "references": "References"
@@ -721,6 +741,7 @@
     "badFile": "The file contains no waypoints."
   },
   "plannerModel": {
+    "situations": "Trained on {{vmin}} to {{vmax}} m/s, up to {{objects}} objects, {{curves}} % curves",
     "acceptance": "Cycles solved by the network",
     "sameChoice": "Same trajectory as the teacher",
     "costRatio": "Cost in closed loop vs. teacher",

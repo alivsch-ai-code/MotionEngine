@@ -9,6 +9,7 @@ Configuration (environment variables):
     MOTIONENGINE_MAX_WALL_TIME    wall-clock budget per simulation, s (default 60)
     MOTIONENGINE_CORS_ORIGINS     comma separated list of allowed CORS origins (default: none)
     ANTHROPIC_API_KEY             enables the chat assistant (/chat, see vdsim/service/chat.py)
+    MOTIONENGINE_CHAT_RATE        chat messages per minute and client address (default 20); more get 429
 
 All compute endpoints are synchronous `def` handlers: FastAPI runs them in its thread pool, so the
 event loop stays responsive. Only names listed by the catalog endpoints are accepted (vehicle
@@ -456,7 +457,9 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             raise HTTPException(status_code=404, detail="unknown model") from None
         if meta.get("kind") != "trajectory_planner":
             raise HTTPException(status_code=422, detail="this model is not a trajectory planner model")
-        return models.backend(model_id)
+        from ..learning.trajectory import planner_backend
+
+        return planner_backend(meta, models.backend(model_id))
 
     def _plan_setup(req):
         from ..core.parameters import load_vehicle_preset
@@ -604,7 +607,8 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         config_name = _require(req.planner_config, catalog["planner_configs"], "planner configuration")
         if planner_kind and req.n_samples > 20000:
             raise HTTPException(status_code=422, detail="at most 20000 demonstrations for a trajectory planner model")
-        default_name = f"Werling imitation ({config_name})" if planner_kind else f"{req.teacher} surrogate ({vehicle_name})"
+        default_name = (f"Werling imitation ({config_name}, {req.approach})" if planner_kind
+                        else f"{req.teacher} surrogate ({vehicle_name})")
         if any(h < 2 or h > 512 for h in req.hidden):
             raise HTTPException(status_code=422, detail="hidden layer sizes must be within 2..512")
         with train_lock:
@@ -635,7 +639,9 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                 stop = lambda: train_jobs[job_id]["cancel"]  # noqa: E731
                 if planner_kind:
                     net, meta = train_planner(vehicle_name, config_name, req.n_samples, tuple(req.hidden), req.epochs,
-                                              req.learning_rate, seed=req.seed, progress=progress, should_stop=stop)
+                                              req.learning_rate, seed=req.seed, progress=progress, should_stop=stop,
+                                              approach=req.approach,
+                                              situations=req.situations.model_dump() if req.situations else None)
                 else:
                     net, meta = train_surrogate(vehicle_name, req.teacher, req.n_samples, tuple(req.hidden),
                                                 req.epochs, req.learning_rate, seed=req.seed, progress=progress,
@@ -678,10 +684,18 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         from urllib.parse import urlparse
 
         from ..learning import FEATURES, TARGETS, load_backend
+        from ..learning.trajectory import PLAN_FEATURES, PLAN_TARGETS, WINDOW, evaluate_planner
 
         vehicle_name = _require(req.vehicle, catalog["presets"], "vehicle preset")
-        meta = {"name": req.name, "kind": "vehicle_dynamics", "vehicle": vehicle_name, "features": list(FEATURES),
-                "targets": list(TARGETS)}
+        planner_kind = req.kind == "trajectory_planner"
+        if planner_kind:
+            config_name = _require(req.planner_config, catalog["planner_configs"], "planner configuration")
+            meta = {"name": req.name, "kind": "trajectory_planner", "vehicle": vehicle_name, "planner_config": config_name,
+                    "teacher": f"werling ({config_name})", "approach": "external", "features": list(PLAN_FEATURES),
+                    "targets": list(PLAN_TARGETS), "head": {"kind": "regression"}, "window": dict(WINDOW)}
+        else:
+            meta = {"name": req.name, "kind": "vehicle_dynamics", "vehicle": vehicle_name, "features": list(FEATURES),
+                    "targets": list(TARGETS)}
         blob = None
         if req.backend == "onnx":
             if not req.onnx_base64:
@@ -701,13 +715,23 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             if parsed.hostname.lower() not in allowed_model_hosts:
                 raise HTTPException(status_code=403, detail="host not in MOTIONENGINE_ALLOWED_MODEL_HOSTS")
             meta.update(backend="http", url=req.url)
+        n_in, n_out = (len(PLAN_FEATURES), len(PLAN_TARGETS)) if planner_kind else (len(FEATURES), len(TARGETS))
+        probe = np.zeros((1, n_in))
+        probe[0, 3 if planner_kind else 0] = 20.0            # 20 m/s, everything else zero
         try:
             backend = load_backend(meta, blob)
-            out = np.asarray(backend.predict([[20.0, 0.0, 0.0, 0.0, 0.0]]))
+            out = np.asarray(backend.predict(probe.tolist()))
         except Exception as exc:
             raise HTTPException(status_code=422, detail=f"model check failed: {exc}") from None
-        if out.shape != (1, len(TARGETS)):
-            raise HTTPException(status_code=422, detail=f"model must map 5 inputs to 3 outputs, got {out.shape}")
+        if out.shape != (1, n_out):
+            raise HTTPException(status_code=422, detail=f"model must map {n_in} inputs to {n_out} outputs, got {out.shape}")
+        if planner_kind:
+            # the same comparison with the Werling planner as after a training (shorter)
+            with limiter.slot():
+                try:
+                    meta["planner_metrics"] = evaluate_planner(backend, vehicle_name, config_name, n_situations=20)
+                except Exception as exc:
+                    raise HTTPException(status_code=422, detail=f"model failed in the planner: {type(exc).__name__}") from None
         return _public(models.save(meta, blob))
 
     @app.post("/models/{model_id}/evaluate", tags=["learning"], dependencies=secured,
@@ -856,6 +880,10 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             chat_state["client"] = anthropic.Anthropic()
         return chat_state["client"]
 
+    chat_rate = max(int(_env_float("MOTIONENGINE_CHAT_RATE", 20.0)), 1)
+    chat_rate_log: dict[str, list[float]] = {}
+    chat_rate_lock = threading.Lock()
+
     @app.get("/chat/status", tags=["chat"], dependencies=secured, summary="Whether the chat assistant is available")
     def chat_status():
         import importlib.util
@@ -871,7 +899,19 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
 
     @app.post("/chat", tags=["chat"], dependencies=secured, response_class=StreamingResponse,
               summary="Ask the assistant; it runs simulations and plans and streams its answer (server-sent events)")
-    def chat(req: ChatRequest):
+    def chat(req: ChatRequest, request: Request):
+        # every message costs model tokens: at most chat_rate messages per minute and client address
+        who = request.client.host if request.client else "unknown"
+        now = time.time()
+        with chat_rate_lock:
+            recent = [t for t in chat_rate_log.get(who, []) if now - t < 60.0]
+            if len(recent) >= chat_rate:
+                raise HTTPException(status_code=429, detail=f"at most {chat_rate} messages per minute; try again shortly",
+                                    headers={"Retry-After": str(int(60.0 - (now - recent[0])) + 1)})
+            recent.append(now)
+            chat_rate_log[who] = recent
+            for key in [k for k, v in chat_rate_log.items() if not v or now - v[-1] > 60.0]:
+                del chat_rate_log[key]
         client = _chat_client()
         conv = conversations.get_or_create(req.conversation_id)
         return StreamingResponse(chat_events(client, conv, req.message, chat_tools), media_type="text/event-stream",

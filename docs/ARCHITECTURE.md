@@ -509,3 +509,35 @@ python run_scenario.py --all
 - **Road excitation:** The road profile is identical on the left and right sides (no roll excitation from the road surface).
 - **No reverse driving:** Below approximately 3 m/s, slip is computed with a minimum speed floor; reverse driving is not supported.
 - **Latency in feedback correction:** The curvature estimator knows the latency of the signal path; in practice, this latency must be estimated (e.g., via cross-correlation between commanded and measured curvature).
+
+## 14. Later additions
+
+Sections 1 to 13 describe the vehicle dynamics platform (`vdsim.core`, `vehicle_models`, `tire_models`,
+`controllers`, `simulation`, `reporting`, desktop GUI). The parts below were added later and have their own
+documents.
+
+| Part | Package | Document |
+|---|---|---|
+| Automated-driving stack: world, perception, prediction, behavior, planner, controller, vehicle dynamics, actuators, plant as typed components on a graph executor | `vdsim.framework`, `vdsim.runtime`, `vdsim.ad`, `vdsim.world`, `vdsim.perception`, `vdsim.prediction`, `vdsim.behavior`, `vdsim.planning`, `vdsim.stabilization` | `docs/specs/contracts.md`, `docs/planning/README.md` |
+| Parking planner (Reeds-Shepp, Hybrid A*) | `vdsim.planning.parking` | `docs/planning/parking.md` |
+| Public Python API | `vdsim.api` | `vdsim/api/__init__.py` |
+| REST service: simulation, planning, workbench runs and live sessions, controller lab, experiments, models, chat assistant | `vdsim.service` | `README.md`, section "REST API" |
+| Web app (React, EN/DE): workflows, development environment, lessons | `web/` | `docs/design-system.md` |
+| Neural models: vehicle dynamics surrogate, learned trajectory planner | `vdsim.learning` | `docs/learning/trajectory_model.md` |
+| Research: batch runs, sweeps, Monte Carlo, metrics | `vdsim.research` | `docs/KNOWLEDGE.md` |
+| Validation against measured data | `vdsim.validation` | `docs/validation/measured_data.md` |
+
+Limitations of these parts (see also section 13):
+
+- **Planner and friction:** the trajectory planner limits the lateral acceleration with a fixed value; it
+  does not know the friction of the road. On a low-friction road it plans maneuvers the tires cannot hold.
+  If the vehicle slides so far that the Frenet start state is singular, the planner brakes straight ahead
+  (emergency stop) and plans again from the measured state.
+- **Perception:** an object list with configurable noise, latency and occlusion; no camera, radar or lidar
+  simulation.
+- **Other road users** follow scripts and car-following models; they do not negotiate with the ego vehicle.
+- **Ideal conditions by default:** the stack runs on the controller's design model with exact measurements
+  unless the conditions are set to realistic (double-track vehicle, actuator dynamics, sensor errors).
+- **Measured data:** only the lateral acceleration of the single-track model is validated against
+  measurements, for normal driving.
+

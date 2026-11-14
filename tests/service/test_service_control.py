@@ -81,7 +81,10 @@ def test_friction_reaches_the_stack(client):
     plant = {"plant": {"component": "vehicle_plant/vehicle_model", "params": {"model": "double_track"}}}
     dry = api.run("kreisverkehr", stack=plant, duration=14.0)
     ice = api.run("kreisverkehr", stack=plant, duration=14.0, environment={"friction": {"base": 0.2}})
-    assert dry.kpis["max_e_n"] < 0.3 and ice.kpis["max_e_n"] > 1.0
+    # dry: on the lane; ice: the vehicle slides off the road, and every planned speed stays physical
+    assert dry.kpis["max_e_n"] < 0.3 and dry.kpis["off_road"] == 0
+    assert ice.kpis["off_road"] > 0 and ice.kpis["max_e_n"] > 5 * dry.kpis["max_e_n"]
+    assert float(abs(ice.signals["des_v"]).max()) < 30.0
     r = client.post("/workbench/runs", json={"scenario": "einscherer", "duration": 1.0, "friction": 0.5})
     assert r.status_code == 202 and r.json()["request"]["environment"] == {"friction": {"base": 0.5}}
     assert client.post("/workbench/runs", json={"scenario": "einscherer", "friction": 5.0}).status_code == 422

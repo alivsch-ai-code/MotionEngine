@@ -134,6 +134,142 @@
    "scenario_engine": "Szenario-Engine"
   }
  },
+ "componentDoc": {
+  "actuator": {
+   "steering_powertrain": {
+    "purpose": "Verbindet die Stellgrößen der Trajektorienregelung mit der Strecke; die Latenzkette der ursprünglichen Spurwechsel-Latenzstudie bleibt in der Wirkkette nutzbar.",
+    "summary": "Integriert die Lenkrate bzw. übernimmt den Lenkwinkel, bildet Lenkaktor (Latenz, Kennlinie, Ratenbegrenzung) sowie verzögerte Antriebs- und Bremsmomente nach."
+   }
+  },
+  "behavior_planner": {
+   "rule_based": {
+    "purpose": "Verhaltensebene nach Werling 3.6: Sollvorgaben so wählen, dass die reaktive Trajektorienplanung möglichst selten eine Kollision vermeiden muss.",
+    "summary": "Zustandsautomat für Spurhalten, Spurwechsel, Einfädeln, Überholen, Kreuzung/Kreisverkehr und Einparken; erzeugt Referenzkurve, Längsmodi und Box-Restriktion für den Trajektorienplaner."
+   }
+  },
+  "perception": {
+   "ground_truth": {
+    "purpose": "Referenz für die Entwicklung von Prädiktion, Verhalten und Planung ohne Wahrnehmungsfehler.",
+    "summary": "Gibt die Objekte der Szenario-Engine und den wahren Eigenzustand unverändert weiter."
+   },
+   "object_sensor": {
+    "purpose": "Realistischere Eingangsdaten für Prädiktion und Verhalten: begrenzte Sicht, Verdeckung, Messrauschen, Fehldetektionen und Latenz; reproduzierbar über den Szenario-Seed.",
+    "summary": "Erzeugt aus der Ground Truth eine gestörte Objektliste und eine Eigenzustandsschätzung."
+   }
+  },
+  "predictor": {
+   "constant_acceleration": {
+    "purpose": "Prädiktion der Vorder- und Lückenfahrzeuge für Folge- und Einfädelmodus nach Werling 3.5.2.",
+    "summary": "Prädiziert Objekte mit konstanter Beschleunigung entlang ihrer Spur in Frenet-Koordinaten."
+   },
+   "constant_velocity": {
+    "purpose": "Einfache, kartenunabhängige Referenzprädiktion, z. B. für Fußgänger oder ohne Straßenkarte.",
+    "summary": "Geradlinige Prädiktion mit konstanter Geschwindigkeit (optional konstanter Gierrate)."
+   },
+   "lane_following": {
+    "purpose": "Erkennt Spurwechsel (Einscherer) frühzeitig aus der Quergeschwindigkeit relativ zur Spur.",
+    "summary": "Konstante Geschwindigkeit entlang der Spurfolge, Querablage konvergiert zur Zielspurmitte."
+   }
+  },
+  "tracking_controller": {
+   "acc": {
+    "purpose": "Vergleich der trajektorienbasierten Längsführung mit klassischem ACC ohne Planer (Werling 4.1.3: bei Trajektorienfolge implizit enthalten).",
+    "summary": "Abstandsbasierte Längsregelung mit konstanter Zeitlücke."
+   },
+   "composite": {
+    "purpose": "Klassische entkoppelte Quer-/Längsregelung als Vergleich zur gekoppelten Werling-Regelung.",
+    "summary": "Kombiniert einen beliebigen Quer- und Längsregler zu einem Trackingregler."
+   },
+   "ff_fb": {
+    "purpose": "Zeitbasiertes Längstracking (Trajektorie statt Bahn).",
+    "summary": "Beschleunigungsvorsteuerung aus der Trajektorie mit Rückführung von Geschwindigkeits- und Längsfehler."
+   },
+   "lqr": {
+    "purpose": "Optimaler linearer Vergleichsregler (Rajamani 3.2).",
+    "summary": "Zustandsregler auf das Querfehlermodell des Einspurmodells mit diskreter Riccati-Lösung, Gain-Scheduling über die Geschwindigkeit und stationärer Vorsteuerung."
+   },
+   "mpc": {
+    "purpose": "Vergleichsregler, der Stellgrößenbeschränkungen explizit berücksichtigt (Werling Tab. 4.1).",
+    "summary": "Linear zeitvariante modellprädiktive Querregelung entlang des Trajektorienhorizonts mit Lenkwinkel- und Lenkratenbeschränkung."
+   },
+   "pi": {
+    "purpose": "Klassischer Längsregler.",
+    "summary": "PI-Regler auf den Geschwindigkeitsfehler."
+   },
+   "pid": {
+    "purpose": "Klassischer Längsregler zum Vergleich.",
+    "summary": "PID-Regler auf den Geschwindigkeitsfehler der Solltrajektorie."
+   },
+   "pure_pursuit": {
+    "purpose": "Einfacher, robuster Vergleichsregler (Snider 2009).",
+    "summary": "Geometrischer Querregler: Kreisbogen von der Hinterachse zu einem Zielpunkt auf der Bahn."
+   },
+   "speed_pi": {
+    "purpose": "Robuster Geschwindigkeitsregler bei Stellgrößensättigung.",
+    "summary": "PI-Geschwindigkeitsregler mit Back-Calculation-Anti-Windup und Vorsteuerung."
+   },
+   "stanley": {
+    "purpose": "Vergleichsregler mit guter Spurtreue bei mittleren Geschwindigkeiten.",
+    "summary": "Querregler auf Vorderachs-Querfehler und Kurswinkelfehler (Stanley, DARPA Grand Challenge)."
+   },
+   "werling_bilevel": {
+    "purpose": "Vereint Low-level-Stabilisierung (permanente Störungen, Modellfehler) mit der High-level-Stabilisierung durch Reinitialisierung bei Impulsstörungen (Werling 2.3, 4.4, 4.5).",
+    "summary": "Standard-Trackingregler: stoßfreie Umschaltung der drei Werling-Regler nach Referenzpunkt und Fahrtrichtung, dazu Reinitialisierungsauslösung und Bewegungsprädiktion für die Planung."
+   },
+   "werling_dynamic": {
+    "purpose": "Stabilisiert einen Referenzpunkt lambda vor dem Schwerpunkt invariant auf der Solltrajektorie; die dynamische Sollgrößentransformation beseitigt den Schleppfehler, die geschwindigkeitsabhängige Vorausschau hält die Dämpfung der Nulldynamik konstant (Werling 4.3).",
+    "summary": "Exakt E/A-linearisierender Trackingregler auf dem dynamischen Einspurmodell mit isotropem Pacejka-Reifen für schnelle Fahrt."
+   },
+   "werling_kinematic_center": {
+    "purpose": "Stabilisiert den Punkt lambda ~ l/2 vor der Hinterachse direkt, damit das Fahrzeug ruhiger lenkt und mit kleineren Korrekturamplituden der kollisionsfrei geplanten Konfiguration folgt (Werling 4.2.4).",
+    "summary": "Lyapunov-basierter Trackingregler der geometrischen Fahrzeugmitte ohne Orientierungsstabilisierung für langsame Vorwärtsfahrt."
+   },
+   "werling_kinematic_orientation": {
+    "purpose": "Stabilisiert Position, Orientierung, Geschwindigkeit und Lenkwinkel des erweiterten kinematischen Einspurmodells entlang der Solltrajektorie, auch im Stand und rückwärts (Werling 4.2.3).",
+    "summary": "Lyapunov-basierter Trackingregler der Hinterachsmitte mit Orientierungsstabilisierung für langsame Vorwärts- und Rückwärtsfahrt."
+   }
+  },
+  "trajectory_planner": {
+   "frenet_naive": {
+    "purpose": "Zeigt den Nutzen der zeitlichen Konsistenz (Werling Abb. 3.2) in Planer-Vergleichen.",
+    "summary": "Vergleichsplaner: Frenet-Sampling mit relativem Endzeitraster und Neuplanung vom Messzustand."
+   },
+   "learned": {
+    "purpose": "Gelernte Planung mit der Sicherheit des Werling-Planers: Ist kein lokaler Kandidat gültig oder liegt der beste am Rand der lokalen Menge, sucht der Zyklus vollständig.",
+    "summary": "Ein Netz schlägt die Trajektorie vor (Endversatz, Endgeschwindigkeit, Endzeiten); der Werling-Planer baut nur die Kandidaten neben dem Vorschlag und prüft sie mit seinen Restriktionen und der Kollisionsprüfung."
+   },
+   "sequential": {
+    "purpose": "Zeigt den Vorteil der kombinierten Quer-/Längsoptimierung (Ausweichen mit abgestimmtem Bremsen).",
+    "summary": "Vergleichsplaner: Längsbewegung ohne Kenntnis der Querbewegung, danach Querbewegung (Werling 3.1)."
+   },
+   "werling": {
+    "purpose": "Reaktive, zeitkritische Kollisionsvermeidung mit kombinierter Längs- und Queroptimierung, die bei inaktiven Restriktionen dank Bellman-Prinzip zeitlich konsistent ist (Werling 2011, Kap. 3).",
+    "summary": "Trajektorienplanung nach Werling: optimale Polynome in Frenet-Koordinaten, diskretisierte Zielmannigfaltigkeiten auf absolutem Zeitraster, zeitliche Konsistenz und Bi-level-Stabilisierung."
+   },
+   "werling_parking": {
+    "purpose": "Parkmanöver mit Richtungswechseln, die der Frenet-Planer auf der Referenzlinie nicht darstellen kann.",
+    "summary": "Werling-Planer für normale Fahrt; bei einer Parkaufgabe plant ein Hybrid-A*-/Reeds-Shepp-Planer den Parkpfad und gibt ihn Zug für Zug an den Regler."
+   }
+  },
+  "vehicle_dynamics": {
+   "split_range": {
+    "purpose": "Die Entwurfsmodelle der Trackingregler vernachlässigen Roll- und Luftwiderstand; die Ebene kompensiert F_W(v) und regelt Restfehler (Gegenwind, Steigung) mit einem Integrator aus.",
+    "summary": "Setzt die Solllängskraft bzw. Sollbeschleunigung über Antrieb oder Bremse in Radmomente um."
+   }
+  },
+  "vehicle_plant": {
+   "vehicle_model": {
+    "purpose": "Beliebige Fahrzeugmodelle (Werling-Entwurfsmodelle, Einspur-, Zweispur-, Mehrkörpermodell) als Strecke für Reglerentwicklung und Robustheitsuntersuchungen.",
+    "summary": "Umschließt ein registriertes vdsim-Fahrzeugmodell als Strecke der Wirkkette (ohne Durchgriff)."
+   }
+  },
+  "world": {
+   "scenario_engine": {
+    "purpose": "Reproduzierbare Testszenarien für die gesamte Wirkkette: Akteure mit IDM/MOBIL, skriptbaren Triggern, Ampeln, Kollisions- und Off-Road-Erkennung sowie Störungsereignissen.",
+    "summary": "Simuliert die Verkehrsteilnehmer eines Szenarios und liefert die Ground Truth (WorldState)."
+   }
+  }
+ },
  "kpi": {
   "aeb_trigger_ttc": "AEB-Auslösung bei TTC",
   "ay_gain": "Stationäre Querbeschleunigungsverstärkung",

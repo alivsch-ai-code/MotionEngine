@@ -133,7 +133,7 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
   const tt = (data.runs[0].signals.t ?? []) as number[];
   const lines = useMemo<Polyline[]>(() => [{ x: data.path.x, y: data.path.y, kind: "road" },
     ...data.runs.map((r, i) => ({ x: r.signals.x, y: r.signals.y, kind: "physics" as const, color: i }))], [data]);
-  const best = Math.min(...data.runs.map((r) => r.kpis?.max_e_n ?? Infinity));
+  const best = Math.min(...data.runs.filter((r) => r.on_path).map((r) => r.kpis?.max_e_n ?? Infinity));
   const current = data.runs.find((r) => r.name === focus) ?? data.runs[0];
   const k = Math.max(0, Math.min(tt.length - 1, tt.findIndex((x) => x >= time) < 0 ? tt.length - 1 : tt.findIndex((x) => x >= time)));
   return (
@@ -146,7 +146,7 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
           <tbody>{data.runs.map((r, i) => (
             <tr key={r.name} onClick={() => onFocus(r.name)} style={{ cursor: "pointer", background: r.name === current.name ? "var(--me-surface-2)" : undefined }}>
               <td><span className="swatch" style={{ background: `var(--me-chart-${(i % 6) + 1})` }} /> {r.label}
-                {!r.stable ? <span className="badge badge--danger">{t("control.unstable")}</span> : r.kpis?.max_e_n === best && data.runs.length > 1 ? <span className="badge badge--success">{t("control.best")}</span> : null}</td>
+                {!r.stable ? <span className="badge badge--danger">{t("control.unstable")}</span> : !r.on_path ? <span className="badge badge--danger">{t("learn.lost")}</span> : r.kpis?.max_e_n === best && data.runs.length > 1 ? <span className="badge badge--success">{t("control.best")}</span> : null}</td>
               <td className="num">{fmt(r.kpis?.max_e_n ?? null, lang, 3)} m</td><td className="num">{fmt(r.kpis?.rms_e_n ?? null, lang, 3)} m</td>
               <td className="num">{r.kpis?.settled_after === null || r.kpis === null ? t("control.notSettled") : `${fmt(r.kpis.settled_after, lang, 3)} s`}</td>
               <td className="num">{fmt(r.kpis?.max_steer_deg ?? null, lang, 3)}°</td><td className="num">{fmt(r.kpis?.max_steer_rate_deg_s ?? null, lang, 3)} °/s</td>
@@ -170,7 +170,7 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
 
 function Law({ run, runs, onFocus, k, tt, time, onTime, duration, lang, doc }:
   { run: ControlRun; runs: ControlRun[]; onFocus: (n: string) => void; k: number; tt: number[]; time: number; onTime: (t: number) => void; duration: number; lang: string; doc?: Record<string, unknown> }) {
-  const { t } = useTranslation(["app", "common"]);
+  const { t } = useTranslation(["app", "common", "domain"]);
   const law = LAWS[run.name];
   const sig = (key: string) => run.signals[key]?.[k] ?? null;
   return (
@@ -203,7 +203,10 @@ function Law({ run, runs, onFocus, k, tt, time, onTime, duration, lang, doc }:
             ))}</tbody></table> : <p className="subtle">{t("control.law.noTerms")}</p>}</div>
         </div>
         {typeof doc?.theory === "string" && doc.theory ? <details className="expert"><summary><Icon name="book" />{t("control.law.library")}</summary>
-          <div className="stack">{(["summary", "theory", "expert"] as const).map((key) => (typeof doc[key] === "string" && doc[key] ? <RichText key={key} text={doc[key] as string} /> : null))}
+          <div className="stack"><p>{t(`domain:componentDoc.tracking_controller.${run.name}.summary`, { defaultValue: String(doc.summary ?? "") })}</p>
+            <p>{t(`domain:componentDoc.tracking_controller.${run.name}.purpose`, { defaultValue: String(doc.purpose ?? "") })}</p>
+            {(["theory", "expert"] as const).map((key) => (typeof doc[key] === "string" && doc[key] ? <RichText key={key} text={doc[key] as string} /> : null))}
+            {lang.startsWith("de") ? null : <p className="subtle">{t("architecture.doc.german")}</p>}
             {Array.isArray(doc.limitations) && doc.limitations.length ? <RichText text={(doc.limitations as string[]).map((x) => `- ${x}`).join("\n")} /> : null}</div></details> : null}
       </div>
     </div>

@@ -134,6 +134,142 @@
    "scenario_engine": "Scenario engine"
   }
  },
+ "componentDoc": {
+  "actuator": {
+   "steering_powertrain": {
+    "purpose": "Connects the outputs of the trajectory controller with the plant.",
+    "summary": "Integrates the steering rate or takes the steering angle, and models the steering actuator (latency, characteristic, rate limit) and delayed drive and brake torques."
+   }
+  },
+  "behavior_planner": {
+   "rule_based": {
+    "purpose": "Behavior layer after Werling 3.6: choose the targets so that the reactive trajectory planning rarely has to avoid a collision.",
+    "summary": "State machine for lane keeping, lane changes, merging, overtaking, intersections, roundabouts and parking; it provides the reference curve, the longitudinal modes and the corridor for the trajectory planner."
+   }
+  },
+  "perception": {
+   "ground_truth": {
+    "purpose": "Reference for developing prediction, behavior and planning without perception errors.",
+    "summary": "Passes on the objects of the scenario engine and the true ego state unchanged."
+   },
+   "object_sensor": {
+    "purpose": "More realistic inputs for prediction and behavior: limited range, occlusion, measurement noise, missed detections and latency; reproducible through the scenario seed.",
+    "summary": "Creates a disturbed object list and an estimate of the ego state from the ground truth."
+   }
+  },
+  "predictor": {
+   "constant_acceleration": {
+    "purpose": "Prediction of leading and gap vehicles for the following and merging modes after Werling 3.5.2.",
+    "summary": "Predicts objects with constant acceleration along their lane in Frenet coordinates."
+   },
+   "constant_velocity": {
+    "purpose": "Simple reference prediction that needs no map, for example for pedestrians.",
+    "summary": "Straight-line prediction with constant speed (optionally constant yaw rate)."
+   },
+   "lane_following": {
+    "purpose": "Detects lane changes (cut-ins) early from the lateral speed relative to the lane.",
+    "summary": "Constant speed along the lane sequence; the lateral offset converges to the center of the target lane."
+   }
+  },
+  "tracking_controller": {
+   "acc": {
+    "purpose": "Comparison of trajectory-based longitudinal control with a classical ACC without a planner.",
+    "summary": "Distance-based longitudinal control with a constant time gap."
+   },
+   "composite": {
+    "purpose": "Classical decoupled lateral and longitudinal control as a comparison with the coupled Werling control.",
+    "summary": "Combines any lateral and any longitudinal controller into one tracking controller."
+   },
+   "ff_fb": {
+    "purpose": "Time-based longitudinal tracking (trajectory instead of path).",
+    "summary": "Acceleration feedforward from the trajectory with feedback of the speed and longitudinal errors."
+   },
+   "lqr": {
+    "purpose": "Optimal linear comparison controller (Rajamani 3.2).",
+    "summary": "State feedback on the lateral error model of the single-track model with a discrete Riccati solution, gain scheduling over speed and a steady-state feedforward."
+   },
+   "mpc": {
+    "purpose": "Comparison controller that takes actuator limits into account explicitly (Werling Tab. 4.1).",
+    "summary": "Linear time-varying model predictive lateral control along the trajectory horizon with limits on steering angle and steering rate."
+   },
+   "pi": {
+    "purpose": "Classical longitudinal controller.",
+    "summary": "PI controller on the speed error."
+   },
+   "pid": {
+    "purpose": "Classical longitudinal controller for comparison.",
+    "summary": "PID controller on the speed error of the planned trajectory."
+   },
+   "pure_pursuit": {
+    "purpose": "Simple, robust comparison controller (Snider 2009).",
+    "summary": "Geometric lateral controller: a circular arc from the rear axle to a target point on the path."
+   },
+   "speed_pi": {
+    "purpose": "Robust speed controller under actuator saturation.",
+    "summary": "PI speed controller with back-calculation anti-windup and feedforward."
+   },
+   "stanley": {
+    "purpose": "Comparison controller with good tracking at medium speeds.",
+    "summary": "Lateral controller on the lateral error of the front axle and the heading error (Stanley, DARPA Grand Challenge)."
+   },
+   "werling_bilevel": {
+    "purpose": "Combines the low-level stabilization (permanent disturbances, model errors) with the high-level stabilization by re-initialization after impulse disturbances (Werling 2.3, 4.4, 4.5).",
+    "summary": "Default tracking controller: bumpless switching between the three Werling controllers by reference point and driving direction, plus the trigger of re-initializations and the motion prediction for the planner."
+   },
+   "werling_dynamic": {
+    "purpose": "Stabilizes a reference point ahead of the center of gravity on the planned trajectory; the speed-dependent look-ahead keeps the damping of the zero dynamics constant (Werling 4.3).",
+    "summary": "Exactly input-output linearizing tracking controller on the dynamic single-track model with an isotropic Pacejka tire, for fast driving."
+   },
+   "werling_kinematic_center": {
+    "purpose": "Stabilizes the point about half a wheelbase ahead of the rear axle directly, so the vehicle steers more calmly (Werling 4.2.4).",
+    "summary": "Lyapunov-based tracking controller of the geometric vehicle center without orientation stabilization, for slow forward driving."
+   },
+   "werling_kinematic_orientation": {
+    "purpose": "Stabilizes position, orientation, speed and steering angle of the extended kinematic single-track model along the trajectory, also at standstill and in reverse (Werling 4.2.3).",
+    "summary": "Lyapunov-based tracking controller of the rear-axle center with orientation stabilization, for slow forward and reverse driving."
+   }
+  },
+  "trajectory_planner": {
+   "frenet_naive": {
+    "purpose": "Shows the benefit of temporal consistency (Werling Fig. 3.2) in planner comparisons.",
+    "summary": "Comparison planner: Frenet sampling with a relative end-time grid and replanning from the measured state."
+   },
+   "learned": {
+    "purpose": "Learned planning with the safety of the Werling planner: if no local candidate is valid, or the best one lies on the border of the local set, the cycle searches completely.",
+    "summary": "A network proposes the trajectory (end offset, end speed, end times); the Werling planner builds only the candidates next to the proposal and checks them with its restrictions and collision check."
+   },
+   "sequential": {
+    "purpose": "Shows the advantage of the combined lateral and longitudinal optimization (evasion with matched braking).",
+    "summary": "Comparison planner: the longitudinal motion without knowledge of the lateral motion, then the lateral motion (Werling 3.1)."
+   },
+   "werling": {
+    "purpose": "Reactive, time-critical collision avoidance with combined longitudinal and lateral optimization, temporally consistent by Bellman's principle while no restriction is active (Werling 2011, ch. 3).",
+    "summary": "Trajectory planning after Werling: optimal polynomials in Frenet coordinates, discretized target manifolds on an absolute time grid, temporal consistency and bi-level stabilization."
+   },
+   "werling_parking": {
+    "purpose": "Parking maneuvers with changes of direction, which the Frenet planner cannot represent on the reference line.",
+    "summary": "Werling planner for normal driving; for a parking task a Hybrid A* / Reeds-Shepp planner plans the parking path and hands it to the controller one move at a time."
+   }
+  },
+  "vehicle_dynamics": {
+   "split_range": {
+    "purpose": "The design models of the tracking controllers neglect rolling and air resistance; this layer compensates them and removes remaining errors (head wind, slope) with an integrator.",
+    "summary": "Converts the desired longitudinal force or acceleration into wheel torques through drive or brake."
+   }
+  },
+  "vehicle_plant": {
+   "vehicle_model": {
+    "purpose": "Any vehicle model (Werling design models, single-track, double-track, multibody) as the plant for controller development and robustness studies.",
+    "summary": "Wraps a registered vdsim vehicle model as the plant of the control chain."
+   }
+  },
+  "world": {
+   "scenario_engine": {
+    "purpose": "Reproducible test scenarios for the whole chain: actors with IDM/MOBIL, scripted triggers, traffic lights, collision and off-road detection, and disturbance events.",
+    "summary": "Simulates the road users of a scenario and provides the ground truth."
+   }
+  }
+ },
  "kpi": {
   "aeb_trigger_ttc": "AEB triggered at TTC",
   "ay_gain": "Steady-state lateral acceleration gain",

@@ -98,7 +98,7 @@ function LessonCard({ lesson, lang, done, onDone }: { lesson: Lesson; lang: stri
           x = (res.runs[0].signals.t ?? []) as number[];
           for (const r of res.runs) {
             const name = [req.label ? label(req.label) : "", a.requests.length > 1 || res.runs.some((o) => o.name !== r.name) ? label(r.name) : "", r.label !== r.name ? label(r.label) : ""].filter(Boolean).join(" · ");
-            rows.push({ label: name, values: [r.kpis?.max_e_n ?? null, r.kpis?.rms_e_n ?? null, r.kpis?.max_steer_rate_deg_s ?? null, r.kpis?.max_ay ?? null], flag: r.stable && (r.kpis?.max_e_n ?? 99) < 3 ? undefined : "fail" });
+            rows.push({ label: name, values: [r.kpis?.max_e_n ?? null, r.kpis?.rms_e_n ?? null, r.kpis?.max_steer_rate_deg_s ?? null, r.kpis?.max_ay ?? null], flag: r.stable && r.on_path ? undefined : "fail" });
             series.push({ label: name, values: r.signals.e_n ?? [] });
           }
         }

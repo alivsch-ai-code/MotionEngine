@@ -38,3 +38,26 @@ mitschke2004:
   publisher: Springer (4. Auflage)
   isbn: 978-3-540-42011-1
   notes: lineares Einspurmodell, stationärer Schwimmwinkel; Restriktion vehicle_stability
+ross2011:
+  type: paper
+  authors: [Stéphane Ross, Geoffrey J. Gordon, J. Andrew Bagnell]
+  title: A reduction of imitation learning and structured prediction to no-regret online learning
+  year: 2011
+  venue: International Conference on Artificial Intelligence and Statistics (AISTATS), 627-635
+  notes: DAgger (Datenaggregation); Grundlage des Lernansatzes "dagger" in vdsim.learning.trajectory
+dolgov2010:
+  type: paper
+  authors: [Dmitri Dolgov, Sebastian Thrun, Michael Montemerlo, James Diebel]
+  title: Path planning for autonomous vehicles in unknown semi-structured environments
+  year: 2010
+  venue: The International Journal of Robotics Research 29(5), 485-501
+  doi: 10.1177/0278364909359210
+  notes: Hybrid A*; Grundlage des Parkplaners (vdsim.planning.parking)
+reeds1990:
+  type: paper
+  authors: [James A. Reeds, Lawrence A. Shepp]
+  title: Optimal paths for a car that goes both forwards and backwards
+  year: 1990
+  venue: Pacific Journal of Mathematics 145(2), 367-393
+  doi: 10.2140/pjm.1990.145.367
+  notes: Kürzeste Pfade mit Richtungswechsel; Grundlage des Parkplaners (vdsim.planning.parking)

@@ -12,7 +12,7 @@
     "forbidden": "The API does not allow this request.",
     "notFound": "Not found.",
     "conflict": "Another job is already running. Wait for it to finish or cancel it.",
-    "tooLarge": "The upload is too large.",
+    "rateLimited": "Too many requests in a short time. Wait a moment and try again.", "tooLarge": "The upload is too large.",
     "invalid": "The API rejected the input.",
     "busy": "The server is busy. Try again in a moment.",
     "server": "The server reported an error.",

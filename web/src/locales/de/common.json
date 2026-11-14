@@ -12,7 +12,7 @@
     "forbidden": "Die API erlaubt diese Anfrage nicht.",
     "notFound": "Nicht gefunden.",
     "conflict": "Es läuft bereits ein anderer Auftrag. Warte, bis er fertig ist, oder brich ihn ab.",
-    "tooLarge": "Die Datei ist zu groß.",
+    "rateLimited": "Zu viele Anfragen in kurzer Zeit. Bitte kurz warten und erneut versuchen.", "tooLarge": "Die Datei ist zu groß.",
     "invalid": "Die API hat die Eingabe abgelehnt.",
     "busy": "Der Server ist ausgelastet. Versuche es gleich noch einmal.",
     "server": "Der Server hat einen Fehler gemeldet.",
