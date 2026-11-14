@@ -19,6 +19,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+import logging  # noqa: E402
+
 from vdsim.core.parameters import VehicleConfig  # noqa: E402
 from vdsim.trajectory import MANEUVER_INFO  # noqa: E402
 
@@ -270,6 +272,92 @@ CATEGORIES = {
 }
 
 
+# ----------------------------------------------------------------------------- automated-driving stack
+AD_SCENARIOS_EN = {
+    "ausscherer_stauende": ("Cut-out at the end of a queue", "The vehicle ahead pulls out shortly before a standing vehicle; the ego has to react."),
+    "autobahn_ausfahrt": ("Highway exit", "The ego starts on the left lane, changes two lanes to the right in time and leaves the highway over the deceleration lane."),
+    "autobahn_ueberholen": ("Highway overtaking", "Three-lane highway: a slower vehicle on the right lane is overtaken on the left, then the ego returns to the right lane (keep-right rule)."),
+    "einfaedeln_lkw": ("Highway entry", "Highway entry after Werling 5.3.2: merging from the acceleration lane into the gap between two trucks."),
+    "einscherer": ("Cut-in", "A slower vehicle cuts in from the left 22 m ahead of the ego."),
+    "innerorts_werling": ("Urban drive", "Urban road after Werling 5.3.1 at 30 km/h: parked cars, two pedestrians step onto the road from between parked cars and are visible late, an oncoming vehicle turns left wrongly at the junction, two cyclists at the roadside."),
+    "kreisverkehr": ("Roundabout", "Single-lane roundabout: entry from the west, yielding to the traffic in the ring, exit to the east."),
+    "kreuzung_ampel_geradeaus": ("Intersection with traffic light", "The ego approaches at red, stops at the stop line and drives straight on at green; cross traffic drives during the ego's red phase."),
+    "kreuzung_vorfahrt_links": ("Intersection with right of way", "The ego comes from the minor road, yields to the cross traffic and turns left."),
+    "laengsparken_rueckwaerts": ("Reverse parallel parking", "Reverse parallel parking into an 8.5 m gap: forward beside the gap, stop, change of direction at standstill, reverse to the middle of the gap."),
+    "landstrasse_ueberholen": ("Overtaking on a country road", "Country road with a slow truck and oncoming traffic: overtaking over the oncoming lane only with a sufficient gap; no overtaking in the section with a solid center line."),
+    "notausweichen_hindernis": ("Emergency evasion", "A broken-down vehicle becomes visible only 60 m ahead; evasion onto the free left lane."),
+    "verkehrsdichte_20": ("Traffic density", "Three-lane ring road with 20 vehicles per km and lane, IDM car following and MOBIL lane changes, 10 % trucks."),
+    "werling_autobahnversuch": ("Werling highway experiment", "Highway experiment after Werling 5.3.2: merging between trucks, a delayed lane change because of a fast approaching car, a truck pulling out and a side-wind gust (lateral_impulse) at t = 38.5 s."),
+}
+AD_KPIS_EN = {
+    "collision": "Collision", "off_road": "Left the road", "min_distance": "Min. distance to objects", "min_ttc": "Min. time to collision",
+    "min_thw": "Min. time headway", "max_drac": "Max. DRAC", "min_pet": "Min. post-encroachment time", "max_ay": "Max. lateral acceleration",
+    "max_ax": "Max. longitudinal acceleration", "min_ax": "Max. deceleration", "rms_jerk_long": "RMS longitudinal jerk",
+    "rms_jerk_lat": "RMS lateral jerk", "max_jerk": "Max. jerk", "rms_steer_rate": "RMS steering rate", "rms_e_n": "RMS lateral error",
+    "max_e_n": "Max. lateral error", "rms_e_t": "RMS longitudinal error", "max_e_t": "Max. longitudinal error",
+    "max_e_theta": "Max. heading error", "reinit_count": "Re-initializations", "plan_time_mean": "Planning time, mean",
+    "plan_time_p95": "Planning time, p95", "plan_time_max": "Planning time, max", "fallback_share": "Share of fallback trajectories",
+    "consistency_mean": "Consistency deviation, mean", "consistency_max": "Consistency deviation, max",
+    "candidates_mean": "Candidates per cycle", "cost_mean": "Mean trajectory cost", "distance": "Distance driven",
+    "mean_speed": "Mean speed", "final_speed": "Final speed", "goal_reached": "Goal reached", "duration": "Simulated time",
+    "real_time_factor": "Real-time factor",
+}
+AD_GROUPS_EN = {"Sicherheit": "Safety", "Komfort": "Comfort", "Tracking": "Tracking", "Planer": "Planner", "Kosten": "Cost",
+                "Mission": "Mission", "Laufzeit": "Runtime"}
+AD_CRITERIA = {  # mission criteria: (English, German)
+    "no_collision": ("No collision", "Keine Kollision"), "stay_on_road": ("Stay on the road", "Auf der Fahrbahn bleiben"),
+    "reach_goal": ("Reach the goal", "Ziel erreichen"), "final_speed_max": ("Final speed below the limit", "Endgeschwindigkeit unter der Grenze"),
+    "final_lane": ("End on the required lane", "Auf der geforderten Spur enden"), "parked": ("Parked in the spot", "In der Lücke geparkt"),
+    "min_progress": ("Minimum distance driven", "Mindeststrecke gefahren"),
+}
+STACK_KINDS = ("world", "perception", "predictor", "behavior_planner", "trajectory_planner", "tracking_controller",
+               "vehicle_dynamics", "actuator", "vehicle_plant")
+COMPONENTS_EN = {
+    "actuator/steering_powertrain": "Steering actuator and drive/brake",
+    "behavior_planner/rule_based": "Rule-based behavior planning",
+    "perception/ground_truth": "Ground truth (undisturbed)",
+    "perception/object_sensor": "Object sensor (range, noise, latency)",
+    "predictor/constant_acceleration": "Constant acceleration (Frenet, Werling 3.5.2)",
+    "predictor/constant_velocity": "Constant velocity (Cartesian)",
+    "predictor/lane_following": "Lane following with lateral intention",
+    "tracking_controller/acc": "Adaptive cruise control (ACC)",
+    "tracking_controller/composite": "Combination of a lateral and a longitudinal controller",
+    "tracking_controller/ff_fb": "Feedforward + feedback (longitudinal)",
+    "tracking_controller/lqr": "LQR (gain scheduled over speed)",
+    "tracking_controller/mpc": "MPC (linear time-varying)",
+    "tracking_controller/pi": "PI speed controller",
+    "tracking_controller/pid": "PID speed controller",
+    "tracking_controller/pure_pursuit": "Pure Pursuit",
+    "tracking_controller/speed_pi": "Vehicle speed controller (PI with anti-windup)",
+    "tracking_controller/stanley": "Stanley",
+    "tracking_controller/werling_bilevel": "Werling: bi-level stabilization (switching + re-initialization)",
+    "tracking_controller/werling_dynamic": "Werling: exact input-output linearization (theorem 8)",
+    "tracking_controller/werling_kinematic_center": "Werling: Lyapunov without orientation stabilization (theorem 6)",
+    "tracking_controller/werling_kinematic_orientation": "Werling: Lyapunov with orientation stabilization (theorem 4)",
+    "trajectory_planner/frenet_naive": "Frenet planner (naive, without consistency)",
+    "trajectory_planner/learned": "Trajectory planner (learned, verified by Werling)",
+    "trajectory_planner/sequential": "Sequential planner (longitudinal first, then lateral)",
+    "trajectory_planner/werling": "Trajectory planner (Werling)",
+    "trajectory_planner/werling_parking": "Trajectory planner (Werling + parking planner)",
+    "vehicle_dynamics/split_range": "Split-range longitudinal force allocation (Werling 5.1.2.2)",
+    "vehicle_plant/vehicle_model": "Vehicle model (vdsim)",
+    "world/scenario_engine": "Scenario engine",
+}
+
+
+def ad_library():
+    # German texts of the automated-driving stack, read from the library
+    from vdsim import api
+    from vdsim.research import KPI_INFO
+
+    scenarios = {s["name"]: (s.get("label") or s["name"], s.get("description") or "") for s in api.list_scenarios()}
+    kpis = {k: v[0] for k, v in KPI_INFO.items()}
+    groups = sorted({v[2] for v in KPI_INFO.values()})
+    components = {f"{c['kind']}/{c['name']}": c.get("label") or c["name"] for c in api.list_components()
+                  if c["kind"] in STACK_KINDS}
+    return scenarios, kpis, groups, components
+
+
 def kpi_labels_de():
     import vdsim.reporting.kpi_evaluator as kpi
 
@@ -301,6 +389,9 @@ def build():
         + sorted(set(MANEUVER_INFO) - set(MANEUVERS_EN))
     )
     missing += sorted({p for info in MANEUVER_INFO.values() for p in info["params"]} - set(MANEUVER_PARAMS_EN))
+    scenarios_de, ad_kpis_de, ad_groups, components_de = ad_library()
+    missing += sorted(set(scenarios_de) - set(AD_SCENARIOS_EN)) + sorted(set(ad_kpis_de) - set(AD_KPIS_EN))
+    missing += sorted(set(ad_groups) - set(AD_GROUPS_EN)) + sorted(set(components_de) - set(COMPONENTS_EN))
     if missing:
         raise SystemExit(f"missing English texts: {missing}")
     out = {}
@@ -318,6 +409,12 @@ def build():
                 }
                 for k, v in MANEUVER_INFO.items()
             },
+            "adScenario": {k: (AD_SCENARIOS_EN[k][1] if en else v[1]) for k, v in scenarios_de.items()},
+            "adScenarioLabel": {k: (AD_SCENARIOS_EN[k][0] if en else v[0]) for k, v in scenarios_de.items()},
+            "adKpi": {k: (AD_KPIS_EN[k] if en else v) for k, v in ad_kpis_de.items()},
+            "adKpiGroup": {g: (AD_GROUPS_EN[g] if en else g) for g in ad_groups},
+            "adCriterion": {k: v[0 if en else 1] for k, v in AD_CRITERIA.items()},
+            "component": _nest({k.replace("/", ".", 1): (COMPONENTS_EN[k] if en else v) for k, v in components_de.items()}),
             "maneuverParam": {
                 p: (MANEUVER_PARAMS_EN[p] if en else lab)
                 for info in MANEUVER_INFO.values()
@@ -328,6 +425,7 @@ def build():
 
 
 def main():
+    logging.disable(logging.WARNING)
     data = build()
     for lang, content in data.items():
         path = ROOT / "web" / "src" / "locales" / lang / "domain.json"

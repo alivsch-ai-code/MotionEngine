@@ -13,6 +13,7 @@ import { PageHeader } from "../components/PageHeader";
 import { indexAt, SceneView } from "../components/SceneView";
 import { StackEditor } from "../components/StackEditor";
 import type { JobView, LiveSession, PlannerSnapshot, RunRequest, RunResult, SavedRun, WorkbenchCatalog } from "../lib/api";
+import { adScenarioLabel, libraryText } from "../lib/domain";
 import { fmt, toDeg } from "../lib/format";
 import { useClient, usePersistentState, useQuery } from "../lib/hooks";
 import { applyConditions, CONDITIONS, downloadBlob, fileToBase64, stackSpecs, useConnections, useStack, type Conditions } from "../lib/stack";
@@ -136,7 +137,7 @@ export default function Workbench() {
           <div className="card__header"><h2>{t("workbench.setup")}</h2></div>
           <div className="card__body stack">
             <SelectField label={t("workbench.scenario")} value={form.scenario} onChange={(v) => setForm({ ...form, scenario: v })}
-              options={(catalog.data?.scenarios ?? [{ name: form.scenario, label: form.scenario }]).map((s) => ({ value: s.name, label: s.label || s.name }))}
+              options={(catalog.data?.scenarios ?? [{ name: form.scenario, label: form.scenario }]).map((s) => ({ value: s.name, label: adScenarioLabel(t, s) }))}
               hint={scenario ? t(`domain:adScenario.${scenario.name}`, { defaultValue: scenario.description }) : undefined} />
             <div className="grid grid--2-tight">
               <NumberField label={t("workbench.seed")} value={form.seed} step={1} min={0} onChange={(v) => setForm({ ...form, seed: v })}
@@ -330,7 +331,7 @@ function RunView({ result, catalog, lang, onDownload }: { result: RunResult; cat
           <div className="card"><div className="card__header"><h2>{t("workbench.mission")}</h2></div><div className="card__body table-wrap">
             {result.mission ? <table className="table"><tbody>{Object.entries(result.mission.criteria).map(([name, c]) => (
               <tr key={name}><td><span className={`badge ${c.ok ? "badge--success" : "badge--danger"}`}>{c.ok ? "✓" : "✕"}</span></td>
-                <td className="mono">{name}</td><td className="subtle">{c.detail}</td></tr>))}</tbody></table> : <p className="subtle">{t("workbench.noMission")}</p>}
+                <td>{t(`domain:adCriterion.${name}`, { defaultValue: name })}</td><td className="subtle">{libraryText(c.detail, lang)}</td></tr>))}</tbody></table> : <p className="subtle">{t("workbench.noMission")}</p>}
           </div></div>
         </div>
       ) : null}

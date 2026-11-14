@@ -9,7 +9,7 @@ import { Icon } from "./Icon";
 import { ParamDialog } from "./ParamDialog";
 
 export function StackEditor({ catalog, stack, onChange }: { catalog: WorkbenchCatalog; stack: StackEdit; onChange: (s: StackEdit) => void }) {
-  const { t } = useTranslation(["app", "common"]);
+  const { t } = useTranslation(["app", "common", "domain"]);
   const changed = Object.keys(stack).length;
   const [dialog, setDialog] = useState<string | null>(null);
   return (
@@ -34,6 +34,7 @@ export function StackEditor({ catalog, stack, onChange }: { catalog: WorkbenchCa
               <select id={id} className="select" value={spec} onChange={(e) => set({ component: e.target.value, paramsText: "" })}>
                 {l.components.map((c) => <option key={c.spec} value={c.spec}>{c.spec.split("/")[1]}{c.spec === l.default ? ` (${t("workbench.stack.default")})` : ""}</option>)}
               </select>
+              {comp ? <span className="field__hint">{t(`domain:component.${comp.spec.replace("/", ".")}`, { defaultValue: comp.label })}</span> : null}
               {comp?.params.length ? (
                 <button type="button" className="btn btn--ghost btn--sm stack-params__edit" onClick={() => setDialog(l.layer)}>
                   <Icon name="settings" size={14} />{t("workbench.stack.edit", { n: comp.params.length })}{edit?.paramsText.trim() ? ` · ${t("workbench.stack.overridden")}` : ""}</button>
