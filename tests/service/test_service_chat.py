@@ -194,3 +194,13 @@ def test_chat_requires_key_and_validates(tmp_path):
     status = http.get("/chat/status").json()
     assert status["available"] and status["model"] == "claude-opus-5-5"
     assert http.delete("/chat/unknown").status_code == 204
+
+
+def test_chat_rate_limit_per_client(tmp_path, monkeypatch):
+    monkeypatch.setenv("MOTIONENGINE_CHAT_RATE", "2")
+    http, _ = make([reply(text_block("a")), reply(text_block("b")), reply(text_block("c"))], tmp_path)
+    codes = [http.post("/chat", json={"message": "hello"}).status_code for _ in range(3)]
+    assert codes == [200, 200, 429]                       # the third message is stopped before it reaches the model
+    limited = http.post("/chat", json={"message": "hello"})
+    assert limited.status_code == 429 and int(limited.headers["Retry-After"]) >= 1
+    assert http.post("/chat", json={"message": ""}).status_code == 422      # invalid messages do not count

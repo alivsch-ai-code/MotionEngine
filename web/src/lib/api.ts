@@ -47,7 +47,7 @@ export interface ModelMeta {
   id: string; name: string; backend: "mlp" | "onnx" | "http"; kind: string; vehicle: string; teacher?: string; created: number;
   vehicle_model: string; hidden?: number[]; n_samples?: number; epochs_run?: number; n_parameters?: number;
   time_total_s?: number; test_metrics?: Record<string, Metric>; history?: { epoch: number; train: number; val: number }[]; url?: string;
-  planner_metrics?: PlannerMetrics; planner_config?: string;
+  planner_metrics?: PlannerMetrics; planner_config?: string; approach?: string; situations?: SituationSettings; dagger_rounds?: number[];
 }
 export interface PlannerMetrics {
   n_situations: number; cycles: number; network_share: number; acceptance: number; fallback_share: number; out_of_scope_share: number; infeasible_share: number;
@@ -62,7 +62,8 @@ export interface DriveResult {
   summary: { cycles: number; network_share: number; fallback_share: number; max_path_difference: number; cost_learned: number; cost_teacher: number;
     collision_learned: boolean; collision_teacher: boolean; time_learned_ms: number; time_teacher_ms: number };
 }
-export interface TrainRequest { kind?: "vehicle_dynamics" | "trajectory_planner"; planner_config?: string; vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
+export interface SituationSettings { curve_share: number; max_objects: number; speed_min: number; speed_max: number; lane_change_share: number }
+export interface TrainRequest { kind?: "vehicle_dynamics" | "trajectory_planner"; planner_config?: string; approach?: "regression" | "classification" | "dagger"; situations?: SituationSettings | null; vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
 export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null; created?: number; name?: string }
 export interface Evaluation { maneuver: string; max_position_error: number; max_yaw_rate_error: number; wall_time: { physics: number; neural: number }; kpis: Record<string, { physics: number; neural: number }>; series: Record<string, number[]> }
 
@@ -193,6 +194,7 @@ function errorKey(status: number): string {
   if (status === 404) return "errors.notFound";
   if (status === 409) return "errors.conflict";
   if (status === 413) return "errors.tooLarge";
+  if (status === 429) return "errors.rateLimited";
   if (status === 422) return "errors.invalid";
   if (status === 503) return "errors.busy";
   return "errors.server";
@@ -266,7 +268,7 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     job: (id: string, s?: AbortSignal) => request<TrainJob>("GET", `/models/jobs/${encodeURIComponent(id)}`, undefined, s),
     jobs: (s?: AbortSignal) => request<TrainJob[]>("GET", "/models/jobs", undefined, s),
     cancelJob: (id: string) => request<TrainJob>("POST", `/models/jobs/${encodeURIComponent(id)}/cancel`),
-    connect: (body: { name: string; backend: "onnx" | "http"; onnx_base64?: string; url?: string; vehicle: string }) => request<ModelMeta>("POST", "/models/connect", body),
+    connect: (body: { name: string; backend: "onnx" | "http"; onnx_base64?: string; url?: string; vehicle: string; kind?: "vehicle_dynamics" | "trajectory_planner" }) => request<ModelMeta>("POST", "/models/connect", body),
     drive: (id: string, body: { situation?: PlanRequest; seed?: number; cycles?: number }) => request<DriveResult>("POST", `/models/${encodeURIComponent(id)}/drive`, body),
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
     park: (body: ParkRequest, s?: AbortSignal) => request<ParkResponse>("POST", "/park", body, s),

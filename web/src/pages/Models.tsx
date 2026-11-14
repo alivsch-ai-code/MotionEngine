@@ -148,6 +148,7 @@ function ModelDetail({ id, onDeleted }: { id: string; onDeleted: () => void }) {
   );
 }
 
+const SITUATIONS = { curve_share: 0.55, max_objects: 3, speed_min: 6, speed_max: 33, lane_change_share: 0.25 };
 const TRAIN_DEFAULTS = {
   vehicle_dynamics: { n_samples: 20000, hiddenText: "64, 64", epochs: 150 },
   trajectory_planner: { n_samples: 3000, hiddenText: "96, 96", epochs: 200 },
@@ -193,12 +194,30 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
             options={(["vehicle_dynamics", "trajectory_planner"] as const).map((v) => ({ value: v, label: t(`models.kinds.${v}`) }))} />
           <SelectField label={t("simulate.vehicle")} value={form.vehicle} onChange={(v) => setForm({ ...form, vehicle: v })}
             options={(catalog.data?.presets ?? [form.vehicle]).map((p) => ({ value: p, label: t(`vehiclePresets.${p}`, { defaultValue: p }) }))} />
+          {planner ? <SelectField label={t("models.trainForm.approach")} value={form.approach ?? "regression"} hint={t(`models.trainForm.approachHint.${form.approach ?? "regression"}`)}
+            onChange={(v) => setForm({ ...form, approach: v })}
+            options={(["regression", "classification", "dagger"] as const).map((v) => ({ value: v, label: t(`models.approaches.${v}`) }))} /> : null}
           {planner ? null : <SelectField label={t("models.trainForm.teacher")} value={form.teacher} tip={t("models.trainForm.teacherTip")}
             onChange={(v) => setForm({ ...form, teacher: v })} options={(["bicycle_nonlinear", "bicycle_linear"] as const).map((v) => ({ value: v, label: t(`vehicleModels.${v}`) }))} />}
           <NumberField label={planner ? t("models.trainForm.demonstrations") : t("models.trainForm.samples")} value={form.n_samples} min={500} max={planner ? 20000 : 200000} step={500}
             onChange={(v) => setForm({ ...form, n_samples: v })} tip={planner ? t("models.trainForm.demonstrationsTip") : t("models.trainForm.samplesTip")} />
           <details className="expert"><summary><Icon name="settings" />{t("common:expertSettings")}</summary>
             <div className="stack">
+              {planner ? <>
+                <div className="chart-title">{t("models.trainForm.situations")}</div>
+                <div className="grid grid--2-tight">
+                  <NumberField label={t("models.trainForm.speedMin")} unit="m/s" value={(form.situations ?? SITUATIONS).speed_min} min={4} max={40}
+                    onChange={(v) => setForm({ ...form, situations: { ...(form.situations ?? SITUATIONS), speed_min: v } })} />
+                  <NumberField label={t("models.trainForm.speedMax")} unit="m/s" value={(form.situations ?? SITUATIONS).speed_max} min={5} max={45}
+                    onChange={(v) => setForm({ ...form, situations: { ...(form.situations ?? SITUATIONS), speed_max: v } })} />
+                  <NumberField label={t("models.trainForm.maxObjects")} value={(form.situations ?? SITUATIONS).max_objects} min={0} max={3} step={1}
+                    onChange={(v) => setForm({ ...form, situations: { ...(form.situations ?? SITUATIONS), max_objects: v } })} />
+                  <NumberField label={t("models.trainForm.curveShare")} value={(form.situations ?? SITUATIONS).curve_share} min={0} max={1} step={0.05}
+                    onChange={(v) => setForm({ ...form, situations: { ...(form.situations ?? SITUATIONS), curve_share: v } })} />
+                </div>
+                <NumberField label={t("models.trainForm.laneChangeShare")} value={(form.situations ?? SITUATIONS).lane_change_share} min={0} max={0.75} step={0.05}
+                  onChange={(v) => setForm({ ...form, situations: { ...(form.situations ?? SITUATIONS), lane_change_share: v } })} hint={t("models.trainForm.situationsHint")} />
+              </> : null}
               <TextField label={t("models.trainForm.hidden")} value={form.hiddenText} onChange={(v) => setForm({ ...form, hiddenText: v })} hint={t("models.trainForm.hiddenHint")} />
               <NumberField label={t("models.trainForm.epochs")} value={form.epochs} min={1} max={1000} onChange={(v) => setForm({ ...form, epochs: v })} />
               <NumberField label={t("models.trainForm.lr")} value={form.learning_rate} min={0.0001} max={0.1} step={0.0001} onChange={(v) => setForm({ ...form, learning_rate: v })} />
@@ -242,6 +261,7 @@ function ConnectPanel({ onDone }: { onDone: (id: string) => void }) {
   const { t } = useTranslation(["app", "common"]);
   const client = useClient();
   const [backend, setBackend] = useState<"onnx" | "http">("onnx");
+  const [kind, setKind] = useState<"vehicle_dynamics" | "trajectory_planner">("vehicle_dynamics");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -253,7 +273,7 @@ function ConnectPanel({ onDone }: { onDone: (id: string) => void }) {
       for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
       onnx_base64 = btoa(bin);
     }
-    const meta = await client.connect({ name: name || file?.name || url, backend, onnx_base64, url: backend === "http" ? url : undefined, vehicle: "mid_size_sedan" });
+    const meta = await client.connect({ name: name || file?.name || url, backend, onnx_base64, url: backend === "http" ? url : undefined, vehicle: "mid_size_sedan", kind });
     onDone(meta.id);
     return meta;
   });
@@ -265,6 +285,8 @@ function ConnectPanel({ onDone }: { onDone: (id: string) => void }) {
           <div className="segmented" role="group" aria-label={t("models.connect.backend")}>
             {(["onnx", "http"] as const).map((b) => <button key={b} type="button" aria-pressed={backend === b} onClick={() => setBackend(b)}>{t(`models.backends.${b}`)}</button>)}
           </div>
+          <SelectField label={t("models.trainForm.kind")} value={kind} onChange={setKind} hint={kind === "trajectory_planner" ? t("models.connect.plannerHint") : undefined}
+            options={(["vehicle_dynamics", "trajectory_planner"] as const).map((v) => ({ value: v, label: t(`models.kinds.${v}`) }))} />
           <TextField label={t("models.trainForm.name")} value={name} onChange={setName} />
           {backend === "onnx" ? (
             <div className="field"><label className="field__label" htmlFor="onnx-file">{t("models.connect.file")}</label>
@@ -280,7 +302,19 @@ function ConnectPanel({ onDone }: { onDone: (id: string) => void }) {
       <div className="card"><div className="card__body stack">
         <h2>{t("models.connect.contract")}</h2>
         <p className="subtle">{t("models.connect.contractText")}</p>
-        <div className="code-block">{`inputs  (n, 5): [vx m/s, vy m/s, r rad/s, delta rad, Fx N]
+        <div className="code-block">{kind === "trajectory_planner" ? `inputs  (n, 31): d, d_dot, d_ddot, s_dot, s_ddot, target_speed, d_min, d_max,
+                 kappa at 0/15/30/60 m, 3 objects x [present, ds, d, dv],
+                 previous choice [present, delta, lat_tau, nu, lon_tau],
+                 phase_lat, phase_lon          (docs/learning/trajectory_model.md)
+outputs (n, 4):  [delta m, lat_tau s, nu m/s, lon_tau s]
+
+# PyTorch -> ONNX
+torch.onnx.export(model, torch.zeros(1, 31), "planner.onnx",
+                  input_names=["x"], output_names=["y"],
+                  dynamic_axes={"x": {0: "n"}, "y": {0: "n"}})
+
+# HTTP: POST {"inputs": [[...31 floats...], ...]}
+#    -> 200 {"outputs": [[...4 floats...], ...]}` : `inputs  (n, 5): [vx m/s, vy m/s, r rad/s, delta rad, Fx N]
 outputs (n, 3): [dvx/dt m/s², dvy/dt m/s², dr/dt rad/s²]
 
 # PyTorch -> ONNX

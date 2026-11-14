@@ -136,8 +136,11 @@ export default function Architecture() {
               <span className="badge badge--success">{t("architecture.outputs")}: {(graph.data?.ports[node.id]?.outputs ?? []).join(", ") || "–"}</span></div></> : null}
           {doc.loading ? <Skeleton height={120} /> : null}
           {d ? <>
-            {typeof d.summary === "string" ? <p>{d.summary}</p> : null}
-            {(["purpose", "theory"] as const).map((key) => (typeof d[key] === "string" && d[key] ? <div key={key}><h3>{t(`architecture.doc.${key}`)}</h3><RichText text={d[key] as string} /></div> : null))}
+            {typeof d.summary === "string" && node ? <p>{t(`domain:componentDoc.${node.component.replace("/", ".")}.summary`, { defaultValue: d.summary })}</p> : null}
+            {typeof d.purpose === "string" && d.purpose && node ? <div><h3>{t("architecture.doc.purpose")}</h3>
+              <p>{t(`domain:componentDoc.${node.component.replace("/", ".")}.purpose`, { defaultValue: d.purpose })}</p></div> : null}
+            {typeof d.theory === "string" && d.theory ? <div><h3>{t("architecture.doc.theory")}</h3><RichText text={d.theory} />
+              {i18n.language.startsWith("de") ? null : <p className="subtle">{t("architecture.doc.german")}</p>}</div> : null}
             {Array.isArray(d.references) && d.references.length ? <p className="subtle">{t("architecture.doc.references")}: {(d.references as string[]).join(", ")}</p> : null}
           </> : !doc.loading ? <p className="subtle">{t("architecture.noDoc")}</p> : null}
         </div></div>

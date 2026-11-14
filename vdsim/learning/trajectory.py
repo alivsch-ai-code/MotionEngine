@@ -28,6 +28,7 @@ import numpy as np
 
 from ..core.parameters import load_vehicle_preset, param
 from ..framework import RunContext
+from ..framework.knowledge import ComponentDoc
 from ..framework.plugins import component
 from ..framework.types import BehaviorCommand, EgoState, LongitudinalMode, Prediction
 from ..geometry import ReferenceLine
@@ -107,6 +108,21 @@ class LearnedPlanner(WerlingPlanner):
     NAME, VERSION = "learned", "1.0.0"
     LABEL = "Trajektorienplaner (gelernt, mit Werling-Prüfung)"
     PARAMS = LearnedPlannerParams
+    DOC = ComponentDoc(
+        summary="Ein Netz schlägt die Trajektorie vor (Endversatz, Endgeschwindigkeit, Endzeiten); der Werling-Planer "
+                "baut nur die Kandidaten neben dem Vorschlag und prüft sie mit seinen Restriktionen und der "
+                "Kollisionsprüfung.",
+        purpose="Gelernte Planung mit der Sicherheit des Werling-Planers: Ist kein lokaler Kandidat gültig oder liegt "
+                "der beste am Rand der lokalen Menge, sucht der Zyklus vollständig.",
+        theory="Imitationslernen der Auswahl des Werling-Planers; Merkmale: Startzustand, Aufgabe, Krümmung voraus, "
+               "nächste Objekte, vorherige Wahl (Bellman-Prinzip).",
+        assumptions=["Schnelle Fahrt mit d(t), Geschwindigkeitsmodus"],
+        limitations=["Folgen, Einfädeln, Anhalten, langsame Fahrt und Rückwärtsfahrt plant der Werling-Planer",
+                     "Kostenabstand zum Lehrer ist gemessen, nicht begrenzt"],
+        references=["werling2011", "ross2011"],
+        validation=["tests/planning/test_learned_planner.py", "tests/service/test_service_planner_model.py"],
+        concepts=["imitation_learning"],
+        expert="docs/learning/trajectory_model.md")
 
     def __init__(self, params=None, **overrides):
         super().__init__(params, **overrides)
@@ -120,6 +136,8 @@ class LearnedPlanner(WerlingPlanner):
         self._previous = None
         self._local = {}
         self.edge_check = "offset"      # "": off, "offset": end offset and end speed, "all": also the end times
+        self.relabel = False            # also compute the teacher's choice in every cycle (data collection)
+        self.teacher_label = None
 
     def reset(self, context=None):
         super().reset(context)
@@ -130,7 +148,7 @@ class LearnedPlanner(WerlingPlanner):
             meta = store.get(self.params.model)
             if meta.get("kind") != "trajectory_planner":
                 raise ValueError(f"model {self.params.model} is not a trajectory planner model")
-            self.backend = store.backend(self.params.model)
+            self.backend = planner_backend(meta, store.backend(self.params.model))
             self.window.update(meta.get("window") or {})
         self.stats = {"network": 0, "teacher": 0, "out_of_scope": 0, "infeasible": 0}
         self.last_features, self.proposal, self._previous = None, None, None
@@ -203,6 +221,19 @@ class LearnedPlanner(WerlingPlanner):
             else:
                 self.source = "out_of_scope" if self.backend is not None else "teacher"
         self._guided = False
+        self.teacher_label = None
+        if self.relabel:
+            # what would the teacher select in this state? (DAgger: labels for the states the learner visits)
+            if self.source == "network":
+                result = (self.plan, self.regime, self.last_trajectory, self.last_debug, self.cycle, dict(self.signals))
+                self.plan, self.regime, self.last_trajectory, self.last_debug, self.cycle, _ = saved
+                super().plan_cycle(t, ego, behavior, prediction, status)
+                self.teacher_label = plan_label(self.plan)
+                self.plan, self.regime, self.last_trajectory, self.last_debug, self.cycle, signals = result
+                self.signals.clear()
+                self.signals.update(signals)
+            else:
+                self.teacher_label = plan_label(self.plan)
         self.stats[self.source] += 1
         debug.compute_time = time.perf_counter() - tic
         debug.info["source"] = self.source
@@ -226,9 +257,18 @@ def planner_for(backend=None, vehicle="mid_size_sedan", config="default", window
 
 
 # ----------------------------------------------------------------------------- situations
-def sample_situation(rng):
-    """Random planning situation in the form of the service's plan request (plain numbers)."""
-    kind = rng.choice(["straight", "curve", "s_curve"], p=[0.45, 0.35, 0.2])
+SITUATION_DEFAULTS = {"curve_share": 0.55, "max_objects": 3, "speed_min": 6.0, "speed_max": 33.0, "lane_change_share": 0.25}
+
+
+def sample_situation(rng, settings=None):
+    """Random planning situation in the form of the service's plan request (plain numbers).
+
+    settings (all optional): curve_share (0..1), max_objects (0..3), speed_min / speed_max (m/s),
+    lane_change_share (0..1, start on the neighbor lane).
+    """
+    cfg = {**SITUATION_DEFAULTS, **(settings or {})}
+    curve = float(np.clip(cfg["curve_share"], 0.0, 1.0))
+    kind = rng.choice(["straight", "curve", "s_curve"], p=[1.0 - curve, curve * 7 / 11, curve * 4 / 11])
     kappa = float(rng.uniform(1 / 400, 1 / 90) * rng.choice([-1, 1]))
     if kind == "straight":
         road = [{"kind": "straight", "length": 600.0}]
@@ -240,10 +280,12 @@ def sample_situation(rng):
                 {"kind": "arc", "length": 120.0, "curvature": -kappa}, {"kind": "straight", "length": 300.0}]
     lanes_left, lanes_right = int(rng.integers(0, 2)), int(rng.integers(0, 2))
     d_min, d_max = -1.75 - 3.5 * lanes_right, 1.75 + 3.5 * lanes_left
-    v = float(rng.uniform(6.0, 33.0))
+    v_lo, v_hi = sorted((float(cfg["speed_min"]), float(cfg["speed_max"])))
+    v = float(rng.uniform(max(v_lo, 4.0), max(v_hi, v_lo + 1.0)))
     target_speed = float(np.clip(v + rng.normal(0.0, 4.0), 5.0, 36.0))
     # start on the target lane, beside it (lane change) or anywhere in the corridor
-    mode = rng.choice(["on_lane", "lane_change", "anywhere"], p=[0.5, 0.25, 0.25])
+    change = float(np.clip(cfg["lane_change_share"], 0.0, 0.75))
+    mode = rng.choice(["on_lane", "lane_change", "anywhere"], p=[0.75 - change, change, 0.25])
     if mode == "on_lane":
         d0 = float(rng.normal(0.0, 0.25))
     elif mode == "lane_change" and (lanes_left or lanes_right):
@@ -252,7 +294,9 @@ def sample_situation(rng):
         d0 = float(rng.uniform(d_min + 1.0, d_max - 1.0))
     ego = {"s": float(rng.uniform(5.0, 40.0)), "d": d0, "dpsi": float(rng.normal(0.0, 0.02)), "vx": v, "ax": float(rng.normal(0.0, 0.5))}
     obstacles = []
-    for i in range(int(rng.choice([0, 1, 2, 3], p=[0.25, 0.35, 0.25, 0.15]))):
+    n_max = int(np.clip(cfg["max_objects"], 0, 3))
+    weights = np.array([0.25, 0.35, 0.25, 0.15])[:n_max + 1]
+    for i in range(int(rng.choice(np.arange(n_max + 1), p=weights / weights.sum()))):
         lane = float(rng.choice(np.arange(-lanes_right, lanes_left + 1))) * 3.5
         v_obj = float(rng.choice([0.0, rng.uniform(0.0, max(v, 8.0))], p=[0.3, 0.7]))
         # not closer than a braking distance at 4 m/s^2 (closer objects leave the planner no valid trajectory)
@@ -349,14 +393,19 @@ def rollout(planner, situation, cycles, dt=0.1, on_cycle=None, t0=0.0):
 
 # ----------------------------------------------------------------------------- data, training, evaluation
 def sample_plan_dataset(n_samples, vehicle="mid_size_sedan", config="default", seed=0, max_cycles=8, progress=None,
-                        should_stop=None):
-    """Teacher demonstrations: (features, labels) from closed-loop rollouts of random situations."""
+                        should_stop=None, situations=None, backend=None):
+    """Demonstrations (features, labels) from closed-loop rollouts of random situations.
+
+    backend None: the teacher drives (behavior cloning). With a backend the learned planner drives and every
+    state it visits is labeled with the teacher's choice (data aggregation, DAgger).
+    """
     rng = np.random.default_rng(seed)
-    teacher = planner_for(None, vehicle, config)
+    teacher = planner_for(backend, vehicle, config)
+    teacher.relabel = backend is not None
     xs, ys = [], []
 
     def collect(planner, _traj, _debug):
-        y = plan_label(planner.plan)
+        y = planner.teacher_label if planner.relabel else plan_label(planner.plan)
         if y is not None and planner.last_features is not None:
             xs.append(planner.last_features)
             ys.append(y)
@@ -365,14 +414,15 @@ def sample_plan_dataset(n_samples, vehicle="mid_size_sedan", config="default", s
         if should_stop and should_stop():
             break
         teacher.restart()
-        rollout(teacher, Situation(sample_situation(rng)), int(rng.integers(1, max_cycles + 1)), on_cycle=collect,
+        rollout(teacher, Situation(sample_situation(rng, situations)), int(rng.integers(1, max_cycles + 1)), on_cycle=collect,
                 t0=round(float(rng.uniform(0.0, 1.0)), 1))
         if progress:
             progress(min(len(xs) / n_samples, 1.0))
     return np.array(xs[:n_samples]), np.array(ys[:n_samples])
 
 
-def evaluate_planner(backend, vehicle="mid_size_sedan", config="default", n_situations=60, cycles=10, seed=10_000):
+def evaluate_planner(backend, vehicle="mid_size_sedan", config="default", n_situations=60, cycles=10, seed=10_000,
+                     situations=None):
     """Network-guided planner against the teacher on held-out situations (closed loop, same start states)."""
     rng = np.random.default_rng(seed)
     learned, teacher = planner_for(backend, vehicle, config), planner_for(None, vehicle, config)
@@ -380,7 +430,7 @@ def evaluate_planner(backend, vehicle="mid_size_sedan", config="default", n_situ
     ratios, t_learned, t_teacher, same = [], [], [], 0
     collisions, invalid, collisions_teacher, invalid_teacher, total_learned, total_teacher = 0, 0, 0, 0, 0.0, 0.0
     for _ in range(n_situations):
-        data = sample_situation(rng)
+        data = sample_situation(rng, situations)
         t0 = round(float(rng.uniform(0.0, 1.0)), 1)
         learned.restart()
         teacher.restart()
@@ -417,41 +467,120 @@ def evaluate_planner(backend, vehicle="mid_size_sedan", config="default", n_situ
             "time_learned_ms": 1e3 * float(np.mean(t_learned)), "time_teacher_ms": 1e3 * float(np.mean(t_teacher))}
 
 
+APPROACHES = ("regression", "classification", "dagger")
+DELTA_CLASSES = np.arange(-3.5, 3.51, 0.5)                                        # end offsets of the teacher's grid
+NU_CLASSES = np.concatenate([np.arange(-34.0, -4.0, 2.0), np.arange(-4.0, 4.01, 1.0)])   # end speed offsets
+
+
+class ChoiceBackend:
+    """Network with class outputs for the end offset and the end speed offset, and two end times.
+
+    predict(x) returns the four numbers of the proposal: the class with the largest score for delta and nu.
+    A regression averages two valid choices (swerve left or right) to an invalid one between them; picking a
+    class does not.
+    """
+
+    def __init__(self, net, delta_classes=DELTA_CLASSES, nu_classes=NU_CLASSES):
+        self.net = net
+        self.delta, self.nu = np.asarray(delta_classes, dtype=float), np.asarray(nu_classes, dtype=float)
+
+    def predict(self, x):
+        out = np.atleast_2d(self.net.predict(x))
+        nd, nn = len(self.delta), len(self.nu)
+        return np.column_stack([self.delta[np.argmax(out[:, :nd], axis=1)], out[:, nd + nn],
+                                self.nu[np.argmax(out[:, nd:nd + nn], axis=1)], out[:, nd + nn + 1]])
+
+
+def _one_hot(values, classes):
+    idx = np.argmin(np.abs(np.asarray(values)[:, None] - classes[None, :]), axis=1)
+    out = np.zeros((len(idx), len(classes)))
+    out[np.arange(len(idx)), idx] = 1.0
+    return out
+
+
+def _class_targets(y):
+    return np.column_stack([_one_hot(y[:, 0], DELTA_CLASSES), _one_hot(y[:, 2], NU_CLASSES), y[:, 1], y[:, 3]])
+
+
+def planner_backend(meta, backend):
+    """Backend that returns the four numbers of a proposal, whatever the model's output head is."""
+    head = meta.get("head") or {}
+    if head.get("kind") == "classification":
+        return ChoiceBackend(backend.net if hasattr(backend, "net") else backend, head["delta_classes"], head["nu_classes"])
+    return backend
+
+
 def train_planner(vehicle="mid_size_sedan", config="default", n_samples=6000, hidden=(96, 96), epochs=200, lr=2e-3,
-                  batch=128, seed=0, progress=None, should_stop=None, eval_situations=40):
-    """Returns (net, meta). progress(phase, fraction, info) as in train_surrogate."""
+                  batch=128, seed=0, progress=None, should_stop=None, eval_situations=40, approach="regression",
+                  situations=None, dagger_iterations=2):
+    """Returns (net, meta). progress(phase, fraction, info) as in train_surrogate.
+
+    approach
+        regression      the network predicts the four numbers of the teacher's choice (behavior cloning)
+        classification  end offset and end speed offset as classes of the teacher's grid, end times as numbers
+        dagger          regression, then the learned planner drives and the teacher labels the states it visits;
+                        the network is trained again on all data (Ross et al. 2011). Half of n_samples are
+                        teacher demonstrations, the rest is collected in `dagger_iterations` rounds.
+    """
     from .backends import MLPBackend
 
+    if approach not in APPROACHES:
+        raise ValueError(f"unknown approach '{approach}', available: {APPROACHES}")
     tic = time.perf_counter()
-    if progress:
-        progress("sampling", 0.0, {})
+    report = (lambda phase, frac, info=None: progress(phase, frac, info or {})) if progress else (lambda *a, **k: None)
+    report("sampling", 0.0)
+    classify = approach == "classification"
     n_test = max(n_samples // 5, 50)
-    x, y = sample_plan_dataset(n_samples + n_test, vehicle, config, seed,
-                               progress=(lambda f: progress("sampling", f, {})) if progress else None, should_stop=should_stop)
+    n_first = n_samples // 2 if approach == "dagger" else n_samples
+    share = n_first / n_samples
+    x, y = sample_plan_dataset(n_first + n_test, vehicle, config, seed, progress=lambda f: report("sampling", share * f),
+                               should_stop=should_stop, situations=situations)
     if len(x) < 100:
         raise ValueError("training was cancelled before enough demonstrations were collected")
     n_test = min(n_test, len(x) // 5)
     x_test, y_test, x, y = x[-n_test:], y[-n_test:], x[:-n_test], y[:-n_test]
+    n_out = len(DELTA_CLASSES) + len(NU_CLASSES) + 2 if classify else len(PLAN_TARGETS)
+
+    def fit(xs, ys, quiet=False):
+        net = MLP(len(PLAN_FEATURES), n_out, hidden, seed)
+
+        def on_epoch(epoch, total, train, val):
+            if not quiet:
+                report("training", epoch / total, {"epoch": epoch, "train": train, "val": val})
+
+        history = net.fit(xs, _class_targets(ys) if classify else ys, epochs=epochs, batch=batch, lr=lr, seed=seed,
+                          progress=on_epoch, should_stop=should_stop)
+        return net, history
+
+    rounds = []
+    if approach == "dagger":
+        per_round = max((n_samples - len(x)) // max(dagger_iterations, 1), 1)
+        for k in range(max(dagger_iterations, 1)):
+            net, _ = fit(x, y, quiet=True)
+            done = share + (1.0 - share) * k / max(dagger_iterations, 1)
+            xk, yk = sample_plan_dataset(per_round, vehicle, config, seed + 101 * (k + 1), backend=MLPBackend(net),
+                                         progress=lambda f, d=done: report("sampling", d + (1.0 - share) * f / max(dagger_iterations, 1)),
+                                         should_stop=should_stop, situations=situations)
+            if len(xk):
+                x, y = np.concatenate([x, xk]), np.concatenate([y, yk])
+            rounds.append(int(len(xk)))
     t_data = time.perf_counter() - tic
-    net = MLP(len(PLAN_FEATURES), len(PLAN_TARGETS), hidden, seed)
-
-    def on_epoch(epoch, total, train, val):
-        if progress:
-            progress("training", epoch / total, {"epoch": epoch, "train": train, "val": val})
-
-    history = net.fit(x, y, epochs=epochs, batch=batch, lr=lr, seed=seed, progress=on_epoch, should_stop=should_stop)
-    pred = net.predict(x_test)
+    net, history = fit(x, y)
+    backend = ChoiceBackend(net) if classify else MLPBackend(net)
+    pred = np.atleast_2d(backend.predict(x_test))
     metrics = {}
     for k, name in enumerate(PLAN_TARGETS):
         err = pred[:, k] - y_test[:, k]
         var = float(np.var(y_test[:, k]))
         metrics[name] = {"rmse": float(np.sqrt(np.mean(err**2))), "max_abs": float(np.max(np.abs(err))),
                          "r2": float(1.0 - np.mean(err**2) / var) if var > 0 else None}
-    if progress:
-        progress("evaluating", 1.0, {})
-    planner_metrics = evaluate_planner(MLPBackend(net), vehicle, config, eval_situations, seed=seed + 10_000)
+    report("evaluating", 1.0)
+    planner_metrics = evaluate_planner(backend, vehicle, config, eval_situations, seed=seed + 10_000, situations=situations)
     meta = {"backend": "mlp", "kind": "trajectory_planner", "vehicle": vehicle, "teacher": f"werling ({config})",
-            "planner_config": config, "features": list(PLAN_FEATURES), "targets": list(PLAN_TARGETS),
+            "planner_config": config, "approach": approach, "features": list(PLAN_FEATURES), "targets": list(PLAN_TARGETS),
+            "head": {"kind": "classification", "delta_classes": DELTA_CLASSES.tolist(), "nu_classes": NU_CLASSES.tolist()}
+            if classify else {"kind": "regression"},
+            "situations": {**SITUATION_DEFAULTS, **(situations or {})}, "dagger_rounds": rounds,
             "hidden": list(hidden), "n_samples": int(len(x)), "epochs_run": len(history), "history": history,
             "test_metrics": metrics, "planner_metrics": planner_metrics, "window": dict(WINDOW),
             "time_data_s": t_data, "time_total_s": time.perf_counter() - tic,

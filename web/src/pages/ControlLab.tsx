@@ -170,7 +170,7 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
 
 function Law({ run, runs, onFocus, k, tt, time, onTime, duration, lang, doc }:
   { run: ControlRun; runs: ControlRun[]; onFocus: (n: string) => void; k: number; tt: number[]; time: number; onTime: (t: number) => void; duration: number; lang: string; doc?: Record<string, unknown> }) {
-  const { t } = useTranslation(["app", "common"]);
+  const { t } = useTranslation(["app", "common", "domain"]);
   const law = LAWS[run.name];
   const sig = (key: string) => run.signals[key]?.[k] ?? null;
   return (
@@ -203,7 +203,10 @@ function Law({ run, runs, onFocus, k, tt, time, onTime, duration, lang, doc }:
             ))}</tbody></table> : <p className="subtle">{t("control.law.noTerms")}</p>}</div>
         </div>
         {typeof doc?.theory === "string" && doc.theory ? <details className="expert"><summary><Icon name="book" />{t("control.law.library")}</summary>
-          <div className="stack">{(["summary", "theory", "expert"] as const).map((key) => (typeof doc[key] === "string" && doc[key] ? <RichText key={key} text={doc[key] as string} /> : null))}
+          <div className="stack"><p>{t(`domain:componentDoc.tracking_controller.${run.name}.summary`, { defaultValue: String(doc.summary ?? "") })}</p>
+            <p>{t(`domain:componentDoc.tracking_controller.${run.name}.purpose`, { defaultValue: String(doc.purpose ?? "") })}</p>
+            {(["theory", "expert"] as const).map((key) => (typeof doc[key] === "string" && doc[key] ? <RichText key={key} text={doc[key] as string} /> : null))}
+            {lang.startsWith("de") ? null : <p className="subtle">{t("architecture.doc.german")}</p>}
             {Array.isArray(doc.limitations) && doc.limitations.length ? <RichText text={(doc.limitations as string[]).map((x) => `- ${x}`).join("\n")} /> : null}</div></details> : null}
       </div>
     </div>

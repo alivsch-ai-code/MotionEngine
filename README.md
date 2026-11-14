@@ -75,7 +75,7 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 | **Research** | compare components of a layer, sweep a parameter or run Monte Carlo, with a KPI table and chart |
 | **Architecture** | signal-flow graph of the stack with validation and the documentation of each component; remove and add connections, the Workbench runs the rewired stack |
 | **MATLAB** | analyze MATLAB functions and convert them to Python or C |
-| **Knowledge** | search the knowledge graph (components, concepts, classes, equations) and 85 literature references |
+| **Knowledge** | search the knowledge graph (components, concepts, classes, equations) and 88 literature references |
 | **Parking** | parallel, perpendicular or angled spots, forward or in reverse; front, rear-only or four-wheel steering; front, rear or all-wheel drive; animated maneuver with KPIs |
 | **Neural models** | train an MLP surrogate of the vehicle dynamics or a network that proposes the planned trajectory (verified by the Werling planner); connect ONNX or HTTP models; compare every model with its teacher in closed loop; use it in simulations or in the stack |
 | **Prediction, Vehicles, Settings** | object prediction, every vehicle parameter with unit and meaning, API address and key |
@@ -312,6 +312,7 @@ Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, 
 | `MOTIONENGINE_MAX_CONCURRENCY`, `MOTIONENGINE_MAX_SIM_TIME`, `MOTIONENGINE_MAX_WALL_TIME` | bound the load |
 | `MOTIONENGINE_WEB_DIR` | serve the built web app |
 | `MOTIONENGINE_MODEL_DIR` | where neural models are stored |
+| `MOTIONENGINE_CHAT_RATE` | chat messages per minute and client address (default 20) |
 | `MOTIONENGINE_ALLOWED_MODEL_HOSTS` | hosts that HTTP models may use |
 | `MOTIONENGINE_CONFIG_DIR` | location of `configs/` for a wheel install outside the source tree |
 | `ANTHROPIC_API_KEY` | enables the assistant (`pip install -e ".[chat]"`); `MOTIONENGINE_CHAT_MODEL` and `MOTIONENGINE_CHAT_EFFORT` choose the model and effort |

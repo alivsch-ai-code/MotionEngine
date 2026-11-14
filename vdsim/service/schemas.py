@@ -321,11 +321,23 @@ class ChatRequest(_Strict):
 
 
 # ----------------------------------------------------------------------------- neural models
+class SituationSettings(_Strict):
+    curve_share: float = Field(0.55, ge=0.0, le=1.0, description="share of situations on a curve or S-curve")
+    max_objects: int = Field(3, ge=0, le=3)
+    speed_min: float = Field(6.0, ge=4.0, le=40.0, description="m/s")
+    speed_max: float = Field(33.0, ge=5.0, le=45.0, description="m/s")
+    lane_change_share: float = Field(0.25, ge=0.0, le=0.75, description="share of situations starting on the neighbor lane")
+
+
 class TrainRequest(_Strict):
     kind: Literal["vehicle_dynamics", "trajectory_planner"] = Field(
         "vehicle_dynamics", description="vehicle_dynamics: surrogate of a physics model; trajectory_planner: "
                                         "imitation of the Werling planner (proposal + verified local search)")
     planner_config: str = Field("default", description="trajectory_planner: planner configuration of the teacher")
+    approach: Literal["regression", "classification", "dagger"] = Field(
+        "regression", description="trajectory_planner: regression of the teacher's choice, classes for end offset and "
+                                  "end speed, or data aggregation (the learner drives, the teacher labels)")
+    situations: SituationSettings | None = Field(None, description="trajectory_planner: training situations")
     vehicle: str = "mid_size_sedan"
     teacher: Literal["bicycle_nonlinear", "bicycle_linear"] = "bicycle_nonlinear"
     n_samples: int = Field(20000, ge=500, le=200000)
@@ -354,6 +366,10 @@ class ConnectRequest(_Strict):
     onnx_base64: str | None = Field(None, description="ONNX graph, base64 (max. 20 MB)")
     url: str | None = Field(None, description="HTTP endpoint: POST {inputs} -> {outputs}")
     vehicle: str = "mid_size_sedan"
+    kind: Literal["vehicle_dynamics", "trajectory_planner"] = Field(
+        "vehicle_dynamics", description="vehicle_dynamics: 5 inputs -> 3 outputs; trajectory_planner: 31 inputs -> "
+                                        "4 outputs (end offset, lateral end time, end speed offset, longitudinal end time)")
+    planner_config: str = Field("default", description="trajectory_planner: configuration of the verifying planner")
 
 
 class DriveRequest(_Strict):
