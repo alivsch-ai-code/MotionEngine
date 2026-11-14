@@ -18,13 +18,13 @@ import time
 from ..core.parameters import load_vehicle_preset
 from ..framework.context import RunContext
 from .results import ADResult
-from .runner import _apply_kicks, _finish, _Recorder, _road_geometry, _spec_dict
+from .runner import _apply_kicks, _finish, _Recorder, _road_geometry, _services, _spec_dict
 from .stack import build_graph, merge_stack
 
 
 class LiveSession:
     def __init__(self, scenario, stack=None, seed=None, duration=None, scenario_params=None, vehicle=None,
-                 graph=None, connections=None):
+                 graph=None, connections=None, environment=None):
         from ..runtime import Executor, Graph
         from ..world import build_scenario
 
@@ -44,7 +44,7 @@ class LiveSession:
         self.graph.validate().raise_for_errors()
 
         context = RunContext(dt=self.graph.base_dt, seed=self.seed, vehicle=vehicle_cfg, road=self.inst.road,
-                             scenario=self.inst)
+                             scenario=self.inst, services=_services(environment))
         self.executor = Executor(self.graph, context, recorder=False, profile=True)
         name = spec.get("name") if isinstance(spec, dict) else str(spec)
         self.result = ADResult(name, spec if isinstance(spec, dict) else {"name": str(spec)}, self.stack, self.seed)

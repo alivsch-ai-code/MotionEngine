@@ -13,9 +13,10 @@ import { PageHeader } from "../components/PageHeader";
 import { indexAt, SceneView } from "../components/SceneView";
 import { StackEditor } from "../components/StackEditor";
 import type { JobView, LiveSession, PlannerSnapshot, RunRequest, RunResult, SavedRun, WorkbenchCatalog } from "../lib/api";
+import { adScenarioLabel, libraryText } from "../lib/domain";
 import { fmt, toDeg } from "../lib/format";
 import { useClient, usePersistentState, useQuery } from "../lib/hooks";
-import { downloadBlob, fileToBase64, stackSpecs, useConnections, useStack } from "../lib/stack";
+import { applyConditions, CONDITIONS, downloadBlob, fileToBase64, stackSpecs, useConnections, useStack, type Conditions } from "../lib/stack";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 const ACTIVE = ["queued", "running"];
@@ -23,7 +24,7 @@ const TABS = ["planner", "signals", "kpis", "events", "profile"] as const;
 type Tab = (typeof TABS)[number];
 const HEAD_KPIS = ["min_ttc", "min_distance", "max_ay", "max_e_n", "max_jerk"];
 
-interface Form { scenario: string; seed: number; duration: number }
+interface Form { scenario: string; seed: number; duration: number; conditions?: Conditions }
 interface SavedFile extends Partial<SavedRun> { [key: string]: unknown }
 
 export default function Workbench() {
@@ -74,8 +75,9 @@ export default function Workbench() {
   const request = (): RunRequest | null => {
     const { specs, invalid } = stackSpecs(stack);
     if (invalid) { setError(new Error(t("workbench.invalidParams", { layer: invalid }))); return null; }
+    const cond = applyConditions(specs, form.conditions ?? "ideal");
     return { scenario: form.scenario, seed: Number.isFinite(form.seed) ? form.seed : null, duration: Number.isFinite(form.duration) ? form.duration : null,
-      stack: specs, ...(connections ? { connections } : {}) };
+      stack: cond.stack, ...(cond.friction !== null ? { friction: cond.friction } : {}), ...(connections ? { connections } : {}) };
   };
   const start = async () => {
     const body = request();
@@ -135,7 +137,7 @@ export default function Workbench() {
           <div className="card__header"><h2>{t("workbench.setup")}</h2></div>
           <div className="card__body stack">
             <SelectField label={t("workbench.scenario")} value={form.scenario} onChange={(v) => setForm({ ...form, scenario: v })}
-              options={(catalog.data?.scenarios ?? [{ name: form.scenario, label: form.scenario }]).map((s) => ({ value: s.name, label: s.label || s.name }))}
+              options={(catalog.data?.scenarios ?? [{ name: form.scenario, label: form.scenario }]).map((s) => ({ value: s.name, label: adScenarioLabel(t, s) }))}
               hint={scenario ? t(`domain:adScenario.${scenario.name}`, { defaultValue: scenario.description }) : undefined} />
             <div className="grid grid--2-tight">
               <NumberField label={t("workbench.seed")} value={form.seed} step={1} min={0} onChange={(v) => setForm({ ...form, seed: v })}
@@ -143,6 +145,8 @@ export default function Workbench() {
               <NumberField label={t("workbench.duration")} unit="s" value={form.duration} min={1} max={catalog.data?.limits.max_duration ?? 120}
                 onChange={(v) => setForm({ ...form, duration: v })} hint={scenario ? t("workbench.defaultValue", { v: scenario.duration }) : undefined} />
             </div>
+            <SelectField label={t("workbench.conditions.label")} value={form.conditions ?? "ideal"} onChange={(v) => setForm({ ...form, conditions: v })}
+              options={CONDITIONS.map((c) => ({ value: c, label: t(`workbench.conditions.${c}`) }))} hint={t(`workbench.conditions.hint.${form.conditions ?? "ideal"}`)} />
             {catalog.data ? <StackEditor catalog={catalog.data} stack={stack} onChange={setStack} /> : <Skeleton height={120} />}
             {active ? (
               <button type="button" className="btn btn--secondary btn--lg" onClick={() => job && void client.cancelRun(job.id).then(setJob)}>
@@ -327,7 +331,7 @@ function RunView({ result, catalog, lang, onDownload }: { result: RunResult; cat
           <div className="card"><div className="card__header"><h2>{t("workbench.mission")}</h2></div><div className="card__body table-wrap">
             {result.mission ? <table className="table"><tbody>{Object.entries(result.mission.criteria).map(([name, c]) => (
               <tr key={name}><td><span className={`badge ${c.ok ? "badge--success" : "badge--danger"}`}>{c.ok ? "✓" : "✕"}</span></td>
-                <td className="mono">{name}</td><td className="subtle">{c.detail}</td></tr>))}</tbody></table> : <p className="subtle">{t("workbench.noMission")}</p>}
+                <td>{t(`domain:adCriterion.${name}`, { defaultValue: name })}</td><td className="subtle">{libraryText(c.detail, lang)}</td></tr>))}</tbody></table> : <p className="subtle">{t("workbench.noMission")}</p>}
           </div></div>
         </div>
       ) : null}

@@ -120,9 +120,10 @@
   },
   "models": {
     "title": "Neuronale Modelle",
-    "subtitle": "Ein neuronales Ersatzmodell der Fahrdynamik mit Daten eines Physikmodells trainieren oder ein eigenes Modell anschließen. Jedes Modell kann eine Simulation antreiben.",
+    "subtitle": "Ein neuronales Ersatzmodell der Fahrdynamik oder ein Netz trainieren, das die geplante Trajektorie vorschlägt, oder ein eigenes Modell anschließen. Jedes Modell wird vor dem Einsatz mit seinem Lehrer verglichen.",
     "tabs": { "models": "Modelle", "train": "Trainieren", "connect": "Externes Modell anschließen" },
-    "table": { "name": "Name", "backend": "Backend", "teacher": "Physik-Lehrer", "params": "Parameter", "created": "Erstellt" },
+    "table": { "name": "Name", "kind": "Art", "backend": "Backend", "teacher": "Lehrer", "quality": "Güte", "acceptance": "{{v}} % über das Netz", "r2": "R² (Gieren) {{v}}", "params": "Parameter", "created": "Erstellt" },
+    "kinds": { "vehicle_dynamics": "Fahrdynamik", "trajectory_planner": "Trajektorienplaner" },
     "backends": { "mlp": "MotionEngine-MLP", "onnx": "ONNX", "http": "HTTP-Endpunkt" },
     "neuralModel": "Neuronales Modell {{id}}",
     "useInSimulation": "In Simulation verwenden",
@@ -146,6 +147,13 @@
       "neural": "Neuronales Modell"
     },
     "trainForm": {
+      "kind": "Was trainiert wird",
+      "kindHint": {
+        "vehicle_dynamics": "Ein Netz, das in Simulationen das Fahrzeugmodell ersetzt.",
+        "trajectory_planner": "Ein Netz, das in jedem Planungszyklus die Trajektorie vorschlägt; der Werling-Planer prüft sie."
+      },
+      "demonstrations": "Demonstrationen",
+      "demonstrationsTip": "Planungszyklen des Werling-Planers in zufälligen Situationen (Straßen, Geschwindigkeiten, Spurversätze, Objekte). Das Sammeln braucht die meiste Zeit: etwa 25 ms pro Zyklus.",
       "title": "Ersatzmodell trainieren",
       "text": "Das Netz lernt die Beschleunigungen eines Physikmodells aus Monte-Carlo-Stichproben des Fahrbereichs.",
       "teacher": "Physik-Lehrer",
@@ -161,7 +169,8 @@
       "start": "Training starten"
     },
     "jobStates": { "queued": "In der Warteschlange", "running": "Training läuft", "done": "Fertig", "failed": "Fehlgeschlagen", "cancelled": "Abgebrochen" },
-    "phases": { "sampling": "Daten werden erzeugt", "training": "Optimierung" },
+    "phases": { "sampling": "Daten werden erzeugt", "training": "Optimierung", "evaluating": "Vergleich mit dem Lehrer" },
+    "howPlanner": { "text": "Das Netz lernt, welche Trajektorie der Werling-Planer auswählt: Endversatz und Endzeit der Querbewegung sowie Endgeschwindigkeit und Endzeit der Längsbewegung. In jedem Zyklus baut der Planer nur die Kandidaten neben diesem Vorschlag und prüft sie mit denselben Restriktionen und derselben Kollisionsprüfung wie immer.", "validation": "Nach dem Training fahren der geführte Planer und der Werling-Planer dieselben zurückgehaltenen Situationen. Ist kein Kandidat neben dem Vorschlag gültig oder liegt der beste am Rand der lokalen Menge, nutzt der Zyklus die vollständige Werling-Suche." },
     "how": {
       "title": "So funktioniert das Ersatzmodell",
       "text": "Die ebene Kinematik bleibt exakt; nur die Beschleunigungen kommen aus dem Netz. Das Modell ersetzt damit das Fahrzeugmodell in jeder Simulation.",
@@ -375,6 +384,19 @@
     "geometryInfo": "Wenderadius des Referenzpunkts {{r}} m · Referenzpunkt {{p}} m vor der Hinterachse · max. Lenkwinkel vorne {{f}}°, hinten {{rr}}°"
   },
   "workbench": {
+    "conditions": {
+      "label": "Bedingungen",
+      "ideal": "Ideal (Entwurfsmodell, perfekte Sensoren)",
+      "realistic": "Realistisch (Zweispur, Aktordynamik, Sensorrauschen, 0,1 s Latenz)",
+      "wet": "Nasse Fahrbahn (realistisch, Reibwert 0,5)",
+      "harsh": "Eis und schlechte Sensoren (Reibwert 0,3, 0,2 s Latenz)",
+      "hint": {
+        "ideal": "Die Strecke ist das Entwurfsmodell des Reglers und jede Messung ist exakt. Gut, um die Algorithmen zu verstehen; die Bahnfolge ist fast perfekt.",
+        "realistic": "Zweispurfahrzeug mit Radlastverlagerung und Reifensättigung; Objekte und die eigene Position werden verrauscht gemessen und kommen 0,1 s verspätet an.",
+        "wet": "Wie realistisch, auf nasser Fahrbahn. Der Planer kennt den Reibwert nicht: auf die geforderte Querbeschleunigung achten.",
+        "harsh": "Niedriger Reibwert und schlechte Sensoren. Missionen werden scheitern; genau das zeigt diese Voreinstellung."
+      }
+    },
     "rewired": "Neu verdrahteter Stack: {{n}} Verbindungen (siehe Architektur)",
     "load": {
       "button": "Ergebnis laden …",
@@ -697,5 +719,261 @@
     "apply": "Diese Trajektorie fahren",
     "applyFriction": "Nur die Reibwertkarte verwenden",
     "badFile": "Die Datei enthält keine Wegpunkte."
+  },
+  "plannerModel": {
+    "acceptance": "Zyklen über das Netz gelöst",
+    "sameChoice": "Gleiche Trajektorie wie der Lehrer",
+    "costRatio": "Kosten im geschlossenen Kreis ggü. Lehrer",
+    "time": "Zeit pro Zyklus",
+    "timeUnit": "ms (Lehrer {{teacher}} ms)",
+    "metricsText": "Gemessen an {{n}} zurückgehaltenen Situationen ({{cycles}} Planungszyklen): {{fallback}} % der Zyklen brauchten die vollständige Suche, {{infeasible}} % hatten gar keine gültige Trajektorie; in {{within}} % der Erstzyklen liegen die Kosten innerhalb von 5 % des Lehrers.",
+    "safety": "Jede Trajektorie wird mit den Restriktionen und der Kollisionsprüfung des Lehrers geprüft. Zyklen ohne gültige Trajektorie: {{invalid}} (Lehrer allein: {{invalidTeacher}}). Kollisionen: {{collisions}} (Lehrer allein: {{collisionsTeacher}}).",
+    "targets": {
+      "lat_delta": "Endversatz δ",
+      "lat_tau": "Endzeit quer",
+      "lon_nu": "Endgeschwindigkeits-Versatz ν",
+      "lon_tau": "Endzeit längs"
+    },
+    "drive": {
+      "title": "Fahrt gegen den Lehrer",
+      "text": "Beide Planer fahren dieselbe Situation 8 Sekunden lang mit idealer Folgeregelung. Die Pfade liegen übereinander, wenn der Netzpfad die Trajektorie des Lehrers findet.",
+      "random": "Zufällige Situation",
+      "randomLabel": "Zufällige Situation {{seed}}",
+      "collision": "Kollision",
+      "noCollision": "keine Kollision",
+      "network": "Zyklen über das Netz",
+      "pathDiff": "Größte Pfadabweichung",
+      "cost": "Kosten ggü. Lehrer",
+      "paths": "Pfade des gelernten Planers und des Lehrers",
+      "teacher": "Werling-Planer",
+      "learned": "gelernter Planer",
+      "objectsNote": "Objekte sind an ihrer Endposition gezeichnet.",
+      "speed": "Geschwindigkeit",
+      "source": "Zyklus über das Netz (1) oder die vollständige Suche (0) gelöst",
+      "networkCycle": "Netz"
+    },
+    "presets": {
+      "overtake": "Langsameres Fahrzeug voraus",
+      "laneChange": "Spurwechsel",
+      "curve": "Kurve",
+      "slowTraffic": "Langsamer Verkehr, eine Spur"
+    },
+    "stackHint": "Im Stack für automatisiertes Fahren ist das Modell die Planer-Komponente „learned“ mit dem Parameter „model“ auf dieser ID.",
+    "useInWorkbench": "In der Workbench verwenden"
+  },
+  "control": {
+    "actuator": "Lenkaktor", "actuatorHint": "Realistisch: 30 ms Totzeit, 50 ms Verzögerung und höchstens 0,6 rad/s an den Rädern; Antrieb und Bremse mit Verzögerung.", "actuators": {"ideal": "Ideal (folgt dem Sollwert sofort)", "realistic": "Realistisch (Totzeit, Verzögerung, Ratenbegrenzung)"},
+    "title": "Regler-Labor",
+    "subtitle": "Mehrere Folgeregler auf derselben Bahn und demselben Fahrzeug fahren lassen, vergleichen, wie gut sie folgen, und sehen, welchen Beitrag jeder Term eines Regelgesetzes in jedem Moment liefert.",
+    "setup": "Versuch",
+    "controllers": "Regler",
+    "params": "Parameter",
+    "paramsChanged": "{{n}} geändert",
+    "path": "Referenzbahn",
+    "speed": "Geschwindigkeit",
+    "speedHint": "{{kmh}} km/h, konstant entlang der Bahn",
+    "names": {
+      "pure_pursuit": "Pure Pursuit",
+      "stanley": "Stanley",
+      "lqr": "LQR (geschwindigkeitsabhängig)",
+      "mpc": "MPC (linear zeitvariant)",
+      "werling_bilevel": "Werling (exakte Linearisierung)"
+    },
+    "paths": {"lane_change": "Spurwechsel", "double_lane_change": "Doppelter Spurwechsel", "curve_entry": "Kurveneinfahrt", "s_curve": "S-Kurve", "slalom": "Slalom", "straight": "Gerade"},
+    "pathsPlot": "Referenzbahn und gefahrene Bahnen",
+    "pathHints": {
+      "lane_change": "3,5 m nach links über 50 m.",
+      "double_lane_change": "Nach links und zurück, je 40 m.",
+      "curve_entry": "Gerade, dann Radius 60 m mit 20 m Übergang.",
+      "s_curve": "Links, dann rechts, Radius 80 m.",
+      "slalom": "±1,5 m bei 60 m Wellenlänge.",
+      "straight": "Mit Startversatz oder Seitenkraft zeigt sie die reine Reaktion des Regelkreises."
+    },
+    "conditions": "Bedingungen und Störungen",
+    "plant": "Fahrzeugmodell",
+    "plantTip": "Das Modell, das der Regler fährt. Das Entwurfsmodell ist das einfachste; Zweispur- und Mehrkörpermodell bringen Radlastverlagerung, Reifensättigung und Wanken dazu.",
+    "plants": {
+      "werling_desm": "Einspur, Entwurfsmodell",
+      "bicycle_nonlinear": "Einspur, nichtlineare Reifen",
+      "double_track": "Zweispur",
+      "multibody": "Mehrkörper"
+    },
+    "mu": "Reibwert",
+    "muHint": "1,0 trocken, etwa 0,5 nass, 0,2 Eis",
+    "offset": "Start neben der Bahn",
+    "offsetHint": "Positiv: links der Bahn",
+    "gust": "Seitenkraft",
+    "gustTime": "zum Zeitpunkt",
+    "gustHint": "Eine Querkraft im Schwerpunkt für 0,5 s, wie eine Windböe. 3000 N sind für eine Limousine eine starke Böe.",
+    "run": "Vergleich starten",
+    "empty": {
+      "title": "Regler vergleichen",
+      "text": "Regler und Bahn wählen. Das Labor fährt jeden Regler durch dasselbe Manöver und zeigt Fehler, Lenkung und das Regelgesetz."
+    },
+    "result": {
+      "title": "Vergleich",
+      "text": "Fahrzeugmodell: {{plant}} · Reibwert {{mu}} · {{speed}} km/h. Auf eine Zeile klicken, um unten das Regelgesetz zu sehen."
+    },
+    "kpi": {
+      "max_e_n": "Größter Querfehler",
+      "rms_e_n": "Querfehler (RMS)",
+      "settled": "Eingeschwungen nach",
+      "steer": "Größter Lenkwinkel",
+      "steerRate": "Größte Lenkrate",
+      "ay": "Größte Querbeschleunigung",
+      "time": "Rechenzeit pro Schritt",
+      "note": "Eingeschwungen: Der Querfehler bleibt ab diesem Zeitpunkt unter 5 cm."
+    },
+    "notSettled": "nicht eingeschwungen",
+    "unstable": "instabil",
+    "best": "kleinster Fehler",
+    "series": {
+      "e_n": "Querfehler",
+      "delta": "Lenkwinkel an den Rädern",
+      "e_theta": "Kursfehler",
+      "ay": "Querbeschleunigung"
+    },
+    "law": {
+      "title": "Regelgesetz",
+      "text": "Die Formel des gewählten Reglers und der Wert jedes Terms zum Zeitpunkt des Schiebers.",
+      "state": "Zustand und Ausgang",
+      "speed": "Geschwindigkeit",
+      "command": "Soll-Lenkwinkel",
+      "actual": "Ist-Lenkwinkel (nach dem Aktor)",
+      "term": "Term",
+      "noTerms": "Dieser Regler meldet keine einzelnen Terme.",
+      "library": "Dokumentation aus der Bibliothek"
+    },
+    "explain": {
+      "pure_pursuit": "Pure Pursuit lenkt auf einem Kreisbogen von der Hinterachse zu einem Punkt der Bahn, der um die Vorausschau L_d voraus liegt. Eine lange Vorausschau ist ruhig, schneidet aber Kurven; eine kurze folgt eng, schwingt aber.",
+      "stanley": "Stanley betrachtet die Vorderachse. Er richtet die Räder an der Bahn aus (Kursterm), lenkt proportional zum Querfehler und umgekehrt zur Geschwindigkeit zur Bahn hin (Rückführung), addiert den Lenkwinkel, den die Krümmung braucht (Vorsteuerung), und dämpft die Gierrate.",
+      "lqr": "Der LQR nutzt das lineare Einspurmodell in Fehlerkoordinaten. Die Verstärkung K minimiert eine gewichtete Summe aus Fehlern und Lenkaufwand und wird für jede Geschwindigkeit neu berechnet; die Vorsteuerung hält das Fahrzeug ohne Fehler in der Kurve.",
+      "mpc": "Der MPC plant die Lenkrate über einen Horizont, indem er eine Optimierung mit dem Fehlermodell und Grenzen für Winkel und Rate löst, wendet den ersten Teil des Plans an und plant neu.",
+      "werling_bilevel": "Der Werling-Regler invertiert das nichtlineare Einspurmodell so, dass der Querfehler einer gewählten linearen Gleichung zweiter Ordnung folgt. Bei niedriger Geschwindigkeit schaltet er auf ein kinematisches Gesetz um; eine große Abweichung löst eine Reinitialisierung des Planers aus."
+    }
+  },
+  "learn": {
+    "title": "Lernen",
+    "subtitle": "Neun kurze Lektionen zu Bahnfolgeregelung und Planung. Jede stellt eine Frage, fährt einen echten Versuch mit den Reglern und dem Planer der Bibliothek und zeigt die Zahlen, die sie beantworten.",
+    "progress": "{{done}} von {{n}} Lektionen erledigt",
+    "note": "Jeder Versuch wird beim Start berechnet; nichts ist aufgezeichnet.",
+    "topics": {
+      "control": "Regelung: einer Bahn folgen",
+      "planning": "Planung: eine Trajektorie wählen",
+      "system": "Das Gesamtsystem"
+    },
+    "done": "erledigt",
+    "experiment": "Der Versuch",
+    "watch": "Worauf achten",
+    "run": "Versuch starten",
+    "takes": "Läufe des kompletten Stacks dauern 10 bis 40 Sekunden.",
+    "open": {
+      "control": "Im Regler-Labor weitermachen",
+      "experiment": "In der Forschung weitermachen",
+      "runs": "In der Workbench weitermachen"
+    },
+    "variant": "Variante",
+    "failed": "gescheitert",
+    "yes": "ja",
+    "no": "nein",
+    "lost": "verlässt die Bahn", "showAnswer": "Antwort zeigen",
+    "kpis": {
+      "max_e_n": "Größter Querfehler",
+      "rms_e_n": "Querfehler (RMS)",
+      "steer_rate": "Größte Lenkrate",
+      "max_ay": "Größte Querbeschleunigung",
+      "max_jerk": "Größter Ruck",
+      "rms_jerk_lat": "Querruck (RMS)",
+      "mean_speed": "Mittlere Geschwindigkeit",
+      "min_distance": "Kleinster Abstand zu Objekten",
+      "mission_passed": "Mission bestanden"
+    },
+    "labels": {
+      "on": "Vorsteuerung an",
+      "off": "Vorsteuerung aus",
+      "werling_desm": "Entwurfsmodell",
+      "double_track": "Zweispurmodell",
+      "ideal": "idealer Aktor",
+      "realistic": "realistischer Aktor",
+      "k_lat=0.05": "Ruckgewicht 0,05",
+      "k_lat=1": "Ruckgewicht 1",
+      "k_lat=20": "Ruckgewicht 20",
+      "k_lat=1.0": "Ruckgewicht 1",
+      "k_lat=20.0": "Ruckgewicht 20"
+    },
+    "lessons": {
+      "lookahead": {
+        "title": "1 · Die Vorausschau von Pure Pursuit",
+        "goal": "Den einen Parameter verstehen, der das Verhalten von Pure Pursuit bestimmt.",
+        "experiment": "Pure Pursuit fährt eine S-Kurve mit 54 km/h mit drei Vorausschau-Verstärkungen: Die Vorausschau entspricht 0,4, 0,8 oder 1,5 Sekunden Fahrstrecke.",
+        "watch": "Der größte Querfehler und die Lenkrate. Die drei Fehlerkurven im Diagramm vergleichen.",
+        "question": "Warum hat die lange Vorausschau den größten Fehler, obwohl sie am ruhigsten lenkt?",
+        "answer": "Bei langer Vorausschau liegt der Zielpunkt weit vorn auf der Bahn; das Fahrzeug zielt dorthin, wo die Bahn sein wird, und schneidet die Kurve. Eine kurze Vorausschau folgt eng; bei höherer Geschwindigkeit oder mit Verzögerungen beginnt sie zu schwingen. Die Vorausschau tauscht Genauigkeit gegen ruhiges Lenken."
+      },
+      "feedforward": {
+        "title": "2 · Rückführung allein oder mit Vorsteuerung",
+        "goal": "Sehen, was die Krümmungsvorsteuerung zu einem Regler beiträgt.",
+        "experiment": "Stanley fährt mit 54 km/h in eine Kurve mit 60 m Radius, einmal mit und einmal ohne Krümmungsvorsteuerung.",
+        "watch": "Der Querfehler am Ende, in der stationären Kurve.",
+        "question": "Warum bleibt in der Kurve ein Fehler, und warum ist er ohne Vorsteuerung größer?",
+        "answer": "Eine Kurve braucht einen konstanten Lenkwinkel. Ohne Vorsteuerung kann ihn nur die Rückführung liefern, und eine proportionale Rückführung liefert nur dann einen Ausgang, wenn ein Fehler vorhanden ist. Die Vorsteuerung gibt den Winkel vor, den die Krümmung braucht; die Rückführung muss nur noch den Rest ausregeln."
+      },
+      "disturbance": {
+        "title": "3 · Eine Seitenwindböe",
+        "goal": "Vergleichen, wie schnell Regler eine Störung ausregeln.",
+        "experiment": "Vier Regler fahren mit 90 km/h geradeaus. Nach 2 s drückt eine Seitenkraft von 4000 N das Fahrzeug eine halbe Sekunde lang.",
+        "watch": "Der größte Querfehler und die Lenkrate, die jeder Regler einsetzt.",
+        "question": "Zwei Regler bleiben innerhalb von 7 cm, zwei driften 20 cm ab. Was machen die beiden besseren anders?",
+        "answer": "Stanley und LQR reagieren mit hoher Verstärkung auf den Querfehler und lenken schnell (4 bis 5 °/s). Pure Pursuit betrachtet nur einen fernen Punkt, und das Werling-Gesetz ist auf eine weiche, langsamere Rückkehr eingestellt; beide lenken sanft (0,5 °/s) und driften weiter. Schnelles Ausregeln kostet Lenkaktivität."
+      },
+      "model": {
+        "title": "4 · Der Regler trifft auf ein realistischeres Fahrzeug",
+        "goal": "Sehen, was passiert, wenn das Fahrzeug vom Entwurfsmodell des Reglers abweicht.",
+        "experiment": "LQR und der Werling-Regler fahren einen doppelten Spurwechsel mit 90 km/h, erst auf dem einfachen Entwurfsmodell, dann auf dem Zweispurmodell mit Radlastverlagerung und Reifensättigung.",
+        "watch": "Wie stark der größte Querfehler jedes Reglers auf dem Zweispurmodell wächst.",
+        "question": "Warum verliert der Werling-Regler mehr Genauigkeit als der LQR?",
+        "answer": "Der Werling-Regler invertiert sein Entwurfsmodell exakt und ist darauf fast perfekt (5 cm). Jeder Unterschied zwischen Modell und Fahrzeug wird zum Folgefehler (20 cm auf dem Zweispurmodell). Der LQR stützt sich mehr auf die Rückführung als auf ein exaktes Modell und ändert sich deshalb weniger. Modellbasierte Präzision ist nur so gut wie das Modell."
+      },
+      "actuator": {
+        "title": "5 · Ein Lenkaktor reagiert nicht sofort",
+        "goal": "Die Wirkung von Totzeit, Verzögerung und Ratenbegrenzung in der Lenkung sehen.",
+        "experiment": "Stanley und LQR fahren einen doppelten Spurwechsel mit 90 km/h, einmal mit idealem Aktor und einmal mit 30 ms Totzeit, 50 ms Verzögerung und Ratenbegrenzung.",
+        "watch": "Der größte Querfehler und ob die Fehlerkurve zu schwingen beginnt.",
+        "question": "Warum bringt eine Verzögerung im Regelkreis einen Regler mit hoher Verstärkung zum Schwingen?",
+        "answer": "Mit Verzögerung sieht der Regler die Wirkung seines Lenkens zu spät und korrigiert zu lange in dieselbe Richtung. Je höher die Verstärkung, desto größer das Überschwingen. Hier liegt das Manöver zudem nahe an der Grenze der Reifen (8,5 m/s²): Stanleys Fehler vervierfacht sich, und der LQR verlässt die Bahn ganz. Regler, die mit idealem Aktor gut arbeiten, brauchen am realen Fahrzeug kleinere Verstärkungen oder ein Modell der Verzögerung."
+      },
+      "friction": {
+        "title": "6 · Die Grenze der Reifen",
+        "goal": "Sehen, dass kein Regler einer Bahn folgen kann, die die Reifen nicht halten.",
+        "experiment": "Der Werling-Regler fährt auf dem Zweispurmodell mit 65 km/h in eine 60-m-Kurve, auf trockener (1,0), nasser (0,5) und vereister (0,3) Fahrbahn.",
+        "watch": "Die Querbeschleunigung, die die Kurve braucht (etwa 5,4 m/s²), gegen das, was die Fahrbahn zulässt (Reibwert × 9,81 m/s²).",
+        "question": "Auf nasser Fahrbahn beträgt der Fehler Meter statt Zentimeter. Ist der Regler falsch?",
+        "answer": "Nein. Die Kurve braucht 5,4 m/s², und eine nasse Fahrbahn gibt höchstens etwa 4,9 m/s² her. Das Fahrzeug rutscht, egal was der Regler tut. Der Planer muss eine Geschwindigkeit wählen, die der Reibwert zulässt: v² / R muss unter μ·g bleiben. Deshalb lassen sich Planung und Regelung nicht getrennt auslegen."
+      },
+      "jerk": {
+        "title": "7 · Das Ruckgewicht formt die Trajektorie",
+        "goal": "Sehen, wie ein Kostengewicht verändert, was der Planer auswählt.",
+        "experiment": "Der komplette Stack überholt dreimal auf der Autobahn; das Gewicht des Querrucks in der Kostenfunktion ist 0,05, 1 und 20.",
+        "watch": "Die größte Querbeschleunigung und der Querruck.",
+        "question": "Das kleine Gewicht wechselt die Spur mit 3,9 m/s², das große mit 0,7 m/s². Was wägt der Planer ab?",
+        "answer": "Die Kosten eines Kandidaten sind das Ruckintegral plus die Dauer plus die Endabweichung. Bei kleinem Ruckgewicht dominiert der Zeitterm, und der Planer wählt einen kurzen, scharfen Spurwechsel. Bei großem wählt er einen langen, sanften. Alle Kandidaten sind dieselben Polynome; die Gewichte entscheiden nur, welcher am billigsten ist."
+      },
+      "stack": {
+        "title": "8 · Fünf Regler im Kreisverkehr",
+        "goal": "Regler im kompletten Stack für automatisiertes Fahren vergleichen.",
+        "experiment": "Der Stack fährt fünfmal durch einen Kreisverkehr. Nur der Folgeregler wechselt.",
+        "watch": "Der größte Querfehler, der Ruck und ob die Mission bestanden wird.",
+        "question": "Der LQR war beim Spurwechsel gut, scheitert aber hier. Warum?",
+        "answer": "Der Kreisverkehr ist langsam und eng gekrümmt. Der LQR ist mit dem linearen Einspurmodell für kleine Winkel und höhere Geschwindigkeiten ausgelegt und hat kein eigenes Gesetz für langsame Fahrt. Die Werling-Stabilisierung schaltet bei niedriger Geschwindigkeit auf ein kinematisches Gesetz um, und der MPC plant mit den Grenzen; beide bleiben innerhalb von 20 cm. Ein Regler ist nur in dem Bereich gut, für den er ausgelegt wurde."
+      },
+      "conditions": {
+        "title": "9 · Von ideal zu realistisch",
+        "goal": "Sehen, wie viel der Leistung von idealen Bedingungen kommt.",
+        "experiment": "Der Stack weicht dreimal einem Hindernis aus: unter idealen Bedingungen, mit realistischem Fahrzeug, Aktoren und Sensoren und auf nasser Fahrbahn.",
+        "watch": "Der größte Querfehler und der Ruck.",
+        "question": "Unter idealen Bedingungen liegt der Fehler unter 1 cm. Woher kommen die 20 cm unter realistischen Bedingungen?",
+        "answer": "Von allem, was der ideale Lauf weglässt: Das Zweispurfahrzeug weicht vom Entwurfsmodell ab, die Lenkung braucht Zeit und ist ratenbegrenzt, und die eigene Position wird verrauscht und 0,1 s verspätet gemessen. Jeder Effekt ist klein; zusammen bestimmen sie die Genauigkeit, die ein reales Fahrzeug erreicht. Einen Algorithmus immer unter realistischen Bedingungen testen, bevor man seinen Zahlen traut."
+      }
+    }
   }
 }

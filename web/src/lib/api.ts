@@ -47,8 +47,22 @@ export interface ModelMeta {
   id: string; name: string; backend: "mlp" | "onnx" | "http"; kind: string; vehicle: string; teacher?: string; created: number;
   vehicle_model: string; hidden?: number[]; n_samples?: number; epochs_run?: number; n_parameters?: number;
   time_total_s?: number; test_metrics?: Record<string, Metric>; history?: { epoch: number; train: number; val: number }[]; url?: string;
+  planner_metrics?: PlannerMetrics; planner_config?: string;
 }
-export interface TrainRequest { vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
+export interface PlannerMetrics {
+  n_situations: number; cycles: number; network_share: number; acceptance: number; fallback_share: number; out_of_scope_share: number; infeasible_share: number;
+  cost_ratio_median: number | null; cost_ratio_mean: number | null; cost_ratio_p90: number | null; within_5_percent_share: number | null; same_choice_share: number;
+  closed_loop_cost_ratio: number | null; collisions: number; collisions_teacher: number; invalid_cycles: number; invalid_cycles_teacher: number;
+  time_learned_ms: number; time_teacher_ms: number;
+}
+export interface DriveLog { t: number[]; x: number[]; y: number[]; v: number[]; cost: number[]; source?: string[] }
+export interface DriveResult {
+  learned: DriveLog; teacher: DriveLog; road: { x: number[]; y: number[]; left_x: number[]; left_y: number[]; right_x: number[]; right_y: number[] };
+  objects: { id: number; length: number; width: number; x: number[]; y: number[]; psi: number }[];
+  summary: { cycles: number; network_share: number; fallback_share: number; max_path_difference: number; cost_learned: number; cost_teacher: number;
+    collision_learned: boolean; collision_teacher: boolean; time_learned_ms: number; time_teacher_ms: number };
+}
+export interface TrainRequest { kind?: "vehicle_dynamics" | "trajectory_planner"; planner_config?: string; vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
 export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null; created?: number; name?: string }
 export interface Evaluation { maneuver: string; max_position_error: number; max_yaw_rate_error: number; wall_time: { physics: number; neural: number }; kpis: Record<string, { physics: number; neural: number }>; series: Record<string, number[]> }
 
@@ -76,7 +90,8 @@ export interface WorkbenchCatalog { scenarios: AdScenario[]; layers: LayerInfo[]
   kpi_info: Record<string, [string, string, string, string]>; limits: { max_duration: number } }
 export interface LayerSpec { component: string; params?: Record<string, unknown> }
 export interface Connection { from: string; to: string }
-export interface RunRequest { scenario: string; seed?: number | null; duration?: number | null; stack?: Record<string, LayerSpec>; name?: string; connections?: Connection[] | null }
+export interface RunRequest { scenario: string; seed?: number | null; duration?: number | null; stack?: Record<string, LayerSpec>; name?: string; connections?: Connection[] | null;
+  friction?: number | null; wind_speed?: number | null }
 export interface LiveActor { type: string; length: number; width: number; t: number; x: number; y: number; psi: number; v?: number }
 export interface LiveFrame { t: number; t_end: number; stopped: boolean; stop_reason: string; row: Record<string, number | string | null>; objects: Record<string, LiveActor>;
   n_steps: number; n_snapshots: number; n_events: number; snapshot: PlannerSnapshot | null; events: ({ t: number; type: string } & Record<string, unknown>)[] }
@@ -117,6 +132,20 @@ export interface Reference { type?: string; authors?: string[]; title?: string; 
 export interface KnowledgeNode { id: string; type: string; label: string }
 export interface KnowledgeExplain { info: Record<string, unknown>; markdown: string; nodes: KnowledgeNode[]; edges: { source: string; target: string; type: string }[] }
 
+export interface ControlCatalog {
+  controllers: { name: string; label: string; params: ComponentParam[]; doc: Record<string, unknown> }[];
+  paths: Record<string, Record<string, number>>; plants: string[]; info_terms: string[];
+}
+export interface ControlRunRequest {
+  controllers: { name: string; params?: Record<string, unknown>; label?: string }[]; path: string; path_params?: Record<string, number>; speed: number;
+  plant?: string; mu?: number; actuator?: "ideal" | "realistic"; lateral_offset?: number; heading_offset_deg?: number; disturbance?: { t: number; duration: number; fy: number; mz?: number } | null; duration?: number;
+}
+export interface ControlKpis { max_e_n: number; rms_e_n: number; final_e_n: number; max_e_theta_deg: number; max_steer_deg: number; max_steer_rate_deg_s: number; max_ay: number;
+  settled_after: number | null; compute_time_ms: number }
+export interface ControlRun { name: string; label: string; params: Record<string, unknown>; stable: boolean; kpis: ControlKpis | null;
+  signals: Record<string, (number | null)[]>; terms: Record<string, (number | null)[]>; active: string }
+export interface ControlResult { path: { kind: string; x: number[]; y: number[]; kappa: number[]; s: number[]; maneuver_start: number }; speed: number; duration: number; plant: string; mu: number;
+  vehicle: { wheelbase: number; length: number; width: number }; runs: ControlRun[] }
 export interface ChatStatus { available: boolean; installed: boolean; credential: boolean; model: string }
 export interface SimulationView { kind: "simulation"; request: Record<string, unknown>; model: string; stop_code: string; simulated_time: number; wall_time: number; kpis: Kpi[]; signals: Record<string, (number | null)[]> }
 export interface PlanView {
@@ -238,8 +267,11 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     jobs: (s?: AbortSignal) => request<TrainJob[]>("GET", "/models/jobs", undefined, s),
     cancelJob: (id: string) => request<TrainJob>("POST", `/models/jobs/${encodeURIComponent(id)}/cancel`),
     connect: (body: { name: string; backend: "onnx" | "http"; onnx_base64?: string; url?: string; vehicle: string }) => request<ModelMeta>("POST", "/models/connect", body),
+    drive: (id: string, body: { situation?: PlanRequest; seed?: number; cycles?: number }) => request<DriveResult>("POST", `/models/${encodeURIComponent(id)}/drive`, body),
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
     park: (body: ParkRequest, s?: AbortSignal) => request<ParkResponse>("POST", "/park", body, s),
+    controlCatalog: (s?: AbortSignal) => request<ControlCatalog>("GET", "/control/catalog", undefined, s),
+    controlRun: (body: ControlRunRequest, s?: AbortSignal) => request<ControlResult>("POST", "/control/run", body, s),
     workbenchCatalog: (s?: AbortSignal) => request<WorkbenchCatalog>("GET", "/workbench/catalog", undefined, s),
     stackGraph: (stack: Record<string, LayerSpec>, s?: AbortSignal, connections?: Connection[] | null) =>
       request<StackGraph>("POST", "/workbench/graph", { stack, ...(connections ? { connections } : {}) }, s),
@@ -253,7 +285,8 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     runs: (s?: AbortSignal) => request<JobView[]>("GET", "/workbench/runs", undefined, s),
     run: (id: string, s?: AbortSignal) => request<JobView>("GET", `/workbench/runs/${encodeURIComponent(id)}`, undefined, s),
     cancelRun: (id: string) => request<JobView>("POST", `/workbench/runs/${encodeURIComponent(id)}/cancel`),
-    runResult: (id: string, s?: AbortSignal) => request<RunResult>("GET", `/workbench/runs/${encodeURIComponent(id)}/result`, undefined, s),
+    runResult: (id: string, s?: AbortSignal, maxPoints?: number) =>
+      request<RunResult>("GET", `/workbench/runs/${encodeURIComponent(id)}/result${maxPoints ? `?max_points=${maxPoints}` : ""}`, undefined, s),
     runSnapshot: (id: string, k: number, s?: AbortSignal) => request<PlannerSnapshot>("GET", `/workbench/runs/${encodeURIComponent(id)}/snapshots/${k}`, undefined, s),
     runDownloadUrl: (id: string) => `${base}/workbench/runs/${encodeURIComponent(id)}/download`,
     runDownload: (id: string) => request<SavedRun>("GET", `/workbench/runs/${encodeURIComponent(id)}/download`),

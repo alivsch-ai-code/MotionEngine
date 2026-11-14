@@ -42,6 +42,7 @@ from .metrics import Metrics
 from .schemas import (
     ChatRequest,
     ConnectRequest,
+    DriveRequest,
     EvaluateRequest,
     ExplainResponse,
     HealthResponse,
@@ -202,9 +203,10 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                     "SI units, ISO 8855 axes (x forward, y left, z up).",
         openapi_tags=[{"name": "service"}, {"name": "vehicle"}, {"name": "trajectory"}, {"name": "simulation"},
                       {"name": "planning"}, {"name": "prediction"}, {"name": "learning"},
-                      {"name": "workbench"}, {"name": "matlab"}, {"name": "knowledge"}, {"name": "chat"}],
+                      {"name": "workbench"}, {"name": "control"}, {"name": "matlab"}, {"name": "knowledge"}, {"name": "chat"}],
     )
     app.state.metrics = metrics
+    app.state.model_dir = models.dir
     app.state.limits = {"max_concurrency": max_concurrency, "max_sim_time": max_sim_time,
                         "max_wall_time": max_wall_time}
     if cors_origins:
@@ -361,9 +363,12 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         scenario.vehicle = _require(scenario.vehicle, catalog["presets"], "vehicle preset")
         if str(scenario.model).startswith("neural_"):
             try:
-                scenario.model = models.activate(models.get(scenario.model[len("neural_"):])["id"])
+                neural = models.get(scenario.model[len("neural_"):])
             except KeyError:
                 raise HTTPException(status_code=422, detail=f"unknown neural model '{scenario.model}'") from None
+            if neural.get("kind", "vehicle_dynamics") != "vehicle_dynamics":
+                raise HTTPException(status_code=422, detail="this model is not a vehicle dynamics model")
+            scenario.model = models.activate(neural["id"])
         else:
             scenario.model = _require(scenario.model, catalog["vehicle_model"], "vehicle model")
         _require(scenario.maneuver, catalog["maneuver"], "maneuver")
@@ -444,6 +449,15 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         return PredictResponse(t0=req.t0, predictor=req.predictor, objects=out)
 
     # ------------------------------------------------------------------------- planning
+    def _planner_backend(model_id):
+        try:
+            meta = models.get(model_id)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="unknown model") from None
+        if meta.get("kind") != "trajectory_planner":
+            raise HTTPException(status_code=422, detail="this model is not a trajectory planner model")
+        return models.backend(model_id)
+
     def _plan_setup(req):
         from ..core.parameters import load_vehicle_preset
         from ..framework import RunContext
@@ -480,8 +494,13 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             return BehaviorCommand(t=t, reference_line=target, target_speed=req.target_speed, d_min=req.d_min,
                                    d_max=req.d_max, modes=modes)
 
-        planner = create_planner(config_name)
-        planner.reset(RunContext(vehicle=vehicle_cfg))
+        if req.model:
+            from ..learning.trajectory import planner_for
+
+            planner = planner_for(_planner_backend(req.model), vehicle_cfg, config_name)
+        else:
+            planner = create_planner(config_name)
+            planner.reset(RunContext(vehicle=vehicle_cfg))
         return planner, vehicle_cfg, road, target, behavior, prediction
 
     def _road_geometry(road, target, req):
@@ -518,7 +537,10 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                                      reference_point=str(first.reference_point),
                                      **{k: _list(getattr(first, k)[idx]) if len(first.t) else []
                                         for k in ("t", "x", "y", "theta", "kappa", "v", "a")})
-        return PlanResponse(road=_road_geometry(road, target, req), trajectory=out,
+        stats = getattr(planner, "stats", None)
+        return PlanResponse(source=str(first_dbg.info.get("source", "teacher")),
+                            network_share=stats["network"] / max(sum(stats.values()), 1) if stats else None,
+                            road=_road_geometry(road, target, req), trajectory=out,
                             n_candidates=int(first_dbg.n_candidates), fallback=bool(first_dbg.fallback),
                             compute_time=float(first_dbg.compute_time), cycles=cycles)
 
@@ -575,9 +597,14 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
     @app.post("/models/train", response_model=TrainJob, status_code=202, tags=["learning"], dependencies=secured,
               summary="Train a neural surrogate of the vehicle dynamics on data from a physics model")
     def train_model(req: TrainRequest):
-        from ..learning import train_surrogate
+        from ..learning import train_planner, train_surrogate
 
         vehicle_name = _require(req.vehicle, catalog["presets"], "vehicle preset")
+        planner_kind = req.kind == "trajectory_planner"
+        config_name = _require(req.planner_config, catalog["planner_configs"], "planner configuration")
+        if planner_kind and req.n_samples > 20000:
+            raise HTTPException(status_code=422, detail="at most 20000 demonstrations for a trajectory planner model")
+        default_name = f"Werling imitation ({config_name})" if planner_kind else f"{req.teacher} surrogate ({vehicle_name})"
         if any(h < 2 or h > 512 for h in req.hidden):
             raise HTTPException(status_code=422, detail="hidden layer sizes must be within 2..512")
         with train_lock:
@@ -586,7 +613,7 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             job_id = models.new_id()
             train_jobs[job_id] = {"id": job_id, "state": "queued", "phase": "", "progress": 0.0, "history": [],
                                   "model_id": None, "error": None, "cancel": False, "created": time.time(),
-                                  "name": req.name or f"{req.teacher} surrogate ({vehicle_name})"}
+                                  "name": req.name or default_name}
             # keep the 20 most recent jobs
             for old in sorted(train_jobs, key=lambda k: train_jobs[k]["created"])[:-20]:
                 if train_jobs[old]["state"] not in ("queued", "running"):
@@ -595,7 +622,9 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         def progress(phase, frac, info):
             with train_lock:
                 job = train_jobs[job_id]
-                job.update(phase=phase, progress=0.1 * frac if phase == "sampling" else 0.1 + 0.9 * frac)
+                share = 0.7 if planner_kind else 0.1          # collecting demonstrations takes most of the time
+                job.update(phase=phase, progress=share * frac if phase == "sampling" else
+                           min(share + (0.95 - share) * frac, 0.95) if phase == "training" else 0.97)
                 if "epoch" in info:
                     job["history"].append({"epoch": info["epoch"], "train": info["train"], "val": info["val"]})
 
@@ -603,10 +632,15 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             with train_lock:
                 train_jobs[job_id]["state"] = "running"
             try:
-                net, meta = train_surrogate(vehicle_name, req.teacher, req.n_samples, tuple(req.hidden), req.epochs,
-                                            req.learning_rate, seed=req.seed, progress=progress,
-                                            should_stop=lambda: train_jobs[job_id]["cancel"])
-                meta["name"] = req.name or f"{req.teacher} surrogate ({vehicle_name})"
+                stop = lambda: train_jobs[job_id]["cancel"]  # noqa: E731
+                if planner_kind:
+                    net, meta = train_planner(vehicle_name, config_name, req.n_samples, tuple(req.hidden), req.epochs,
+                                              req.learning_rate, seed=req.seed, progress=progress, should_stop=stop)
+                else:
+                    net, meta = train_surrogate(vehicle_name, req.teacher, req.n_samples, tuple(req.hidden),
+                                                req.epochs, req.learning_rate, seed=req.seed, progress=progress,
+                                                should_stop=stop)
+                meta["name"] = req.name or default_name
                 saved = models.save(meta, net.to_bytes())
                 with train_lock:
                     cancelled = train_jobs[job_id]["cancel"]
@@ -683,6 +717,8 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
 
         try:
             meta = models.get(model_id)
+            if meta.get("kind", "vehicle_dynamics") != "vehicle_dynamics":
+                raise HTTPException(status_code=422, detail="use /models/{id}/drive for a trajectory planner model")
             name = models.activate(model_id)
         except KeyError:
             raise HTTPException(status_code=404, detail="unknown model") from None
@@ -694,6 +730,31 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                                             dict(req.maneuver_params), req.duration)
             except (TypeError, ValueError) as exc:
                 raise HTTPException(status_code=422, detail=str(exc)) from None
+
+    @app.post("/models/{model_id}/drive", tags=["learning"], dependencies=secured,
+              summary="One situation driven by the learned planner and by its teacher (closed loop, ideal tracking)")
+    def drive_model(model_id: str, req: DriveRequest):
+        from ..learning.trajectory import compare_closed_loop, sample_situation
+        from .workbench import _clean
+
+        backend = _planner_backend(model_id)
+        meta = models.get(model_id)
+        if req.situation is None:
+            data = sample_situation(np.random.default_rng(req.seed))
+        else:
+            s = req.situation
+            if s.stop_at is not None:
+                raise HTTPException(status_code=422, detail="stop lines are outside the scope of the learned planner")
+            data = {"road": [{"kind": r.kind, "length": r.length, "curvature": r.curvature} for r in s.road],
+                    "target_offset": s.target_offset, "target_speed": s.target_speed, "d_min": s.d_min, "d_max": s.d_max,
+                    "ego": {"x": s.ego.x, "y": s.ego.y, "psi": s.ego.psi, "vx": s.ego.vx, "ax": s.ego.ax},
+                    "obstacles": [{"id": o.id, "x": o.x, "y": o.y, "psi": o.psi, "v": o.v, "length": o.length,
+                                   "width": o.width} for o in s.obstacles]}
+        with limiter.slot():
+            out = compare_closed_loop(backend, data, meta.get("vehicle", "mid_size_sedan"),
+                                      meta.get("planner_config", "default"), req.cycles)
+        out["situation"] = data
+        return _clean(out)
 
     # ------------------------------------------------------------------------- parking
     @app.post("/park", tags=["planning"], dependencies=secured,
@@ -758,7 +819,10 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         return result
 
     # ------------------------------------------------------------------------- development environment
+    from .control import create_router as _control_router
     from .workbench import create_router as _workbench_router
+
+    app.include_router(_control_router(secured, limiter, catalog["presets"], max_wall_time))
 
     app.include_router(_workbench_router(secured, limiter, max_sim_time, max_wall_time))
 

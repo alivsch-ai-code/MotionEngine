@@ -25,7 +25,7 @@ const SCREENS = process.argv.includes("--screens");
 const OUT = new URL("./output/", import.meta.url).pathname;
 if (SCREENS) mkdirSync(OUT, { recursive: true });
 
-const PAGES = ["/", "/app", "/app/assistant", "/app/simulate", "/app/trajectory", "/app/inspector", "/app/parking", "/app/workbench", "/app/research", "/app/architecture", "/app/matlab", "/app/knowledge", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
+const PAGES = ["/", "/app", "/app/assistant", "/app/learn", "/app/simulate", "/app/trajectory", "/app/inspector", "/app/control", "/app/parking", "/app/workbench", "/app/research", "/app/architecture", "/app/matlab", "/app/knowledge", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
 // raw i18n keys look like "simulate.title" or "app:models.x": letters, dots, no spaces
 const RAW_KEY = /(^|\s)(common|app|domain|inspector|landing):[a-z]|(^|\s)[a-z]+(\.[a-zA-Z_]+){2,}(\s|$)/;
 const failures = [];
@@ -132,6 +132,36 @@ await page.getByText(/Run comparison and report/).waitFor({ timeout: 60000 });
 if ((await page.getByText(/Editor path/).count()) === 0) failures.push("editor run: not listed in the run comparison");
 await checkText(page, "editor run");
 await page.getByRole("button", { name: "Remove", exact: true }).click();
+
+// trajectory planner model: train on a few demonstrations, then drive against the teacher
+t0 = Date.now();
+await page.goto(BASE + "/app/models", { waitUntil: "networkidle" });
+await page.getByRole("tab", { name: "Train" }).click();
+await page.getByLabel("What to train").selectOption("trajectory_planner");
+await page.getByLabel("Demonstrations").fill("500");
+await page.getByText("Expert settings").click();
+await page.getByLabel("Epochs").fill("40");
+await page.getByRole("button", { name: "Start training" }).click();
+await page.getByText("Cycles solved by the network").first().waitFor({ timeout: 180000 });
+timings["workflow planner training"] = Date.now() - t0;
+await page.getByRole("button", { name: "Slower vehicle ahead" }).click();
+await page.getByText("Largest path difference").waitFor({ timeout: 60000 });
+await checkText(page, "planner model");
+
+// controller lab: compare the default controllers, control law with terms
+await page.goto(BASE + "/app/control", { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "Run comparison" }).first().click();
+await page.getByText("smallest error").waitFor({ timeout: 60000 });
+await page.locator(".katex").first().waitFor({ timeout: 20000 });
+await checkText(page, "controller lab");
+
+// lessons: the first one runs a real experiment and reveals its answer
+await page.goto(BASE + "/app/learn", { waitUntil: "networkidle" });
+const lesson = page.locator("article.lesson").first();
+await lesson.getByRole("button", { name: "Run the experiment" }).click();
+await lesson.getByRole("button", { name: "Show the answer" }).click({ timeout: 60000 });
+await lesson.getByText(/cuts the corner/).waitFor();
+await checkText(page, "lessons");
 
 // German workflow labels
 const de = await newPage("de", "dark");

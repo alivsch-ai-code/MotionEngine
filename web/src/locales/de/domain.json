@@ -1,4 +1,139 @@
 {
+ "adCriterion": {
+  "final_lane": "Auf der geforderten Spur enden",
+  "final_speed_max": "Endgeschwindigkeit unter der Grenze",
+  "min_progress": "Mindeststrecke gefahren",
+  "no_collision": "Keine Kollision",
+  "parked": "In der Lücke geparkt",
+  "reach_goal": "Ziel erreichen",
+  "stay_on_road": "Auf der Fahrbahn bleiben"
+ },
+ "adKpi": {
+  "candidates_mean": "Kandidaten je Zyklus",
+  "collision": "Kollision",
+  "consistency_max": "Konsistenzabweichung Max",
+  "consistency_mean": "Konsistenzabweichung Mittel",
+  "cost_mean": "Mittlere Trajektorienkosten",
+  "distance": "Zurückgelegte Strecke",
+  "duration": "Simulierte Dauer",
+  "fallback_share": "Anteil Fallback-Trajektorien",
+  "final_speed": "Endgeschwindigkeit",
+  "goal_reached": "Ziel erreicht",
+  "max_ax": "Max. Längsbeschleunigung",
+  "max_ay": "Max. Querbeschleunigung",
+  "max_drac": "Max. DRAC",
+  "max_e_n": "Max. Querfehler",
+  "max_e_t": "Max. Längsfehler",
+  "max_e_theta": "Max. Kurswinkelfehler",
+  "max_jerk": "Max. Ruck",
+  "mean_speed": "Mittlere Geschwindigkeit",
+  "min_ax": "Max. Verzögerung",
+  "min_distance": "Min. Abstand zu Objekten",
+  "min_pet": "Min. Post-Encroachment-Time",
+  "min_thw": "Min. Zeitlücke",
+  "min_ttc": "Min. Time-to-Collision",
+  "off_road": "Fahrbahn verlassen",
+  "plan_time_max": "Planungszeit Max",
+  "plan_time_mean": "Planungszeit Mittel",
+  "plan_time_p95": "Planungszeit p95",
+  "real_time_factor": "Echtzeitfaktor",
+  "reinit_count": "Reinitialisierungen",
+  "rms_e_n": "RMS Querfehler",
+  "rms_e_t": "RMS Längsfehler",
+  "rms_jerk_lat": "RMS Querruck",
+  "rms_jerk_long": "RMS Längsruck",
+  "rms_steer_rate": "RMS Lenkrate"
+ },
+ "adKpiGroup": {
+  "Komfort": "Komfort",
+  "Kosten": "Kosten",
+  "Laufzeit": "Laufzeit",
+  "Mission": "Mission",
+  "Planer": "Planer",
+  "Sicherheit": "Sicherheit",
+  "Tracking": "Tracking"
+ },
+ "adScenario": {
+  "ausscherer_stauende": "Das Vorderfahrzeug schert kurz vor einem stehenden Fahrzeug aus; das Ego muss reagieren.",
+  "autobahn_ausfahrt": "Ego startet auf der linken Spur, wechselt rechtzeitig zweimal nach rechts und verlässt die Autobahn über den Verzögerungsstreifen.",
+  "autobahn_ueberholen": "Dreispurige Autobahn: langsameres Fahrzeug auf der rechten Spur wird links überholt, danach Rückkehr nach rechts (Rechtsfahrgebot).",
+  "einfaedeln_lkw": "Autobahnauffahrt nach Werling 5.3.2: Einfädeln vom Beschleunigungsstreifen in die Lücke zwischen zwei Lkw.",
+  "einscherer": "Ein langsameres Fahrzeug schert 22 m vor dem Ego von links ein.",
+  "innerorts_werling": "Innerortsstraße nach Werling 5.3.1 mit 30 km/h: parkende Autos, zwei Fußgänger treten spät sichtbar zwischen parkenden Autos auf die Fahrbahn, Linksabbieger-Fehler des Gegenverkehrs an der Einmündung, zwei Radfahrer am Fahrbahnrand.",
+  "kreisverkehr": "Einspuriger Kreisverkehr: Einfahrt von Westen mit Wartepflicht gegenüber dem Ringverkehr, Ausfahrt nach Osten.",
+  "kreuzung_ampel_geradeaus": "Ampelkreuzung: Ego nähert sich bei Rot, hält an der Haltelinie, fährt bei Grün geradeaus; Querverkehr fährt während der Rotphase des Ego.",
+  "kreuzung_vorfahrt_links": "Kreuzung mit Vorfahrtregelung: Ego kommt aus der untergeordneten Straße, gewährt dem Querverkehr Vorfahrt und biegt links ab.",
+  "laengsparken_rueckwaerts": "Rückwärts-Längsparken in eine 8,5 m lange Lücke: vorwärts neben die Lücke, Halt, Richtungswechsel im Stand, rückwärts bis zur Lückenmitte.",
+  "landstrasse_ueberholen": "Landstraße mit langsamem Lkw und Gegenverkehr: Überholen über die Gegenfahrbahn nur bei ausreichender Lücke; Überholverbot im Abschnitt mit durchgezogener Mittellinie.",
+  "notausweichen_hindernis": "Liegengebliebenes Fahrzeug wird erst 60 m vorher sichtbar; Ausweichen auf die freie linke Spur.",
+  "verkehrsdichte_20": "Dreispurige Ringstraße mit 20 Fz/km/Spur, IDM-Längsverhalten und MOBIL-Spurwechseln, 10 % Lkw.",
+  "werling_autobahnversuch": "Autobahnversuch nach Werling 5.3.2: Einfädeln zwischen Lkw, verzögerter Spurwechsel wegen schnell herannahendem Pkw, ausscherender Lkw und Seitenwindböe (lateral_impulse) bei t = 38,5 s."
+ },
+ "adScenarioLabel": {
+  "ausscherer_stauende": "Ausscherer",
+  "autobahn_ausfahrt": "Autobahnausfahrt",
+  "autobahn_ueberholen": "Autobahnfahrt",
+  "einfaedeln_lkw": "Autobahnauffahrt",
+  "einscherer": "Einscherer",
+  "innerorts_werling": "Innerortsfahrt",
+  "kreisverkehr": "Kreisverkehr",
+  "kreuzung_ampel_geradeaus": "Kreuzung",
+  "kreuzung_vorfahrt_links": "Kreuzung",
+  "laengsparken_rueckwaerts": "Längsparken rückwärts",
+  "landstrasse_ueberholen": "Überholen auf der Landstraße",
+  "notausweichen_hindernis": "Notausweichen",
+  "verkehrsdichte_20": "Verkehrsdichte",
+  "werling_autobahnversuch": "Werling-Autobahnversuch"
+ },
+ "component": {
+  "actuator": {
+   "steering_powertrain": "Lenkaktor und Antrieb/Bremse"
+  },
+  "behavior_planner": {
+   "rule_based": "Regelbasierte Verhaltensplanung"
+  },
+  "perception": {
+   "ground_truth": "Ground Truth (ungestört)",
+   "object_sensor": "Objektsensor (Reichweite, Rauschen, Latenz)"
+  },
+  "predictor": {
+   "constant_acceleration": "Konstante Beschleunigung (Frenet, Werling 3.5.2)",
+   "constant_velocity": "Konstante Geschwindigkeit (kartesisch)",
+   "lane_following": "Spurfolge mit Querabsicht"
+  },
+  "tracking_controller": {
+   "acc": "Abstandsregeltempomat (ACC)",
+   "composite": "Kombination Quer- + Längsregler",
+   "ff_fb": "Vorsteuerung + Rückführung (längs)",
+   "lqr": "LQR (geschwindigkeitsgeplant)",
+   "mpc": "MPC (linear zeitvariant)",
+   "pi": "PI-Geschwindigkeitsregler",
+   "pid": "PID-Geschwindigkeitsregler",
+   "pure_pursuit": "Pure Pursuit",
+   "speed_pi": "Fahrzeug-Geschwindigkeitsregler (PI mit Anti-Windup)",
+   "stanley": "Stanley",
+   "werling_bilevel": "Werling: Bi-level-Stabilisierung (Umschaltung + Reinitialisierung)",
+   "werling_dynamic": "Werling: exakte E/A-Linearisierung (Satz 8)",
+   "werling_kinematic_center": "Werling: Lyapunov ohne Orientierungsstabilisierung (Satz 6)",
+   "werling_kinematic_orientation": "Werling: Lyapunov mit Orientierungsstabilisierung (Satz 4)"
+  },
+  "trajectory_planner": {
+   "frenet_naive": "Frenet-Planer (naiv, ohne Konsistenz)",
+   "learned": "Trajektorienplaner (gelernt, mit Werling-Prüfung)",
+   "sequential": "Sequentieller Planer (erst längs, dann quer)",
+   "werling": "Trajektorienplaner (Werling)",
+   "werling_parking": "Trajektorienplaner (Werling + Parkplaner)"
+  },
+  "vehicle_dynamics": {
+   "split_range": "Split-Range-Längskraftumsetzung (Werling 5.1.2.2)"
+  },
+  "vehicle_plant": {
+   "vehicle_model": "Fahrzeugmodell (vdsim)"
+  },
+  "world": {
+   "scenario_engine": "Szenario-Engine"
+  }
+ },
  "kpi": {
   "aeb_trigger_ttc": "AEB-Auslösung bei TTC",
   "ay_gain": "Stationäre Querbeschleunigungsverstärkung",

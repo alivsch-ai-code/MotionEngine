@@ -1,4 +1,139 @@
 {
+ "adCriterion": {
+  "final_lane": "End on the required lane",
+  "final_speed_max": "Final speed below the limit",
+  "min_progress": "Minimum distance driven",
+  "no_collision": "No collision",
+  "parked": "Parked in the spot",
+  "reach_goal": "Reach the goal",
+  "stay_on_road": "Stay on the road"
+ },
+ "adKpi": {
+  "candidates_mean": "Candidates per cycle",
+  "collision": "Collision",
+  "consistency_max": "Consistency deviation, max",
+  "consistency_mean": "Consistency deviation, mean",
+  "cost_mean": "Mean trajectory cost",
+  "distance": "Distance driven",
+  "duration": "Simulated time",
+  "fallback_share": "Share of fallback trajectories",
+  "final_speed": "Final speed",
+  "goal_reached": "Goal reached",
+  "max_ax": "Max. longitudinal acceleration",
+  "max_ay": "Max. lateral acceleration",
+  "max_drac": "Max. DRAC",
+  "max_e_n": "Max. lateral error",
+  "max_e_t": "Max. longitudinal error",
+  "max_e_theta": "Max. heading error",
+  "max_jerk": "Max. jerk",
+  "mean_speed": "Mean speed",
+  "min_ax": "Max. deceleration",
+  "min_distance": "Min. distance to objects",
+  "min_pet": "Min. post-encroachment time",
+  "min_thw": "Min. time headway",
+  "min_ttc": "Min. time to collision",
+  "off_road": "Left the road",
+  "plan_time_max": "Planning time, max",
+  "plan_time_mean": "Planning time, mean",
+  "plan_time_p95": "Planning time, p95",
+  "real_time_factor": "Real-time factor",
+  "reinit_count": "Re-initializations",
+  "rms_e_n": "RMS lateral error",
+  "rms_e_t": "RMS longitudinal error",
+  "rms_jerk_lat": "RMS lateral jerk",
+  "rms_jerk_long": "RMS longitudinal jerk",
+  "rms_steer_rate": "RMS steering rate"
+ },
+ "adKpiGroup": {
+  "Komfort": "Comfort",
+  "Kosten": "Cost",
+  "Laufzeit": "Runtime",
+  "Mission": "Mission",
+  "Planer": "Planner",
+  "Sicherheit": "Safety",
+  "Tracking": "Tracking"
+ },
+ "adScenario": {
+  "ausscherer_stauende": "The vehicle ahead pulls out shortly before a standing vehicle; the ego has to react.",
+  "autobahn_ausfahrt": "The ego starts on the left lane, changes two lanes to the right in time and leaves the highway over the deceleration lane.",
+  "autobahn_ueberholen": "Three-lane highway: a slower vehicle on the right lane is overtaken on the left, then the ego returns to the right lane (keep-right rule).",
+  "einfaedeln_lkw": "Highway entry after Werling 5.3.2: merging from the acceleration lane into the gap between two trucks.",
+  "einscherer": "A slower vehicle cuts in from the left 22 m ahead of the ego.",
+  "innerorts_werling": "Urban road after Werling 5.3.1 at 30 km/h: parked cars, two pedestrians step onto the road from between parked cars and are visible late, an oncoming vehicle turns left wrongly at the junction, two cyclists at the roadside.",
+  "kreisverkehr": "Single-lane roundabout: entry from the west, yielding to the traffic in the ring, exit to the east.",
+  "kreuzung_ampel_geradeaus": "The ego approaches at red, stops at the stop line and drives straight on at green; cross traffic drives during the ego's red phase.",
+  "kreuzung_vorfahrt_links": "The ego comes from the minor road, yields to the cross traffic and turns left.",
+  "laengsparken_rueckwaerts": "Reverse parallel parking into an 8.5 m gap: forward beside the gap, stop, change of direction at standstill, reverse to the middle of the gap.",
+  "landstrasse_ueberholen": "Country road with a slow truck and oncoming traffic: overtaking over the oncoming lane only with a sufficient gap; no overtaking in the section with a solid center line.",
+  "notausweichen_hindernis": "A broken-down vehicle becomes visible only 60 m ahead; evasion onto the free left lane.",
+  "verkehrsdichte_20": "Three-lane ring road with 20 vehicles per km and lane, IDM car following and MOBIL lane changes, 10 % trucks.",
+  "werling_autobahnversuch": "Highway experiment after Werling 5.3.2: merging between trucks, a delayed lane change because of a fast approaching car, a truck pulling out and a side-wind gust (lateral_impulse) at t = 38.5 s."
+ },
+ "adScenarioLabel": {
+  "ausscherer_stauende": "Cut-out at the end of a queue",
+  "autobahn_ausfahrt": "Highway exit",
+  "autobahn_ueberholen": "Highway overtaking",
+  "einfaedeln_lkw": "Highway entry",
+  "einscherer": "Cut-in",
+  "innerorts_werling": "Urban drive",
+  "kreisverkehr": "Roundabout",
+  "kreuzung_ampel_geradeaus": "Intersection with traffic light",
+  "kreuzung_vorfahrt_links": "Intersection with right of way",
+  "laengsparken_rueckwaerts": "Reverse parallel parking",
+  "landstrasse_ueberholen": "Overtaking on a country road",
+  "notausweichen_hindernis": "Emergency evasion",
+  "verkehrsdichte_20": "Traffic density",
+  "werling_autobahnversuch": "Werling highway experiment"
+ },
+ "component": {
+  "actuator": {
+   "steering_powertrain": "Steering actuator and drive/brake"
+  },
+  "behavior_planner": {
+   "rule_based": "Rule-based behavior planning"
+  },
+  "perception": {
+   "ground_truth": "Ground truth (undisturbed)",
+   "object_sensor": "Object sensor (range, noise, latency)"
+  },
+  "predictor": {
+   "constant_acceleration": "Constant acceleration (Frenet, Werling 3.5.2)",
+   "constant_velocity": "Constant velocity (Cartesian)",
+   "lane_following": "Lane following with lateral intention"
+  },
+  "tracking_controller": {
+   "acc": "Adaptive cruise control (ACC)",
+   "composite": "Combination of a lateral and a longitudinal controller",
+   "ff_fb": "Feedforward + feedback (longitudinal)",
+   "lqr": "LQR (gain scheduled over speed)",
+   "mpc": "MPC (linear time-varying)",
+   "pi": "PI speed controller",
+   "pid": "PID speed controller",
+   "pure_pursuit": "Pure Pursuit",
+   "speed_pi": "Vehicle speed controller (PI with anti-windup)",
+   "stanley": "Stanley",
+   "werling_bilevel": "Werling: bi-level stabilization (switching + re-initialization)",
+   "werling_dynamic": "Werling: exact input-output linearization (theorem 8)",
+   "werling_kinematic_center": "Werling: Lyapunov without orientation stabilization (theorem 6)",
+   "werling_kinematic_orientation": "Werling: Lyapunov with orientation stabilization (theorem 4)"
+  },
+  "trajectory_planner": {
+   "frenet_naive": "Frenet planner (naive, without consistency)",
+   "learned": "Trajectory planner (learned, verified by Werling)",
+   "sequential": "Sequential planner (longitudinal first, then lateral)",
+   "werling": "Trajectory planner (Werling)",
+   "werling_parking": "Trajectory planner (Werling + parking planner)"
+  },
+  "vehicle_dynamics": {
+   "split_range": "Split-range longitudinal force allocation (Werling 5.1.2.2)"
+  },
+  "vehicle_plant": {
+   "vehicle_model": "Vehicle model (vdsim)"
+  },
+  "world": {
+   "scenario_engine": "Scenario engine"
+  }
+ },
  "kpi": {
   "aeb_trigger_ttc": "AEB triggered at TTC",
   "ay_gain": "Steady-state lateral acceleration gain",

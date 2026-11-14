@@ -120,9 +120,10 @@
   },
   "models": {
     "title": "Neural models",
-    "subtitle": "Train a neural surrogate of the vehicle dynamics on data from a physics model, or connect your own model. Every model can drive a simulation.",
+    "subtitle": "Train a neural surrogate of the vehicle dynamics or a network that proposes the planned trajectory, or connect your own model. Every model is compared with its teacher before you use it.",
     "tabs": { "models": "Models", "train": "Train", "connect": "Connect external model" },
-    "table": { "name": "Name", "backend": "Backend", "teacher": "Physics teacher", "params": "Parameters", "created": "Created" },
+    "table": { "name": "Name", "kind": "Type", "backend": "Backend", "teacher": "Teacher", "quality": "Quality", "acceptance": "{{v}} % by the network", "r2": "R² (yaw) {{v}}", "params": "Parameters", "created": "Created" },
+    "kinds": { "vehicle_dynamics": "Vehicle dynamics", "trajectory_planner": "Trajectory planner" },
     "backends": { "mlp": "MotionEngine MLP", "onnx": "ONNX", "http": "HTTP endpoint" },
     "neuralModel": "Neural model {{id}}",
     "useInSimulation": "Use in simulation",
@@ -146,6 +147,13 @@
       "neural": "Neural model"
     },
     "trainForm": {
+      "kind": "What to train",
+      "kindHint": {
+        "vehicle_dynamics": "A network that replaces the vehicle model in simulations.",
+        "trajectory_planner": "A network that proposes the trajectory of each planning cycle; the Werling planner verifies it."
+      },
+      "demonstrations": "Demonstrations",
+      "demonstrationsTip": "Planning cycles of the Werling planner in random situations (roads, speeds, lane offsets, objects). Collecting them takes most of the time: about 25 ms each.",
       "title": "Train a surrogate",
       "text": "The network learns the accelerations of a physics model from Monte Carlo samples of the driving envelope.",
       "teacher": "Physics teacher",
@@ -161,7 +169,8 @@
       "start": "Start training"
     },
     "jobStates": { "queued": "Queued", "running": "Training", "done": "Done", "failed": "Failed", "cancelled": "Cancelled" },
-    "phases": { "sampling": "generating data", "training": "optimizing" },
+    "phases": { "sampling": "generating data", "training": "optimizing", "evaluating": "comparing with the teacher" },
+    "howPlanner": { "text": "The network learns which trajectory the Werling planner selects: the end offset and end time of the lateral motion and the end speed and end time of the longitudinal motion. In every cycle the planner builds only the candidates next to this proposal and checks them with the same restrictions and collision check as always.", "validation": "After training, the guided planner and the Werling planner drive the same held-out situations. If no candidate next to the proposal is valid, or the best one lies on the border of the local set, the cycle uses the complete Werling search." },
     "how": {
       "title": "How the surrogate works",
       "text": "The planar kinematics stay exact; only the accelerations come from the network. The model is then a drop-in replacement of the vehicle model in every simulation.",
@@ -375,6 +384,19 @@
     "geometryInfo": "Turning radius of the reference point {{r}} m · reference point {{p}} m ahead of the rear axle · max. steering front {{f}}°, rear {{rr}}°"
   },
   "workbench": {
+    "conditions": {
+      "label": "Conditions",
+      "ideal": "Ideal (design model, perfect sensors)",
+      "realistic": "Realistic (double track, actuator dynamics, sensor noise, 0.1 s latency)",
+      "wet": "Wet road (realistic, friction 0.5)",
+      "harsh": "Ice and poor sensors (friction 0.3, 0.2 s latency)",
+      "hint": {
+        "ideal": "The plant is the controller's own design model and every measurement is exact. Good for understanding the algorithms; tracking is almost perfect.",
+        "realistic": "Double-track vehicle with load transfer and tire saturation; objects and the own position are measured with noise and arrive 0.1 s late.",
+        "wet": "As realistic, on a wet road. The planner does not know the friction: watch the lateral acceleration it asks for.",
+        "harsh": "Low friction and poor sensors. Expect missions to fail; that is the point of this preset."
+      }
+    },
     "rewired": "Rewired stack: {{n}} connections (see Architecture)",
     "load": {
       "button": "Load result…",
@@ -697,5 +719,261 @@
     "apply": "Drive this trajectory",
     "applyFriction": "Use only the friction map",
     "badFile": "The file contains no waypoints."
+  },
+  "plannerModel": {
+    "acceptance": "Cycles solved by the network",
+    "sameChoice": "Same trajectory as the teacher",
+    "costRatio": "Cost in closed loop vs. teacher",
+    "time": "Time per cycle",
+    "timeUnit": "ms (teacher {{teacher}} ms)",
+    "metricsText": "Measured on {{n}} held-out situations ({{cycles}} planning cycles): {{fallback}} % of the cycles needed the complete search, {{infeasible}} % had no valid trajectory at all; in {{within}} % of the first cycles the cost is within 5 % of the teacher.",
+    "safety": "Every trajectory is checked with the teacher's restrictions and collision check. Cycles without a valid trajectory: {{invalid}} (teacher alone: {{invalidTeacher}}). Collisions: {{collisions}} (teacher alone: {{collisionsTeacher}}).",
+    "targets": {
+      "lat_delta": "End offset δ",
+      "lat_tau": "Lateral end time",
+      "lon_nu": "End speed offset ν",
+      "lon_tau": "Longitudinal end time"
+    },
+    "drive": {
+      "title": "Drive against the teacher",
+      "text": "Both planners drive the same situation for 8 seconds with ideal tracking. The paths lie on top of each other when the network path finds the teacher's trajectory.",
+      "random": "Random situation",
+      "randomLabel": "Random situation {{seed}}",
+      "collision": "collision",
+      "noCollision": "no collision",
+      "network": "Cycles by the network",
+      "pathDiff": "Largest path difference",
+      "cost": "Cost vs. teacher",
+      "paths": "Paths of the learned planner and the teacher",
+      "teacher": "Werling planner",
+      "learned": "learned planner",
+      "objectsNote": "Objects are shown at their final position.",
+      "speed": "Speed",
+      "source": "Cycle solved by the network (1) or the complete search (0)",
+      "networkCycle": "network"
+    },
+    "presets": {
+      "overtake": "Slower vehicle ahead",
+      "laneChange": "Lane change",
+      "curve": "Curve",
+      "slowTraffic": "Slow traffic, one lane"
+    },
+    "stackHint": "In the automated-driving stack the model is the planner component “learned” with the parameter “model” set to this id.",
+    "useInWorkbench": "Use in the Workbench"
+  },
+  "control": {
+    "actuator": "Steering actuator", "actuatorHint": "Realistic: 30 ms dead time, 50 ms lag and at most 0.6 rad/s at the wheels; drive and brake with a lag.", "actuators": {"ideal": "Ideal (follows the command at once)", "realistic": "Realistic (dead time, lag, rate limit)"},
+    "title": "Controller lab",
+    "subtitle": "Run several tracking controllers on the same path and vehicle, compare how well they follow it, and see how each term of a control law contributes at any moment.",
+    "setup": "Experiment",
+    "controllers": "Controllers",
+    "params": "Parameters",
+    "paramsChanged": "{{n}} changed",
+    "path": "Reference path",
+    "speed": "Speed",
+    "speedHint": "{{kmh}} km/h, constant along the path",
+    "names": {
+      "pure_pursuit": "Pure Pursuit",
+      "stanley": "Stanley",
+      "lqr": "LQR (gain scheduled)",
+      "mpc": "MPC (linear time-varying)",
+      "werling_bilevel": "Werling (exact linearization)"
+    },
+    "paths": {"lane_change": "Lane change", "double_lane_change": "Double lane change", "curve_entry": "Curve entry", "s_curve": "S-curve", "slalom": "Slalom", "straight": "Straight"},
+    "pathsPlot": "Reference path and driven paths",
+    "pathHints": {
+      "lane_change": "3.5 m to the left over 50 m.",
+      "double_lane_change": "To the left and back, 40 m each.",
+      "curve_entry": "Straight, then a 60 m radius with a 20 m transition.",
+      "s_curve": "Left then right, 80 m radius.",
+      "slalom": "±1.5 m with a 60 m wavelength.",
+      "straight": "Use it with a start offset or a side force to see the pure reaction of the loop."
+    },
+    "conditions": "Conditions and disturbances",
+    "plant": "Vehicle model",
+    "plantTip": "The model the controller drives. The design model is the simplest; the double-track and multibody models add load transfer, tire saturation and roll.",
+    "plants": {
+      "werling_desm": "Single track, design model",
+      "bicycle_nonlinear": "Single track, nonlinear tires",
+      "double_track": "Double track",
+      "multibody": "Multibody"
+    },
+    "mu": "Friction coefficient",
+    "muHint": "1.0 dry, about 0.5 wet, 0.2 ice",
+    "offset": "Start beside the path",
+    "offsetHint": "Positive: to the left of the path",
+    "gust": "Side force",
+    "gustTime": "at time",
+    "gustHint": "A lateral force at the center of gravity for 0.5 s, like a wind gust. 3000 N is a strong gust for a sedan.",
+    "run": "Run comparison",
+    "empty": {
+      "title": "Compare controllers",
+      "text": "Pick controllers and a path. The lab drives each controller through the same maneuver and shows errors, steering and the control law."
+    },
+    "result": {
+      "title": "Comparison",
+      "text": "Vehicle model: {{plant}} · friction {{mu}} · {{speed}} km/h. Click a row to see its control law below."
+    },
+    "kpi": {
+      "max_e_n": "Largest lateral error",
+      "rms_e_n": "RMS lateral error",
+      "settled": "Settled after",
+      "steer": "Largest steering angle",
+      "steerRate": "Largest steering rate",
+      "ay": "Largest lateral acceleration",
+      "time": "Compute time per step",
+      "note": "Settled: the lateral error stays below 5 cm from this time on."
+    },
+    "notSettled": "not settled",
+    "unstable": "unstable",
+    "best": "smallest error",
+    "series": {
+      "e_n": "Lateral error",
+      "delta": "Steering angle at the wheels",
+      "e_theta": "Heading error",
+      "ay": "Lateral acceleration"
+    },
+    "law": {
+      "title": "Control law",
+      "text": "The formula of the selected controller and the value of each term at the time of the slider.",
+      "state": "State and output",
+      "speed": "Speed",
+      "command": "Commanded steering angle",
+      "actual": "Actual steering angle (after the actuator)",
+      "term": "Term",
+      "noTerms": "This controller reports no separate terms.",
+      "library": "Documentation from the library"
+    },
+    "explain": {
+      "pure_pursuit": "Pure Pursuit steers along a circle from the rear axle to a point on the path that lies the look-ahead distance L_d ahead. A long look-ahead is smooth but cuts corners; a short one follows closely but oscillates.",
+      "stanley": "Stanley looks at the front axle. It aligns the wheels with the path (heading term), steers toward the path in proportion to the lateral error and inversely to the speed (feedback), adds the steering angle the curvature needs (feedforward) and damps the yaw rate.",
+      "lqr": "The LQR uses the linear single-track model in error coordinates. The gain K minimizes a weighted sum of errors and steering effort and is recomputed for each speed; the feedforward holds the vehicle on a curve without error.",
+      "mpc": "The MPC plans the steering rate over a horizon by solving an optimization with the error model and limits on angle and rate, applies the first part of the plan and plans again.",
+      "werling_bilevel": "The Werling controller inverts the nonlinear single-track model so that the lateral error follows a chosen linear second-order equation. At low speed it switches to a kinematic law; a large deviation triggers a re-initialization of the planner."
+    }
+  },
+  "learn": {
+    "title": "Learn",
+    "subtitle": "Nine short lessons on trajectory tracking and planning. Each one asks a question, runs a real experiment with the library's controllers and planner, and shows the numbers that answer it.",
+    "progress": "{{done}} of {{n}} lessons done",
+    "note": "Every experiment is computed when you start it; nothing is pre-recorded.",
+    "topics": {
+      "control": "Control: following a path",
+      "planning": "Planning: choosing a trajectory",
+      "system": "The whole system"
+    },
+    "done": "done",
+    "experiment": "The experiment",
+    "watch": "What to look at",
+    "run": "Run the experiment",
+    "takes": "Runs of the complete stack take 10 to 40 seconds.",
+    "open": {
+      "control": "Continue in the Controller lab",
+      "experiment": "Continue in Research",
+      "runs": "Continue in the Workbench"
+    },
+    "variant": "Variant",
+    "failed": "failed",
+    "yes": "yes",
+    "no": "no",
+    "lost": "leaves the path", "showAnswer": "Show the answer",
+    "kpis": {
+      "max_e_n": "Largest lateral error",
+      "rms_e_n": "RMS lateral error",
+      "steer_rate": "Largest steering rate",
+      "max_ay": "Largest lateral acceleration",
+      "max_jerk": "Largest jerk",
+      "rms_jerk_lat": "Lateral jerk (RMS)",
+      "mean_speed": "Mean speed",
+      "min_distance": "Smallest distance to objects",
+      "mission_passed": "Mission passed"
+    },
+    "labels": {
+      "on": "feedforward on",
+      "off": "feedforward off",
+      "werling_desm": "design model",
+      "double_track": "double-track model",
+      "ideal": "ideal actuator",
+      "realistic": "realistic actuator",
+      "k_lat=0.05": "jerk weight 0.05",
+      "k_lat=1": "jerk weight 1",
+      "k_lat=20": "jerk weight 20",
+      "k_lat=1.0": "jerk weight 1",
+      "k_lat=20.0": "jerk weight 20"
+    },
+    "lessons": {
+      "lookahead": {
+        "title": "1 · The look-ahead distance of Pure Pursuit",
+        "goal": "Understand the one parameter that decides how Pure Pursuit behaves.",
+        "experiment": "Pure Pursuit drives an S-curve at 54 km/h with three look-ahead gains: the look-ahead distance is 0.4, 0.8 or 1.5 seconds of travel.",
+        "watch": "The largest lateral error and the steering rate. Compare the three error curves in the chart.",
+        "question": "Why does the long look-ahead give the largest error although it steers most calmly?",
+        "answer": "With a long look-ahead the target point lies far ahead on the path, so the vehicle aims at where the path will be and cuts the corner. A short look-ahead follows closely; at higher speed or with delays it starts to oscillate. The look-ahead trades accuracy against calm steering."
+      },
+      "feedforward": {
+        "title": "2 · Feedback alone or with feedforward",
+        "goal": "See what the curvature feedforward contributes to a controller.",
+        "experiment": "Stanley enters a curve with a 60 m radius at 54 km/h, once with and once without the curvature feedforward.",
+        "watch": "The lateral error at the end, inside the steady curve.",
+        "question": "Why does an error remain in the curve, and why is it larger without the feedforward?",
+        "answer": "A curve needs a constant steering angle. Without feedforward only the feedback can produce it, and a proportional feedback gives an output only when there is an error. The feedforward supplies the angle the curvature needs, so the feedback only has to correct what is left."
+      },
+      "disturbance": {
+        "title": "3 · A gust of side wind",
+        "goal": "Compare how fast controllers reject a disturbance.",
+        "experiment": "Four controllers drive straight at 90 km/h. After 2 s a side force of 4000 N pushes the vehicle for half a second.",
+        "watch": "The largest lateral error and the steering rate each controller uses.",
+        "question": "Two controllers stay within 7 cm, two drift 20 cm. What do the two better ones do differently?",
+        "answer": "Stanley and LQR react with a high gain on the lateral error and steer quickly (4 to 5 °/s). Pure Pursuit only looks at a far point and the Werling law is tuned for a smooth, slower return, so both steer gently (0.5 °/s) and drift further. Fast rejection costs steering activity."
+      },
+      "model": {
+        "title": "4 · The controller meets a more realistic vehicle",
+        "goal": "See what happens when the vehicle differs from the model the controller was designed with.",
+        "experiment": "LQR and the Werling controller drive a double lane change at 90 km/h, first on the simple design model, then on the double-track model with load transfer and tire saturation.",
+        "watch": "How much the largest lateral error of each controller grows on the double-track model.",
+        "question": "Why does the Werling controller lose more accuracy than the LQR?",
+        "answer": "The Werling controller inverts its design model exactly, so on that model it is nearly perfect (5 cm). Every difference between model and vehicle becomes a tracking error (20 cm on the double-track model). The LQR relies on feedback more than on an exact model, so it changes less. Model-based precision is only as good as the model."
+      },
+      "actuator": {
+        "title": "5 · A steering actuator is not instant",
+        "goal": "See the effect of dead time, lag and a rate limit in the steering.",
+        "experiment": "Stanley and LQR drive a double lane change at 90 km/h, once with an ideal actuator and once with 30 ms dead time, 50 ms lag and a rate limit.",
+        "watch": "The largest lateral error and whether the error curve starts to oscillate.",
+        "question": "Why does a delay in the loop make a controller with high gain oscillate?",
+        "answer": "With a delay the controller sees the effect of its steering late and keeps correcting in the same direction for too long. The higher the gain, the larger the overshoot. Here the maneuver is also near the limit of the tires (8.5 m/s²), so Stanley's error grows fourfold and the LQR leaves the path completely. Controllers that work well with an ideal actuator need lower gains or a model of the delay on a real vehicle."
+      },
+      "friction": {
+        "title": "6 · The limit of the tires",
+        "goal": "See that no controller can follow a path the tires cannot hold.",
+        "experiment": "The Werling controller enters a 60 m curve at 65 km/h on the double-track model, on a dry (1.0), wet (0.5) and icy (0.3) road.",
+        "watch": "The lateral acceleration the curve needs (about 5.4 m/s²) against what the road allows (friction × 9.81 m/s²).",
+        "question": "On the wet road the error is meters, not centimeters. Is the controller wrong?",
+        "answer": "No. The curve needs 5.4 m/s² and a wet road gives at most about 4.9 m/s². The vehicle slides whatever the controller does. The planner has to choose a speed the friction allows: v² / R must stay below μ·g. This is why planning and control cannot be designed separately."
+      },
+      "jerk": {
+        "title": "7 · The jerk weight shapes the trajectory",
+        "goal": "See how one cost weight changes what the planner selects.",
+        "experiment": "The complete stack overtakes on the highway three times; the weight of the lateral jerk in the cost function is 0.05, 1 and 20.",
+        "watch": "The largest lateral acceleration and the lateral jerk.",
+        "question": "The low weight changes lanes with 3.9 m/s², the high one with 0.7 m/s². What does the planner trade?",
+        "answer": "The cost of a candidate is the jerk integral plus the duration plus the end deviation. With a small jerk weight the time term dominates and the planner selects a short, sharp lane change. With a large one it selects a long, gentle one. All candidates are the same polynomials; the weights only decide which one is cheapest."
+      },
+      "stack": {
+        "title": "8 · Five controllers in the roundabout",
+        "goal": "Compare controllers inside the complete automated-driving stack.",
+        "experiment": "The stack drives through a roundabout five times. Only the tracking controller changes.",
+        "watch": "The largest lateral error, the jerk and whether the mission is passed.",
+        "question": "The LQR was good on the lane change but fails here. Why?",
+        "answer": "The roundabout is slow and tightly curved. The LQR is designed with the linear single-track model for small angles and higher speeds, and it has no special law for slow driving. The Werling stabilization switches to a kinematic law at low speed and the MPC plans with the limits, so both stay within 20 cm. A controller is only good in the range it was designed for."
+      },
+      "conditions": {
+        "title": "9 · From ideal to realistic",
+        "goal": "See how much of the performance comes from ideal conditions.",
+        "experiment": "The stack avoids an obstacle three times: with ideal conditions, with a realistic vehicle, actuators and sensors, and on a wet road.",
+        "watch": "The largest lateral error and the jerk.",
+        "question": "Under ideal conditions the error is below 1 cm. Where do the 20 cm under realistic conditions come from?",
+        "answer": "From everything the ideal run leaves out: the double-track vehicle differs from the design model, the steering needs time and has a rate limit, and the own position is measured with noise and 0.1 s late. Each effect is small; together they set the accuracy a real vehicle reaches. Always test an algorithm under realistic conditions before trusting its numbers."
+      }
+    }
   }
 }

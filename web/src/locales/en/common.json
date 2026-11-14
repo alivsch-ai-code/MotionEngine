@@ -36,7 +36,7 @@
     "assistant": "Assistant",
     "simulate": "Simulation",
     "inspector": "Trajectory inspector",
-    "parking": "Parking", "trajectory": "Trajectory editor", "workbench": "Workbench", "research": "Research", "architecture": "Architecture", "matlab": "MATLAB", "knowledge": "Knowledge",
+    "parking": "Parking", "learn": "Learn", "control": "Controller lab", "trajectory": "Trajectory editor", "workbench": "Workbench", "research": "Research", "architecture": "Architecture", "matlab": "MATLAB", "knowledge": "Knowledge",
     "predict": "Prediction",
     "vehicles": "Vehicles",
     "models": "Neural models",

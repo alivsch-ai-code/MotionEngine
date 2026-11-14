@@ -66,16 +66,18 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 | Page | What it does |
 |---|---|
 | **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
+| **Learn** | nine lessons on tracking control, planning and the whole system: a question, a real experiment, the numbers, the answer |
+| **Controller lab** | Pure Pursuit, Stanley, LQR, MPC and the Werling controller on the same path and vehicle; KPIs, signals and the control law with the value of every term at any moment; friction, actuator dynamics, side force |
 | **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view; run comparison (KPI table, overlaid paths and signals), PDF report, save and load runs |
 | **Trajectory editor** | draw a path through draggable waypoints with corner radii, limit the speed by lateral acceleration, add a friction map, then drive it in the simulation |
 | **Trajectory inspector** | one planning cycle in seven steps, each with formula, values, source and chart |
-| **Workbench** | run the complete automated-driving stack on one of 14 scenarios; choose the component and parameters of every layer; animated top view with candidates and selected trajectory of each planning cycle; cost terms, signals, KPIs, mission criteria, events and runtime per node; live mode with pause and single step; parameter dialog per component; download a result and load it again |
+| **Workbench** | run the complete automated-driving stack on one of 14 scenarios; choose the component and parameters of every layer; animated top view with candidates and selected trajectory of each planning cycle; cost terms, signals, KPIs, mission criteria, events and runtime per node; live mode with pause and single step; conditions from ideal to realistic (double-track vehicle, actuator dynamics, sensor noise and latency, friction); parameter dialog per component; download a result and load it again |
 | **Research** | compare components of a layer, sweep a parameter or run Monte Carlo, with a KPI table and chart |
 | **Architecture** | signal-flow graph of the stack with validation and the documentation of each component; remove and add connections, the Workbench runs the rewired stack |
 | **MATLAB** | analyze MATLAB functions and convert them to Python or C |
 | **Knowledge** | search the knowledge graph (components, concepts, classes, equations) and 85 literature references |
 | **Parking** | parallel, perpendicular or angled spots, forward or in reverse; front, rear-only or four-wheel steering; front, rear or all-wheel drive; animated maneuver with KPIs |
-| **Neural models** | train an MLP surrogate in the background, connect ONNX or HTTP models, compare them closed loop with the physics model, simulate with them |
+| **Neural models** | train an MLP surrogate of the vehicle dynamics or a network that proposes the planned trajectory (verified by the Werling planner); connect ONNX or HTTP models; compare every model with its teacher in closed loop; use it in simulations or in the stack |
 | **Prediction, Vehicles, Settings** | object prediction, every vehicle parameter with unit and meaning, API address and key |
 
 Every workflow runs with sensible defaults; advanced parameters sit behind *Expert settings*. The design system is
@@ -134,7 +136,7 @@ for kpi in evaluate(result):
 | **Control** | Stanley, Pure Pursuit, MPC, bi-level stabilization; ACC, AEB, lane keeping; ABS, TCS, ESP, torque vectoring, active suspension; actuator latency chains |
 | **Automated driving** | full stack from scenario to actuators, 14 AD scenarios with missions and success criteria (overtaking, merging, cut-in, intersections, roundabout, evasion, parking) |
 | **Analysis** | 22 ISO and ADAS test scenarios, automated KPI evaluation with ratings, PDF and Markdown reports, linear and quasi-static vehicle analysis, parameter sweeps |
-| **Machine learning** | MLP surrogates trained against a physics teacher, ONNX and HTTP model backends, closed-loop validation, neural models usable as vehicle models |
+| **Machine learning** | MLP surrogates trained against a physics teacher, ONNX and HTTP model backends, closed-loop validation, neural models usable as vehicle models; a learned trajectory planner that imitates the Werling planner and is verified by it ([method and results](docs/learning/trajectory_model.md)) |
 | **Interfaces** | chat assistant (natural language → simulations and plans), web app (EN/DE), PySide6 desktop workbench with live top view and 3D view, REST API, Python library, command line |
 
 ---
@@ -217,7 +219,8 @@ The planning module implements the Werling optimal trajectory generation approac
 <img src="docs/images/vehicle_dynamics.svg" alt="Vehicle Dynamics Models" width="85%">
 </div>
 
-Five fidelity levels, all validated against analytical solutions:
+Five fidelity levels, all validated against analytical solutions. The single-track model is also compared with
+46 hours of measurements from four production cars ([method and results](docs/validation/measured_data.md)):
 
 | Model | States | Capabilities |
 |---|---|---|

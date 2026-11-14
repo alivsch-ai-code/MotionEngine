@@ -49,3 +49,24 @@ export function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+// Conditions of a stack run: how close the plant and the sensors are to a real vehicle. A preset fills the
+// plant and perception layers unless the user configured them, and sets the friction coefficient.
+export const CONDITIONS = ["ideal", "realistic", "wet", "harsh"] as const;
+export type Conditions = (typeof CONDITIONS)[number];
+const SENSOR = { latency: 0.1, pos_sigma: 0.15, vel_sigma: 0.3, ego_pos_sigma: 0.05, ego_heading_sigma_deg: 0.2 };
+const ACTUATOR = { steering: { dead_time: 0.03, tau: 0.05, rate_limit: 0.6 }, drive_tau: 0.2, brake_tau: 0.1 };
+const PRESETS: Record<Conditions, { plant?: string; sensor?: Record<string, number>; friction?: number }> = {
+  ideal: {},
+  realistic: { plant: "double_track", sensor: SENSOR, friction: 1.0 },
+  wet: { plant: "double_track", sensor: SENSOR, friction: 0.5 },
+  harsh: { plant: "double_track", sensor: { latency: 0.2, pos_sigma: 0.3, vel_sigma: 0.5, ego_pos_sigma: 0.1, ego_heading_sigma_deg: 0.5 }, friction: 0.3 },
+};
+export function applyConditions(specs: Record<string, LayerSpec>, conditions: Conditions): { stack: Record<string, LayerSpec>; friction: number | null } {
+  const preset = PRESETS[conditions] ?? {};
+  const stack = { ...specs };
+  if (preset.plant && !stack.plant) stack.plant = { component: "vehicle_plant/vehicle_model", params: { model: preset.plant } };
+  if (preset.sensor && !stack.perception) stack.perception = { component: "perception/object_sensor", params: preset.sensor };
+  if (preset.plant && !stack.actuators) stack.actuators = { component: "actuator/steering_powertrain", params: ACTUATOR };
+  return { stack, friction: preset.friction ?? null };
+}

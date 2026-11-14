@@ -9,12 +9,13 @@ import { LogoMark, Wordmark } from "../components/Logo";
 import { PageSkeleton } from "../components/PageSkeleton";
 
 const NAV: { section: string; items: { to: string; key: string; icon: IconName; end?: boolean }[] }[] = [
-  { section: "nav.sections.overview", items: [{ to: "/app", key: "nav.dashboard", icon: "dashboard", end: true }] },
+  { section: "nav.sections.overview", items: [{ to: "/app", key: "nav.dashboard", icon: "dashboard", end: true }, { to: "/app/learn", key: "nav.learn", icon: "book" }] },
   { section: "nav.sections.work", items: [
     { to: "/app/assistant", key: "nav.assistant", icon: "chat" },
     { to: "/app/simulate", key: "nav.simulate", icon: "play" },
     { to: "/app/trajectory", key: "nav.trajectory", icon: "route" },
     { to: "/app/inspector", key: "nav.inspector", icon: "sigma" },
+    { to: "/app/control", key: "nav.control", icon: "settings" },
     { to: "/app/parking", key: "nav.parking", icon: "parking" },
     { to: "/app/predict", key: "nav.predict", icon: "radar" },
   ] },

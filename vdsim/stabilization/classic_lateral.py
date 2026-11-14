@@ -186,7 +186,7 @@ class PurePursuit(ClassicBase):
         tx, ty = point_along(traj, rproj["index"], rproj["w"], Ld)
         alpha = wrap(math.atan2(ty - ry, tx - rx) - ego.psi)
         delta = math.atan2(2.0 * l * math.sin(alpha), Ld)
-        return self.finish(t, delta, self.speed_loop(pt, e, speed), pt, e, speed, {"lookahead": Ld})
+        return self.finish(t, delta, self.speed_loop(pt, e, speed), pt, e, speed, {"lookahead": Ld, "alpha": alpha})
 
 
 # ----------------------------------------------------------------------------- Stanley
@@ -228,9 +228,12 @@ class Stanley(ClassicBase):
         if p.feedforward:
             eg = understeer_gradient(self.cfg)
             ff = math.atan(P.l * fproj["kappa"]) + eg * v * v * fproj["kappa"]
-        delta = heading + math.atan2(-p.gain * fproj["e_y"], p.softening + v) + ff \
-            - p.yaw_damping * (ego.r - v * fproj["kappa"])
-        return self.finish(t, delta, self.speed_loop(pt, e, speed), pt, e, speed, {"e_front": fproj["e_y"]})
+        feedback = math.atan2(-p.gain * fproj["e_y"], p.softening + v)
+        damping = -p.yaw_damping * (ego.r - v * fproj["kappa"])
+        delta = heading + feedback + ff + damping
+        return self.finish(t, delta, self.speed_loop(pt, e, speed), pt, e, speed,
+                           {"e_front": fproj["e_y"], "heading": heading, "feedback": feedback, "feedforward": ff,
+                            "damping": damping})
 
 
 # ----------------------------------------------------------------------------- LQR
@@ -309,8 +312,10 @@ class LQR(ClassicBase):
         K = self.gain(v)
         e2_ss = -P.lh * kap + P.lv * P.m * v * v * kap / (P.ch * P.l)
         ff = P.l * kap + self.eg * v * v * kap - K[2] * e2_ss
-        delta = -float(K @ np.array([e1, e1_dot, e2, e2_dot])) + ff
-        return self.finish(t, delta, self.speed_loop(pt, e, speed), pt, e, speed, {"K": K.tolist()})
+        x = np.array([e1, e1_dot, e2, e2_dot])
+        delta = -float(K @ x) + ff
+        return self.finish(t, delta, self.speed_loop(pt, e, speed), pt, e, speed,
+                           {"K": K.tolist(), "x": x.tolist(), "feedback": -float(K @ x), "feedforward": float(ff)})
 
 
 # ----------------------------------------------------------------------------- MPC

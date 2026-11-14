@@ -10,6 +10,7 @@ import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { RichText } from "../components/RichText";
 import { StackEditor } from "../components/StackEditor";
+import { componentLabel, libraryText } from "../lib/domain";
 import { useClient, useQuery } from "../lib/hooks";
 import type { Connection } from "../lib/api";
 import { stackSpecs, useConnections, useStack } from "../lib/stack";
@@ -17,7 +18,7 @@ import { stackSpecs, useConnections, useStack } from "../lib/stack";
 const W = 200, H = 86;
 
 export default function Architecture() {
-  const { t } = useTranslation(["app", "common"]);
+  const { t, i18n } = useTranslation(["app", "common", "domain"]);
   const client = useClient();
   const catalog = useQuery((s) => client.workbenchCatalog(s), [client]);
   const [stack, setStack] = useStack();
@@ -95,7 +96,7 @@ export default function Architecture() {
             ))}
           </svg>
         ) : <Skeleton height={420} />}
-        {graph.data?.issues.length ? <div className="alert alert--danger" role="alert"><div>{graph.data.issues.map((x, i) => <div key={i} className="mono">{x}</div>)}</div></div>
+        {graph.data?.issues.length ? <div className="alert alert--danger" role="alert"><div>{graph.data.issues.map((x, i) => <div key={i} className="mono">{libraryText(x, i18n.language)}</div>)}</div></div>
           : graph.data ? <p className="subtle">{t("architecture.valid", { nodes: graph.data.nodes.length, conns: graph.data.connections.length })}</p> : null}
       </div></div>
       <div className="card">
@@ -130,6 +131,7 @@ export default function Architecture() {
           <p className="subtle">{t("architecture.stackHint")}</p></div></div>
         <div className="card"><div className="card__body stack">
           {node ? <><h2>{t(`workbench.layers.${node.id}`, { defaultValue: node.id })} · <span className="mono">{node.component}</span></h2>
+            <p className="subtle">{componentLabel(t, node.component)}</p>
             <div className="row"><span className="badge badge--info">{t("architecture.inputs")}: {(graph.data?.ports[node.id]?.inputs ?? []).join(", ") || "–"}</span>
               <span className="badge badge--success">{t("architecture.outputs")}: {(graph.data?.ports[node.id]?.outputs ?? []).join(", ") || "–"}</span></div></> : null}
           {doc.loading ? <Skeleton height={120} /> : null}

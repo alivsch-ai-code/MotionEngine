@@ -231,6 +231,8 @@ class PlanRequest(_Strict):
                                          description="predicted with constant velocity/acceleration")
     cycles: int = Field(1, ge=1, le=300, description=">1: closed loop with ideal tracking")
     max_points: int = Field(200, ge=2, le=5000)
+    model: str | None = Field(None, description="id of a trained trajectory planner model: the network proposes, "
+                                                "the Werling planner verifies")
 
 
 class PlannedTrajectoryModel(BaseModel):
@@ -269,6 +271,9 @@ class RoadGeometry(BaseModel):
 
 
 class PlanResponse(BaseModel):
+    source: str = Field("teacher", description="first cycle: network (learned proposal accepted), teacher "
+                                               "(complete Werling search), out_of_scope or infeasible")
+    network_share: float | None = Field(None, description="share of the cycles solved by the network path")
     road: RoadGeometry | None = None
     trajectory: PlannedTrajectoryModel
     n_candidates: int
@@ -317,6 +322,10 @@ class ChatRequest(_Strict):
 
 # ----------------------------------------------------------------------------- neural models
 class TrainRequest(_Strict):
+    kind: Literal["vehicle_dynamics", "trajectory_planner"] = Field(
+        "vehicle_dynamics", description="vehicle_dynamics: surrogate of a physics model; trajectory_planner: "
+                                        "imitation of the Werling planner (proposal + verified local search)")
+    planner_config: str = Field("default", description="trajectory_planner: planner configuration of the teacher")
     vehicle: str = "mid_size_sedan"
     teacher: Literal["bicycle_nonlinear", "bicycle_linear"] = "bicycle_nonlinear"
     n_samples: int = Field(20000, ge=500, le=200000)
@@ -345,6 +354,13 @@ class ConnectRequest(_Strict):
     onnx_base64: str | None = Field(None, description="ONNX graph, base64 (max. 20 MB)")
     url: str | None = Field(None, description="HTTP endpoint: POST {inputs} -> {outputs}")
     vehicle: str = "mid_size_sedan"
+
+
+class DriveRequest(_Strict):
+    situation: PlanRequest | None = Field(None, description="road, ego, target speed, corridor and obstacles; "
+                                                            "omit to draw a random situation from `seed`")
+    seed: int = Field(0, ge=0, le=2**31 - 1)
+    cycles: int = Field(60, ge=1, le=200, description="planning cycles of 0.1 s")
 
 
 class EvaluateRequest(_Strict):

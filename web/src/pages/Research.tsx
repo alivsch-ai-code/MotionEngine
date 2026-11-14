@@ -8,6 +8,7 @@ import { NumberField, SelectField, TextField } from "../components/Field";
 import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import type { ExperimentRequest, ExperimentView } from "../lib/api";
+import { adScenarioLabel } from "../lib/domain";
 import { fmt } from "../lib/format";
 import { useClient, usePersistentState, useQuery } from "../lib/hooks";
 import { stackSpecs, useStack } from "../lib/stack";
@@ -72,7 +73,7 @@ export default function Research() {
             <SelectField label={t("research.kindLabel")} value={form.kind} onChange={(v) => set({ kind: v })} options={KINDS.map((k) => ({ value: k, label: t(`research.kind.${k}`) }))}
               hint={t(`research.kindHint.${form.kind}`)} />
             <SelectField label={t("workbench.scenario")} value={form.scenario} onChange={(v) => set({ scenario: v })}
-              options={(catalog.data?.scenarios ?? [{ name: form.scenario, label: form.scenario }]).map((s) => ({ value: s.name, label: s.label || s.name }))} />
+              options={(catalog.data?.scenarios ?? [{ name: form.scenario, label: form.scenario }]).map((s) => ({ value: s.name, label: adScenarioLabel(t, s) }))} />
             <NumberField label={t("workbench.duration")} unit="s" value={form.duration} min={1} max={120} onChange={(v) => set({ duration: v })} />
             {form.kind === "compare" ? (
               <>

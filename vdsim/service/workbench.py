@@ -65,6 +65,8 @@ class RunRequest(_Strict):
     name: str = Field("", max_length=80)
     connections: list[Connection] | None = Field(None, max_length=200,
                                                  description="rewired stack: replaces the default connections")
+    friction: float | None = Field(None, ge=0.05, le=1.5, description="tire-road friction coefficient of the plant")
+    wind_speed: float | None = Field(None, ge=-40.0, le=40.0, description="head wind, m/s")
 
 
 class GraphRequest(_Strict):
@@ -257,6 +259,9 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
         stack = check_stack(req.stack)
         out = {"scenario": req.scenario, "seed": req.seed, "duration": duration, "stack": stack,
                "scenario_params": dict(req.scenario_params) or None}
+        if req.friction is not None or req.wind_speed is not None:
+            out["environment"] = {**({"friction": {"base": req.friction}} if req.friction is not None else {}),
+                                  **({"wind_speed": req.wind_speed} if req.wind_speed is not None else {})}
         if req.connections is not None:
             out["connections"] = _connections(req.connections)
             issues = graph_issues({**api.build_graph(stack), "connections": out["connections"]})
@@ -332,7 +337,7 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
                 r = job["request"]
                 result = api.run(r["scenario"], stack=r["stack"] or None, seed=r["seed"], duration=r["duration"],
                                  scenario_params=r["scenario_params"], progress=progress,
-                                 connections=r.get("connections"))
+                                 connections=r.get("connections"), environment=r.get("environment"))
                 store(job, result)
             except _Cancelled:
                 job.update(state="cancelled", finished=time.time())
@@ -484,7 +489,7 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
         try:
             session = api.live(r["scenario"], stack=r["stack"] or None, seed=r["seed"],
                                duration=r["duration"], scenario_params=r["scenario_params"],
-                               connections=r.get("connections"))
+                               connections=r.get("connections"), environment=r.get("environment"))
         except Exception as exc:
             raise HTTPException(status_code=422, detail=f"{type(exc).__name__}: could not start the run") from None
         session.t_end = min(session.t_end, max_sim_time)
@@ -566,7 +571,7 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
     def start_experiment(req: ExperimentRequest):
         from ..research import compare_components, monte_carlo, parameter_sweep
 
-        base = {k: v for k, v in check_run(req.base).items() if v is not None and k != "connections"}
+        base = {k: v for k, v in check_run(req.base).items() if v is not None and k not in ("connections", "environment")}
         base["snapshots"] = False
         if req.kind == "compare":
             if not req.layer or not req.variants:

@@ -32,6 +32,7 @@ _ALIASES = {}                         # "kind/name" -> "kind/name" (renamed comp
 BUILTIN_MODULES = [
     "vdsim.planning",
     "vdsim.planning.parking.ad",
+    "vdsim.learning.trajectory",
     "vdsim.stabilization",
     "vdsim.world",
     "vdsim.perception",
