@@ -238,7 +238,8 @@ class WerlingPlanner(TrajectoryPlannerBase):
         else:
             lat_grid = ctx.t_grid
         lat = build_lateral_set(start.frenet, start.lateral_mode, t_s, behavior.d_ref, behavior.d_min, behavior.d_max,
-                                0.5 * self.geometry.width, p.sampling, lat_grid, keep_lat, lat_limit)
+                                0.5 * self.geometry.width, p.sampling, lat_grid, keep_lat, lat_limit,
+                                focus=self._lateral_focus(ctx))
         self.cost_model.lateral(lat, ctx)
         modes = list(behavior.modes) or [LongitudinalMode("velocity", {"v_ref": behavior.target_speed})]
         sel = SelectionSettings(p.search.batch_min, p.search.batch_max, p.search.max_checks,
@@ -390,10 +391,20 @@ class WerlingPlanner(TrajectoryPlannerBase):
             return "fast"
         return self.regime
 
+    # ------------------------------------------------------------------ hooks for a guided search
+    def _lateral_focus(self, ctx):
+        # None: the complete lateral set. A subclass returns (delta, tau, n_delta, n_tau) to search only
+        # around a proposal (vdsim.learning.trajectory.LearnedPlanner).
+        return None
+
+    def _longitudinal_focus(self, ctx, target):
+        return None
+
     # ------------------------------------------------------------------ steps 3-5 per mode
     def _run_mode(self, label, target, start, t_s, keep_lon, lon_limits, lat, ctx, sel):
         p = self.params
-        lon = build_longitudinal_set(start.frenet, target, t_s, p.sampling, ctx.t_grid, keep_lon, lon_limits, label)
+        lon = build_longitudinal_set(start.frenet, target, t_s, p.sampling, ctx.t_grid, keep_lon, lon_limits, label,
+                                     focus=self._longitudinal_focus(ctx, target))
         self.cost_model.longitudinal(lon, ctx)
         evaluator = CandidateEvaluator(ctx.reference_line, lat, lon, ctx)
         res = select_mode(label, lat, lon, evaluator, self.cost_model, self.constraint_set, self.checker, ctx, sel,

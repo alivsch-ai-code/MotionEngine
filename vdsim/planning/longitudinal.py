@@ -23,7 +23,7 @@ import numpy as np
 from ..core.parameters import param
 from ..framework.knowledge import trace
 from .polynomials import PolynomialSet, jerk_integral, quartic_coefficients, quintic_coefficients
-from .sampling import end_grid, offsets
+from .sampling import EndGrid, end_grid, nearest, offsets, open_edges
 
 
 @dataclass
@@ -194,9 +194,17 @@ def _prefilter(sd, sdd, limits):
 @trace("werling2011", section="3.5.2", equation="Tab. 3.1", concept="longitudinal_sampling",
        note="s(t): sigma_i x tau_j, q345(s_ref(tau_j)+sigma_i, s_dot_ref(tau_j), s_ddot_ref(tau_j)); s_dot(t): q34")
 def build_longitudinal_set(start, target, t_start, sampling, grid, keep_k=None, limits=(-np.inf, np.inf, np.inf),
-                           label=None):
+                           label=None, focus=None):
+    # focus: optional (offset, tau, n_offset, n_tau, include), see build_lateral_set
     g = end_grid(t_start, sampling.lon_tau_step, sampling.lon_tau_min, sampling.lon_tau_max, sampling.absolute_grid,
                  keep_k)
+    edges = {}
+    if focus is not None:
+        keep = np.sort(np.argsort(np.abs(g.tau - focus[1]), kind="stable")[:max(int(focus[3]), 1)])
+        if keep_k is not None and int(keep_k) in set(g.k.tolist()):
+            keep = np.union1d(keep, np.flatnonzero(g.k == int(keep_k)))
+        edges["tau"] = open_edges(g.tau, g.tau[keep])
+        g = EndGrid(g.tau[keep], g.k[keep], g.absolute)
     s0, v0, a0 = start.s, start.s_d, start.s_dd
     if target.kind == "velocity":
         nus = offsets(sampling.lon_nu_step, -sampling.lon_nu_range, sampling.lon_nu_range)
@@ -209,6 +217,10 @@ def build_longitudinal_set(start, target, t_start, sampling, grid, keep_k=None, 
             nus = np.unique(np.concatenate([nus, low]))
         if sampling.include_stop_candidates and target.v_ref > 0:
             nus = np.unique(np.append(nus, -target.v_ref))
+        if focus is not None:
+            local = nearest(nus, focus[0], focus[2], focus[4])
+            edges["offset"] = open_edges(nus, local)
+            nus = local
         oo, tt = np.meshgrid(nus, g.tau, indexing="ij")
         kk = np.broadcast_to(g.k[None, :], oo.shape)
         off, tau, k = oo.ravel(), tt.ravel(), kk.ravel().copy()
@@ -219,6 +231,10 @@ def build_longitudinal_set(start, target, t_start, sampling, grid, keep_k=None, 
         if target.kind == "stopping" and not sampling.stop_allow_overshoot:
             upper = 0.0
         sig = offsets(sampling.lon_sigma_step, -sampling.lon_sigma_range, upper)
+        if focus is not None:
+            local = nearest(sig, focus[0], focus[2], focus[4])
+            edges["offset"] = open_edges(sig, local)
+            sig = local
         oo, tt = np.meshgrid(sig, g.tau, indexing="ij")
         kk = np.broadcast_to(g.k[None, :], oo.shape)
         off, tau, k = oo.ravel(), tt.ravel(), kk.ravel().copy()
@@ -229,7 +245,8 @@ def build_longitudinal_set(start, target, t_start, sampling, grid, keep_k=None, 
     feasible = _prefilter(sd, sdd, limits)
     return LongitudinalSet(kind=target.kind, label=label or target.kind, target=target, poly=poly, offset=off,
                            tau=tau, k=k, jerk=jerk_integral(poly.coeffs, tau), t0=float(t_start),
-                           grid=np.asarray(grid, dtype=float), s=s, sd=sd, sdd=sdd, feasible=feasible)
+                           grid=np.asarray(grid, dtype=float), s=s, sd=sd, sdd=sdd, feasible=feasible,
+                           info={"open_edges": edges})
 
 
 def make_target(mode, behavior, prediction, reference_line, t_start, geometry, reference_point, direction, lon_params):

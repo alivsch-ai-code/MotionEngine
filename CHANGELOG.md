@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Learned trajectory planner** (`vdsim.learning.trajectory`, stack component `trajectory_planner/learned`): a network
+  learns from the Werling planner which trajectory it selects (end offset, end speed and end times). The planner
+  builds only the candidates next to this proposal and checks them with the teacher's restrictions and collision
+  check; without a valid candidate, or with the best one on the border of the local set, the cycle uses the complete
+  search. Training and evaluation through `POST /models/train` (`kind: "trajectory_planner"`), a closed-loop
+  comparison with the teacher (`POST /models/{id}/drive`), `model` in `POST /plan`, and the **Neural models** page.
+  With 4000 demonstrations (108 s): 99 % of the solvable cycles come from the network path, 91 % select the teacher's
+  trajectory, about 30 % less computing time. Method and results: `docs/learning/trajectory_model.md`.
 - **Development environment in the web app** (the functions of the desktop workbench `run_gui.py`): pages
   **Workbench** (full AD stack on a scenario, stack editor per layer, animated planner view with candidates per cycle,
   cost terms, signals, KPIs, mission, events, runtime profile, result download), **Research** (compare components,

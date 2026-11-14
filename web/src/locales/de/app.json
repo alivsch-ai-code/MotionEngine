@@ -120,9 +120,10 @@
   },
   "models": {
     "title": "Neuronale Modelle",
-    "subtitle": "Ein neuronales Ersatzmodell der Fahrdynamik mit Daten eines Physikmodells trainieren oder ein eigenes Modell anschließen. Jedes Modell kann eine Simulation antreiben.",
+    "subtitle": "Ein neuronales Ersatzmodell der Fahrdynamik oder ein Netz trainieren, das die geplante Trajektorie vorschlägt, oder ein eigenes Modell anschließen. Jedes Modell wird vor dem Einsatz mit seinem Lehrer verglichen.",
     "tabs": { "models": "Modelle", "train": "Trainieren", "connect": "Externes Modell anschließen" },
-    "table": { "name": "Name", "backend": "Backend", "teacher": "Physik-Lehrer", "params": "Parameter", "created": "Erstellt" },
+    "table": { "name": "Name", "kind": "Art", "backend": "Backend", "teacher": "Lehrer", "quality": "Güte", "acceptance": "{{v}} % über das Netz", "r2": "R² (Gieren) {{v}}", "params": "Parameter", "created": "Erstellt" },
+    "kinds": { "vehicle_dynamics": "Fahrdynamik", "trajectory_planner": "Trajektorienplaner" },
     "backends": { "mlp": "MotionEngine-MLP", "onnx": "ONNX", "http": "HTTP-Endpunkt" },
     "neuralModel": "Neuronales Modell {{id}}",
     "useInSimulation": "In Simulation verwenden",
@@ -146,6 +147,13 @@
       "neural": "Neuronales Modell"
     },
     "trainForm": {
+      "kind": "Was trainiert wird",
+      "kindHint": {
+        "vehicle_dynamics": "Ein Netz, das in Simulationen das Fahrzeugmodell ersetzt.",
+        "trajectory_planner": "Ein Netz, das in jedem Planungszyklus die Trajektorie vorschlägt; der Werling-Planer prüft sie."
+      },
+      "demonstrations": "Demonstrationen",
+      "demonstrationsTip": "Planungszyklen des Werling-Planers in zufälligen Situationen (Straßen, Geschwindigkeiten, Spurversätze, Objekte). Das Sammeln braucht die meiste Zeit: etwa 25 ms pro Zyklus.",
       "title": "Ersatzmodell trainieren",
       "text": "Das Netz lernt die Beschleunigungen eines Physikmodells aus Monte-Carlo-Stichproben des Fahrbereichs.",
       "teacher": "Physik-Lehrer",
@@ -161,7 +169,8 @@
       "start": "Training starten"
     },
     "jobStates": { "queued": "In der Warteschlange", "running": "Training läuft", "done": "Fertig", "failed": "Fehlgeschlagen", "cancelled": "Abgebrochen" },
-    "phases": { "sampling": "Daten werden erzeugt", "training": "Optimierung" },
+    "phases": { "sampling": "Daten werden erzeugt", "training": "Optimierung", "evaluating": "Vergleich mit dem Lehrer" },
+    "howPlanner": { "text": "Das Netz lernt, welche Trajektorie der Werling-Planer auswählt: Endversatz und Endzeit der Querbewegung sowie Endgeschwindigkeit und Endzeit der Längsbewegung. In jedem Zyklus baut der Planer nur die Kandidaten neben diesem Vorschlag und prüft sie mit denselben Restriktionen und derselben Kollisionsprüfung wie immer.", "validation": "Nach dem Training fahren der geführte Planer und der Werling-Planer dieselben zurückgehaltenen Situationen. Ist kein Kandidat neben dem Vorschlag gültig oder liegt der beste am Rand der lokalen Menge, nutzt der Zyklus die vollständige Werling-Suche." },
     "how": {
       "title": "So funktioniert das Ersatzmodell",
       "text": "Die ebene Kinematik bleibt exakt; nur die Beschleunigungen kommen aus dem Netz. Das Modell ersetzt damit das Fahrzeugmodell in jeder Simulation.",
@@ -697,5 +706,46 @@
     "apply": "Diese Trajektorie fahren",
     "applyFriction": "Nur die Reibwertkarte verwenden",
     "badFile": "Die Datei enthält keine Wegpunkte."
+  },
+  "plannerModel": {
+    "acceptance": "Zyklen über das Netz gelöst",
+    "sameChoice": "Gleiche Trajektorie wie der Lehrer",
+    "costRatio": "Kosten im geschlossenen Kreis ggü. Lehrer",
+    "time": "Zeit pro Zyklus",
+    "timeUnit": "ms (Lehrer {{teacher}} ms)",
+    "metricsText": "Gemessen an {{n}} zurückgehaltenen Situationen ({{cycles}} Planungszyklen): {{fallback}} % der Zyklen brauchten die vollständige Suche, {{infeasible}} % hatten gar keine gültige Trajektorie; in {{within}} % der Erstzyklen liegen die Kosten innerhalb von 5 % des Lehrers.",
+    "safety": "Jede Trajektorie wird mit den Restriktionen und der Kollisionsprüfung des Lehrers geprüft. Zyklen ohne gültige Trajektorie: {{invalid}} (Lehrer allein: {{invalidTeacher}}). Kollisionen: {{collisions}} (Lehrer allein: {{collisionsTeacher}}).",
+    "targets": {
+      "lat_delta": "Endversatz δ",
+      "lat_tau": "Endzeit quer",
+      "lon_nu": "Endgeschwindigkeits-Versatz ν",
+      "lon_tau": "Endzeit längs"
+    },
+    "drive": {
+      "title": "Fahrt gegen den Lehrer",
+      "text": "Beide Planer fahren dieselbe Situation 8 Sekunden lang mit idealer Folgeregelung. Die Pfade liegen übereinander, wenn der Netzpfad die Trajektorie des Lehrers findet.",
+      "random": "Zufällige Situation",
+      "randomLabel": "Zufällige Situation {{seed}}",
+      "collision": "Kollision",
+      "noCollision": "keine Kollision",
+      "network": "Zyklen über das Netz",
+      "pathDiff": "Größte Pfadabweichung",
+      "cost": "Kosten ggü. Lehrer",
+      "paths": "Pfade des gelernten Planers und des Lehrers",
+      "teacher": "Werling-Planer",
+      "learned": "gelernter Planer",
+      "objectsNote": "Objekte sind an ihrer Endposition gezeichnet.",
+      "speed": "Geschwindigkeit",
+      "source": "Zyklus über das Netz (1) oder die vollständige Suche (0) gelöst",
+      "networkCycle": "Netz"
+    },
+    "presets": {
+      "overtake": "Langsameres Fahrzeug voraus",
+      "laneChange": "Spurwechsel",
+      "curve": "Kurve",
+      "slowTraffic": "Langsamer Verkehr, eine Spur"
+    },
+    "stackHint": "Im Stack für automatisiertes Fahren ist das Modell die Planer-Komponente „learned“ mit dem Parameter „model“ auf dieser ID.",
+    "useInWorkbench": "In der Workbench verwenden"
   }
 }

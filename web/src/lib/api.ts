@@ -47,8 +47,22 @@ export interface ModelMeta {
   id: string; name: string; backend: "mlp" | "onnx" | "http"; kind: string; vehicle: string; teacher?: string; created: number;
   vehicle_model: string; hidden?: number[]; n_samples?: number; epochs_run?: number; n_parameters?: number;
   time_total_s?: number; test_metrics?: Record<string, Metric>; history?: { epoch: number; train: number; val: number }[]; url?: string;
+  planner_metrics?: PlannerMetrics; planner_config?: string;
 }
-export interface TrainRequest { vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
+export interface PlannerMetrics {
+  n_situations: number; cycles: number; network_share: number; acceptance: number; fallback_share: number; out_of_scope_share: number; infeasible_share: number;
+  cost_ratio_median: number | null; cost_ratio_mean: number | null; cost_ratio_p90: number | null; within_5_percent_share: number | null; same_choice_share: number;
+  closed_loop_cost_ratio: number | null; collisions: number; collisions_teacher: number; invalid_cycles: number; invalid_cycles_teacher: number;
+  time_learned_ms: number; time_teacher_ms: number;
+}
+export interface DriveLog { t: number[]; x: number[]; y: number[]; v: number[]; cost: number[]; source?: string[] }
+export interface DriveResult {
+  learned: DriveLog; teacher: DriveLog; road: { x: number[]; y: number[]; left_x: number[]; left_y: number[]; right_x: number[]; right_y: number[] };
+  objects: { id: number; length: number; width: number; x: number[]; y: number[]; psi: number }[];
+  summary: { cycles: number; network_share: number; fallback_share: number; max_path_difference: number; cost_learned: number; cost_teacher: number;
+    collision_learned: boolean; collision_teacher: boolean; time_learned_ms: number; time_teacher_ms: number };
+}
+export interface TrainRequest { kind?: "vehicle_dynamics" | "trajectory_planner"; planner_config?: string; vehicle: string; teacher: "bicycle_nonlinear" | "bicycle_linear"; n_samples: number; hidden: number[]; epochs: number; learning_rate: number; seed: number; name: string }
 export interface TrainJob { id: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; phase: string; progress: number; history: { epoch: number; train: number; val: number }[]; model_id: string | null; error: string | null; created?: number; name?: string }
 export interface Evaluation { maneuver: string; max_position_error: number; max_yaw_rate_error: number; wall_time: { physics: number; neural: number }; kpis: Record<string, { physics: number; neural: number }>; series: Record<string, number[]> }
 
@@ -238,6 +252,7 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     jobs: (s?: AbortSignal) => request<TrainJob[]>("GET", "/models/jobs", undefined, s),
     cancelJob: (id: string) => request<TrainJob>("POST", `/models/jobs/${encodeURIComponent(id)}/cancel`),
     connect: (body: { name: string; backend: "onnx" | "http"; onnx_base64?: string; url?: string; vehicle: string }) => request<ModelMeta>("POST", "/models/connect", body),
+    drive: (id: string, body: { situation?: PlanRequest; seed?: number; cycles?: number }) => request<DriveResult>("POST", `/models/${encodeURIComponent(id)}/drive`, body),
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
     park: (body: ParkRequest, s?: AbortSignal) => request<ParkResponse>("POST", "/park", body, s),
     workbenchCatalog: (s?: AbortSignal) => request<WorkbenchCatalog>("GET", "/workbench/catalog", undefined, s),

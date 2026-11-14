@@ -19,7 +19,7 @@ import numpy as np
 
 from ..framework.knowledge import trace
 from .polynomials import ConstantReference, PolynomialSet, jerk_integral, quintic_coefficients
-from .sampling import end_grid, offsets
+from .sampling import end_grid, nearest, offsets, open_edges
 
 
 @dataclass
@@ -41,6 +41,7 @@ class LateralSet:
     feasible: np.ndarray           # passed the Frenet pre-filter
     costs: dict = field(default_factory=dict)   # cost term name -> (n,) weighted values
     total: np.ndarray = None
+    open_edges: dict = field(default_factory=dict)   # focused set: {"offset": (...), "tau": (...)}, see sampling
 
     def __len__(self):
         return len(self.tau)
@@ -61,8 +62,10 @@ def lateral_targets(d_ref, d_step, d_range, d_min, d_max, half_width):
 @trace("werling2011", section="3.5.1", equation="Tab. 3.1", concept="lateral_sampling",
        note="d(t): delta_i x tau_j, q345(d_ref + delta_i, 0, 0, tau_j); d(s): Strichgrößen, k_s [s(tau)-s(0)]")
 def build_lateral_set(start, mode, t_start, d_ref, d_min, d_max, half_width, sampling, grid, keep_k=None,
-                      prefilter_limit=np.inf):
+                      prefilter_limit=np.inf, focus=None):
     # start: FrenetState-like (d, d_d, d_dd, d_p, d_pp, s); grid: evaluation grid (t_rel or s_rel)
+    # focus: optional (delta, tau, n_delta, n_tau, include): keep only the n grid values nearest to a proposed
+    #        end offset and end time, plus the offsets in include (local search around a learned proposal)
     if mode == "arc":
         g = end_grid(start.s, sampling.arc_s_step, sampling.arc_s_min, sampling.arc_s_max, sampling.absolute_grid,
                      keep_k)
@@ -74,8 +77,19 @@ def build_lateral_set(start, mode, t_start, d_ref, d_min, d_max, half_width, sam
         x0, x1, x2 = start.d, start.d_d, start.d_dd
         origin = t_start
     deltas = lateral_targets(d_ref, sampling.lat_d_step, sampling.lat_d_range, d_min, d_max, half_width)
-    dd, tt = np.meshgrid(deltas, g.tau, indexing="ij")
-    kk = np.broadcast_to(g.k[None, :], dd.shape)
+    taus, ks = g.tau, g.k
+    edges = {}
+    if focus is not None:
+        local = nearest(deltas, focus[0], focus[2], focus[4])
+        edges["offset"] = open_edges(deltas, local)
+        deltas = local
+        keep = np.sort(np.argsort(np.abs(taus - focus[1]), kind="stable")[:max(int(focus[3]), 1)])
+        if keep_k is not None and int(keep_k) in set(ks.tolist()):       # the rest of the old plan stays available
+            keep = np.union1d(keep, np.flatnonzero(ks == int(keep_k)))
+        edges["tau"] = open_edges(taus, taus[keep])
+        taus, ks = taus[keep], ks[keep]
+    dd, tt = np.meshgrid(deltas, taus, indexing="ij")
+    kk = np.broadcast_to(ks[None, :], dd.shape)
     delta, tau, k = dd.ravel(), tt.ravel(), kk.ravel().copy()
     target = d_ref + delta
     coeffs = quintic_coefficients(x0, x1, x2, target, 0.0, 0.0, tau)
@@ -84,4 +98,4 @@ def build_lateral_set(start, mode, t_start, d_ref, d_min, d_max, half_width, sam
     feasible = np.max(np.abs(d2), axis=1) <= prefilter_limit
     return LateralSet(mode=mode, poly=poly, delta=delta, tau=tau, k=k, target=target,
                       jerk=jerk_integral(coeffs, tau), t0=float(t_start), s0=float(start.s), d_ref=float(d_ref),
-                      grid=np.asarray(grid, dtype=float), d=d, d1=d1, d2=d2, feasible=feasible)
+                      grid=np.asarray(grid, dtype=float), d=d, d1=d1, d2=d2, feasible=feasible, open_edges=edges)

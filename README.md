@@ -75,7 +75,7 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 | **MATLAB** | analyze MATLAB functions and convert them to Python or C |
 | **Knowledge** | search the knowledge graph (components, concepts, classes, equations) and 85 literature references |
 | **Parking** | parallel, perpendicular or angled spots, forward or in reverse; front, rear-only or four-wheel steering; front, rear or all-wheel drive; animated maneuver with KPIs |
-| **Neural models** | train an MLP surrogate in the background, connect ONNX or HTTP models, compare them closed loop with the physics model, simulate with them |
+| **Neural models** | train an MLP surrogate of the vehicle dynamics or a network that proposes the planned trajectory (verified by the Werling planner); connect ONNX or HTTP models; compare every model with its teacher in closed loop; use it in simulations or in the stack |
 | **Prediction, Vehicles, Settings** | object prediction, every vehicle parameter with unit and meaning, API address and key |
 
 Every workflow runs with sensible defaults; advanced parameters sit behind *Expert settings*. The design system is
@@ -134,7 +134,7 @@ for kpi in evaluate(result):
 | **Control** | Stanley, Pure Pursuit, MPC, bi-level stabilization; ACC, AEB, lane keeping; ABS, TCS, ESP, torque vectoring, active suspension; actuator latency chains |
 | **Automated driving** | full stack from scenario to actuators, 14 AD scenarios with missions and success criteria (overtaking, merging, cut-in, intersections, roundabout, evasion, parking) |
 | **Analysis** | 22 ISO and ADAS test scenarios, automated KPI evaluation with ratings, PDF and Markdown reports, linear and quasi-static vehicle analysis, parameter sweeps |
-| **Machine learning** | MLP surrogates trained against a physics teacher, ONNX and HTTP model backends, closed-loop validation, neural models usable as vehicle models |
+| **Machine learning** | MLP surrogates trained against a physics teacher, ONNX and HTTP model backends, closed-loop validation, neural models usable as vehicle models; a learned trajectory planner that imitates the Werling planner and is verified by it ([method and results](docs/learning/trajectory_model.md)) |
 | **Interfaces** | chat assistant (natural language → simulations and plans), web app (EN/DE), PySide6 desktop workbench with live top view and 3D view, REST API, Python library, command line |
 
 ---

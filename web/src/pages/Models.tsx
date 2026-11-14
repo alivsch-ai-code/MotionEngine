@@ -9,6 +9,7 @@ import { Icon } from "../components/Icon";
 import { KpiTile } from "../components/KpiTile";
 import { PageHeader } from "../components/PageHeader";
 import { PathPlot } from "../components/PathPlot";
+import { PlannerModel } from "../components/PlannerModel";
 import type { ModelMeta, TrainRequest } from "../lib/api";
 import { isActive, useTraining } from "../lib/training";
 import { maneuverLabel } from "../lib/domain";
@@ -59,14 +60,17 @@ function ModelList({ models, loading, error, selected, onSelect, onDeleted, onTr
   return (
     <div className="stack">
       <div className="card"><div className="card__body table-wrap"><table className="table">
-        <thead><tr><th>{t("models.table.name")}</th><th>{t("models.table.backend")}</th><th>{t("models.table.teacher")}</th><th className="num">R² ψ̈</th><th className="num">{t("models.table.params")}</th><th>{t("models.table.created")}</th></tr></thead>
+        <thead><tr><th>{t("models.table.name")}</th><th>{t("models.table.kind")}</th><th>{t("models.table.backend")}</th><th>{t("models.table.teacher")}</th><th className="num">{t("models.table.quality")}</th><th className="num">{t("models.table.params")}</th><th>{t("models.table.created")}</th></tr></thead>
         <tbody>{models.map((m) => (
           <tr key={m.id} onClick={() => onSelect(m.id)} style={{ cursor: "pointer", background: m.id === current.id ? "var(--me-surface-2)" : undefined }}
             aria-selected={m.id === current.id}>
             <td><button type="button" className="btn btn--ghost btn--sm" onClick={() => onSelect(m.id)}>{m.name}</button></td>
+            <td><span className={`badge ${m.kind === "trajectory_planner" ? "badge--info" : ""}`}>{t(`models.kinds.${m.kind}`, { defaultValue: m.kind })}</span></td>
             <td><span className="badge">{t(`models.backends.${m.backend}`)}</span></td>
-            <td className="subtle">{m.teacher ? t(`vehicleModels.${m.teacher}`) : "–"}</td>
-            <td className="num">{fmt(m.test_metrics?.r_dot?.r2 ?? null, i18n.language, 4)}</td>
+            <td className="subtle">{m.teacher ? t(`vehicleModels.${m.teacher}`, { defaultValue: m.teacher }) : "–"}</td>
+            <td className="num">{m.kind === "trajectory_planner"
+              ? (m.planner_metrics ? t("models.table.acceptance", { v: fmt(m.planner_metrics.acceptance * 100, i18n.language, 3) }) : "–")
+              : t("models.table.r2", { v: fmt(m.test_metrics?.r_dot?.r2 ?? null, i18n.language, 4) })}</td>
             <td className="num">{m.n_parameters ? fmt(m.n_parameters, i18n.language) : "–"}</td>
             <td className="subtle">{new Date(m.created * 1000).toLocaleString(i18n.language)}</td>
           </tr>
@@ -89,18 +93,20 @@ function ModelDetail({ id, onDeleted }: { id: string; onDeleted: () => void }) {
   if (!m) return <Skeleton height={240} />;
   const hist = m.history ?? [];
   const ev = evaluation.data;
+  const planner = m.kind === "trajectory_planner";
   return (
     <div className="card">
       <div className="card__header">
-        <div><h2>{m.name}</h2><p className="mono">{m.vehicle_model}</p></div>
+        <div><h2>{m.name}</h2><p className="mono">{planner ? m.id : m.vehicle_model}</p></div>
         <div className="row">
-          <Link className="btn btn--secondary btn--sm" to={`/app/simulate?model=${encodeURIComponent(m.vehicle_model)}`}><Icon name="play" />{t("models.useInSimulation")}</Link>
+          {planner ? null : <Link className="btn btn--secondary btn--sm" to={`/app/simulate?model=${encodeURIComponent(m.vehicle_model)}`}><Icon name="play" />{t("models.useInSimulation")}</Link>}
           <button type="button" className="btn btn--danger btn--sm" onClick={() => { if (window.confirm(t("models.confirmDelete", { name: m.name }))) void remove.run(); }}>
             <Icon name="trash" />{t("common:delete")}</button>
         </div>
       </div>
       <div className="card__body stack">
-        {m.test_metrics ? (
+        {planner ? <PlannerModel model={m} /> : null}
+        {planner ? null : m.test_metrics ? (
           <div className="grid grid--3">
             {(["vx_dot", "vy_dot", "r_dot"] as const).map((k) => (
               <KpiTile key={k} label={t(`models.targets.${k}`)} value={m.test_metrics?.[k]?.r2 ?? null} unit={`R² · RMSE ${fmt(m.test_metrics?.[k]?.rmse ?? null, lang)}`} lang={lang} />
@@ -112,6 +118,7 @@ function ModelDetail({ id, onDeleted }: { id: string; onDeleted: () => void }) {
             <Chart x={hist.map((h) => h.epoch)} xLabel={t("models.epoch")} yLabel="MSE" height={220} ariaLabel={t("models.lossCurve")}
               series={[{ label: t("models.train"), values: hist.map((h) => h.train) }, { label: t("models.validation"), values: hist.map((h) => h.val), color: 2 }]} /></Suspense>
         ) : null}
+        {planner ? <ErrorAlert error={remove.error} /> : <>
         <h3>{t("models.evaluate.title")}</h3>
         <p className="subtle">{t("models.evaluate.text")}</p>
         <div className="row" style={{ alignItems: "end" }}>
@@ -135,15 +142,21 @@ function ModelDetail({ id, onDeleted }: { id: string; onDeleted: () => void }) {
                 series={[{ label: t("models.evaluate.physics"), values: ev.series.physics_r }, { label: t("models.evaluate.neural"), values: ev.series.neural_r, color: 2, dash: true }]} /></Suspense>
           </div>
         ) : null}
+        </>}
       </div>
     </div>
   );
 }
 
+const TRAIN_DEFAULTS = {
+  vehicle_dynamics: { n_samples: 20000, hiddenText: "64, 64", epochs: 150 },
+  trajectory_planner: { n_samples: 3000, hiddenText: "96, 96", epochs: 200 },
+};
+
 function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
   const { t, i18n } = useTranslation(["app", "common"]);
   const client = useClient();
-  const [form, setForm] = useState<TrainRequest & { hiddenText: string }>({ vehicle: "mid_size_sedan", teacher: "bicycle_nonlinear", n_samples: 20000,
+  const [form, setForm] = useState<TrainRequest & { hiddenText: string }>({ kind: "vehicle_dynamics", vehicle: "mid_size_sedan", teacher: "bicycle_nonlinear", n_samples: 20000,
     hidden: [64, 64], hiddenText: "64, 64", epochs: 150, learning_rate: 0.002, seed: 0, name: "" });
   // the job is followed app-wide (lib/training.tsx): leaving this page does not lose it
   const { job, starting, error: startError, start, cancel, dismiss } = useTraining();
@@ -165,6 +178,7 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
     await start({ ...body, hidden: hidden.length ? hidden : [64, 64] });
   };
   const running = isActive(job);
+  const planner = form.kind === "trajectory_planner";
   const hist = job?.history ?? [];
   const last = hist[hist.length - 1];
   const chart = useMemo(() => ({ x: hist.map((h) => h.epoch), train: hist.map((h) => h.train), val: hist.map((h) => h.val) }), [hist]);
@@ -174,12 +188,15 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
       <form className="card" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
         <div className="card__header"><div><h2>{t("models.trainForm.title")}</h2><p>{t("models.trainForm.text")}</p></div></div>
         <div className="card__body stack">
+          <SelectField label={t("models.trainForm.kind")} value={form.kind ?? "vehicle_dynamics"} hint={t(`models.trainForm.kindHint.${form.kind ?? "vehicle_dynamics"}`)}
+            onChange={(v) => setForm({ ...form, kind: v, ...TRAIN_DEFAULTS[v] })}
+            options={(["vehicle_dynamics", "trajectory_planner"] as const).map((v) => ({ value: v, label: t(`models.kinds.${v}`) }))} />
           <SelectField label={t("simulate.vehicle")} value={form.vehicle} onChange={(v) => setForm({ ...form, vehicle: v })}
             options={(catalog.data?.presets ?? [form.vehicle]).map((p) => ({ value: p, label: t(`vehiclePresets.${p}`, { defaultValue: p }) }))} />
-          <SelectField label={t("models.trainForm.teacher")} value={form.teacher} tip={t("models.trainForm.teacherTip")}
-            onChange={(v) => setForm({ ...form, teacher: v })} options={(["bicycle_nonlinear", "bicycle_linear"] as const).map((v) => ({ value: v, label: t(`vehicleModels.${v}`) }))} />
-          <NumberField label={t("models.trainForm.samples")} value={form.n_samples} min={500} max={200000} step={500} onChange={(v) => setForm({ ...form, n_samples: v })}
-            tip={t("models.trainForm.samplesTip")} />
+          {planner ? null : <SelectField label={t("models.trainForm.teacher")} value={form.teacher} tip={t("models.trainForm.teacherTip")}
+            onChange={(v) => setForm({ ...form, teacher: v })} options={(["bicycle_nonlinear", "bicycle_linear"] as const).map((v) => ({ value: v, label: t(`vehicleModels.${v}`) }))} />}
+          <NumberField label={planner ? t("models.trainForm.demonstrations") : t("models.trainForm.samples")} value={form.n_samples} min={500} max={planner ? 20000 : 200000} step={500}
+            onChange={(v) => setForm({ ...form, n_samples: v })} tip={planner ? t("models.trainForm.demonstrationsTip") : t("models.trainForm.samplesTip")} />
           <details className="expert"><summary><Icon name="settings" />{t("common:expertSettings")}</summary>
             <div className="stack">
               <TextField label={t("models.trainForm.hidden")} value={form.hiddenText} onChange={(v) => setForm({ ...form, hiddenText: v })} hint={t("models.trainForm.hiddenHint")} />
@@ -210,9 +227,10 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
         ) : (
           <div className="card"><div className="card__body stack">
             <h2>{t("models.how.title")}</h2>
-            <p>{t("models.how.text")}</p>
-            <div className="code-block">{"x = [vₓ, v_y, ψ̇, δ, Fₓ]   →   MLP (tanh)   →   y = [v̇ₓ, v̇_y, ψ̈]"}</div>
-            <p className="subtle">{t("models.how.validation")}</p>
+            <p>{planner ? t("models.howPlanner.text") : t("models.how.text")}</p>
+            <div className="code-block">{planner ? "x = [d, ḋ, d̈, ṡ, s̈, v_ref, d_min, d_max, κ(s), objects, previous plan]   →   MLP (tanh)   →   y = [δ, τ_lat, ν, τ_lon]"
+              : "x = [vₓ, v_y, ψ̇, δ, Fₓ]   →   MLP (tanh)   →   y = [v̇ₓ, v̇_y, ψ̈]"}</div>
+            <p className="subtle">{planner ? t("models.howPlanner.validation") : t("models.how.validation")}</p>
           </div></div>
         )}
       </div>

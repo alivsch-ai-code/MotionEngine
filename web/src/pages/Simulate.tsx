@@ -66,7 +66,7 @@ export default function Simulate() {
     .map((m) => ({ value: m, label: maneuverLabel(t, m) })), [maneuvers.data, t]);
   const info = maneuvers.data?.[form.maneuver];
   const paramKeys = Object.keys(info?.params ?? {}).filter((p) => p !== "steering_ratio" && p !== "vehicle_width");
-  const modelOptions = [...MODELS_BASIC, ...(neural.data ?? []).map((m) => m.vehicle_model)]
+  const modelOptions = [...MODELS_BASIC, ...(neural.data ?? []).filter((m) => m.kind !== "trajectory_planner").map((m) => m.vehicle_model)]
     .map((m) => ({ value: m, label: modelLabel(t, m) }));
 
   const run = async () => {

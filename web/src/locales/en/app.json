@@ -120,9 +120,10 @@
   },
   "models": {
     "title": "Neural models",
-    "subtitle": "Train a neural surrogate of the vehicle dynamics on data from a physics model, or connect your own model. Every model can drive a simulation.",
+    "subtitle": "Train a neural surrogate of the vehicle dynamics or a network that proposes the planned trajectory, or connect your own model. Every model is compared with its teacher before you use it.",
     "tabs": { "models": "Models", "train": "Train", "connect": "Connect external model" },
-    "table": { "name": "Name", "backend": "Backend", "teacher": "Physics teacher", "params": "Parameters", "created": "Created" },
+    "table": { "name": "Name", "kind": "Type", "backend": "Backend", "teacher": "Teacher", "quality": "Quality", "acceptance": "{{v}} % by the network", "r2": "R² (yaw) {{v}}", "params": "Parameters", "created": "Created" },
+    "kinds": { "vehicle_dynamics": "Vehicle dynamics", "trajectory_planner": "Trajectory planner" },
     "backends": { "mlp": "MotionEngine MLP", "onnx": "ONNX", "http": "HTTP endpoint" },
     "neuralModel": "Neural model {{id}}",
     "useInSimulation": "Use in simulation",
@@ -146,6 +147,13 @@
       "neural": "Neural model"
     },
     "trainForm": {
+      "kind": "What to train",
+      "kindHint": {
+        "vehicle_dynamics": "A network that replaces the vehicle model in simulations.",
+        "trajectory_planner": "A network that proposes the trajectory of each planning cycle; the Werling planner verifies it."
+      },
+      "demonstrations": "Demonstrations",
+      "demonstrationsTip": "Planning cycles of the Werling planner in random situations (roads, speeds, lane offsets, objects). Collecting them takes most of the time: about 25 ms each.",
       "title": "Train a surrogate",
       "text": "The network learns the accelerations of a physics model from Monte Carlo samples of the driving envelope.",
       "teacher": "Physics teacher",
@@ -161,7 +169,8 @@
       "start": "Start training"
     },
     "jobStates": { "queued": "Queued", "running": "Training", "done": "Done", "failed": "Failed", "cancelled": "Cancelled" },
-    "phases": { "sampling": "generating data", "training": "optimizing" },
+    "phases": { "sampling": "generating data", "training": "optimizing", "evaluating": "comparing with the teacher" },
+    "howPlanner": { "text": "The network learns which trajectory the Werling planner selects: the end offset and end time of the lateral motion and the end speed and end time of the longitudinal motion. In every cycle the planner builds only the candidates next to this proposal and checks them with the same restrictions and collision check as always.", "validation": "After training, the guided planner and the Werling planner drive the same held-out situations. If no candidate next to the proposal is valid, or the best one lies on the border of the local set, the cycle uses the complete Werling search." },
     "how": {
       "title": "How the surrogate works",
       "text": "The planar kinematics stay exact; only the accelerations come from the network. The model is then a drop-in replacement of the vehicle model in every simulation.",
@@ -697,5 +706,46 @@
     "apply": "Drive this trajectory",
     "applyFriction": "Use only the friction map",
     "badFile": "The file contains no waypoints."
+  },
+  "plannerModel": {
+    "acceptance": "Cycles solved by the network",
+    "sameChoice": "Same trajectory as the teacher",
+    "costRatio": "Cost in closed loop vs. teacher",
+    "time": "Time per cycle",
+    "timeUnit": "ms (teacher {{teacher}} ms)",
+    "metricsText": "Measured on {{n}} held-out situations ({{cycles}} planning cycles): {{fallback}} % of the cycles needed the complete search, {{infeasible}} % had no valid trajectory at all; in {{within}} % of the first cycles the cost is within 5 % of the teacher.",
+    "safety": "Every trajectory is checked with the teacher's restrictions and collision check. Cycles without a valid trajectory: {{invalid}} (teacher alone: {{invalidTeacher}}). Collisions: {{collisions}} (teacher alone: {{collisionsTeacher}}).",
+    "targets": {
+      "lat_delta": "End offset δ",
+      "lat_tau": "Lateral end time",
+      "lon_nu": "End speed offset ν",
+      "lon_tau": "Longitudinal end time"
+    },
+    "drive": {
+      "title": "Drive against the teacher",
+      "text": "Both planners drive the same situation for 8 seconds with ideal tracking. The paths lie on top of each other when the network path finds the teacher's trajectory.",
+      "random": "Random situation",
+      "randomLabel": "Random situation {{seed}}",
+      "collision": "collision",
+      "noCollision": "no collision",
+      "network": "Cycles by the network",
+      "pathDiff": "Largest path difference",
+      "cost": "Cost vs. teacher",
+      "paths": "Paths of the learned planner and the teacher",
+      "teacher": "Werling planner",
+      "learned": "learned planner",
+      "objectsNote": "Objects are shown at their final position.",
+      "speed": "Speed",
+      "source": "Cycle solved by the network (1) or the complete search (0)",
+      "networkCycle": "network"
+    },
+    "presets": {
+      "overtake": "Slower vehicle ahead",
+      "laneChange": "Lane change",
+      "curve": "Curve",
+      "slowTraffic": "Slow traffic, one lane"
+    },
+    "stackHint": "In the automated-driving stack the model is the planner component “learned” with the parameter “model” set to this id.",
+    "useInWorkbench": "Use in the Workbench"
   }
 }

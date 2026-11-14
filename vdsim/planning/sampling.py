@@ -70,6 +70,28 @@ def offsets(step, lower, upper, include=()):
     return np.unique(np.round(vals, 9))
 
 
+def nearest(values, target, n, include=()):
+    # the n grid values closest to target (ties: the lower index), plus the grid values listed in include
+    values = np.asarray(values, dtype=float)
+    keep = np.argsort(np.abs(values - float(target)), kind="stable")[:max(int(n), 1)]
+    extra = [int(np.argmin(np.abs(values - v))) for v in include if len(values) and np.min(np.abs(values - v)) < 1e-6]
+    return values[np.union1d(keep, np.array(extra, dtype=int))]
+
+
+def open_edges(full, kept):
+    # smallest / largest kept value if the full grid continues beyond it: a best candidate there suggests that
+    # the optimum lies outside the kept window
+    full, kept = np.asarray(full, dtype=float), np.asarray(kept, dtype=float)
+    if not len(kept) or not len(full):
+        return ()
+    out = []
+    if kept.min() > full.min() + 1e-9:
+        out.append(float(kept.min()))
+    if kept.max() < full.max() - 1e-9:
+        out.append(float(kept.max()))
+    return tuple(out)
+
+
 @dataclass
 class SamplingParams:
     absolute_grid: bool = param(True, "", "Absolutes Endzeitraster (zeitliche Konsistenz, Satz 3)")

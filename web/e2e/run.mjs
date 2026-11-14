@@ -133,6 +133,21 @@ if ((await page.getByText(/Editor path/).count()) === 0) failures.push("editor r
 await checkText(page, "editor run");
 await page.getByRole("button", { name: "Remove", exact: true }).click();
 
+// trajectory planner model: train on a few demonstrations, then drive against the teacher
+t0 = Date.now();
+await page.goto(BASE + "/app/models", { waitUntil: "networkidle" });
+await page.getByRole("tab", { name: "Train" }).click();
+await page.getByLabel("What to train").selectOption("trajectory_planner");
+await page.getByLabel("Demonstrations").fill("500");
+await page.getByText("Expert settings").click();
+await page.getByLabel("Epochs").fill("40");
+await page.getByRole("button", { name: "Start training" }).click();
+await page.getByText("Cycles solved by the network").first().waitFor({ timeout: 180000 });
+timings["workflow planner training"] = Date.now() - t0;
+await page.getByRole("button", { name: "Slower vehicle ahead" }).click();
+await page.getByText("Largest path difference").waitFor({ timeout: 60000 });
+await checkText(page, "planner model");
+
 // German workflow labels
 const de = await newPage("de", "dark");
 await de.goto(BASE + "/app/inspector", { waitUntil: "networkidle" });
