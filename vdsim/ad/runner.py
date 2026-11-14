@@ -224,6 +224,15 @@ def _apply_kicks(ex, rec):
             kick(**deltas)
 
 
+def _services(environment):
+    # environment of the plant (friction, wind, road): dict as in Scenario.environment, e.g. {"friction": {"base": 0.5}}
+    if not environment:
+        return {}
+    from ..simulation.environment import Environment
+
+    return {"environment": environment if isinstance(environment, Environment) else Environment.from_dict(environment)}
+
+
 def _finish(res, ex, g, inst, rec, full_stack, seed, stop_reason, wall):
     # metadata, road, runtime profile, provenance, metrics and mission of a finished run (batch and live)
     res.metadata.update(stop_reason=stop_reason, wall_time=wall, controllers=rec.controllers, modes=rec.modes,
@@ -245,7 +254,7 @@ def _finish(res, ex, g, inst, rec, full_stack, seed, stop_reason, wall):
 
 def run_scenario(scenario, stack=None, seed=None, duration=None, scenario_params=None, record_snapshots=True,
                  vehicle=None, graph=None, progress=None, stop_on_collision=True, stop_on_goal=True,
-                 max_wall_time=None, name=None, connections=None):
+                 max_wall_time=None, name=None, connections=None, environment=None):
     from ..runtime import Executor, Graph
     from ..world import build_scenario
 
@@ -264,7 +273,8 @@ def run_scenario(scenario, stack=None, seed=None, duration=None, scenario_params
     report = g.validate()
     report.raise_for_errors()
 
-    context = RunContext(dt=g.base_dt, seed=seed, vehicle=vehicle_cfg, road=inst.road, scenario=inst)
+    context = RunContext(dt=g.base_dt, seed=seed, vehicle=vehicle_cfg, road=inst.road, scenario=inst,
+                         services=_services(environment))
     ex = Executor(g, context, recorder=False)
     sc_name = name or (spec.get("name") if isinstance(spec, dict) else str(spec))
     res = ADResult(sc_name, spec if isinstance(spec, dict) else {"name": str(spec)}, full_stack, seed)

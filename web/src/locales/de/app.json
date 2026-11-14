@@ -384,6 +384,19 @@
     "geometryInfo": "Wenderadius des Referenzpunkts {{r}} m · Referenzpunkt {{p}} m vor der Hinterachse · max. Lenkwinkel vorne {{f}}°, hinten {{rr}}°"
   },
   "workbench": {
+    "conditions": {
+      "label": "Bedingungen",
+      "ideal": "Ideal (Entwurfsmodell, perfekte Sensoren)",
+      "realistic": "Realistisch (Zweispur, Sensorrauschen, 0,1 s Latenz)",
+      "wet": "Nasse Fahrbahn (realistisch, Reibwert 0,5)",
+      "harsh": "Eis und schlechte Sensoren (Reibwert 0,3, 0,2 s Latenz)",
+      "hint": {
+        "ideal": "Die Strecke ist das Entwurfsmodell des Reglers und jede Messung ist exakt. Gut, um die Algorithmen zu verstehen; die Bahnfolge ist fast perfekt.",
+        "realistic": "Zweispurfahrzeug mit Radlastverlagerung und Reifensättigung; Objekte und die eigene Position werden verrauscht gemessen und kommen 0,1 s verspätet an.",
+        "wet": "Wie realistisch, auf nasser Fahrbahn. Der Planer kennt den Reibwert nicht: auf die geforderte Querbeschleunigung achten.",
+        "harsh": "Niedriger Reibwert und schlechte Sensoren. Missionen werden scheitern; genau das zeigt diese Voreinstellung."
+      }
+    },
     "rewired": "Neu verdrahteter Stack: {{n}} Verbindungen (siehe Architektur)",
     "load": {
       "button": "Ergebnis laden …",
@@ -747,5 +760,94 @@
     },
     "stackHint": "Im Stack für automatisiertes Fahren ist das Modell die Planer-Komponente „learned“ mit dem Parameter „model“ auf dieser ID.",
     "useInWorkbench": "In der Workbench verwenden"
+  },
+  "control": {
+    "title": "Regler-Labor",
+    "subtitle": "Mehrere Folgeregler auf derselben Bahn und demselben Fahrzeug fahren lassen, vergleichen, wie gut sie folgen, und sehen, welchen Beitrag jeder Term eines Regelgesetzes in jedem Moment liefert.",
+    "setup": "Versuch",
+    "controllers": "Regler",
+    "params": "Parameter",
+    "paramsChanged": "{{n}} geändert",
+    "path": "Referenzbahn",
+    "speed": "Geschwindigkeit",
+    "speedHint": "{{kmh}} km/h, konstant entlang der Bahn",
+    "names": {
+      "pure_pursuit": "Pure Pursuit",
+      "stanley": "Stanley",
+      "lqr": "LQR (geschwindigkeitsabhängig)",
+      "mpc": "MPC (linear zeitvariant)",
+      "werling_bilevel": "Werling (exakte Linearisierung)"
+    },
+    "paths": "Referenzbahn und gefahrene Bahnen",
+    "pathHints": {
+      "lane_change": "3,5 m nach links über 50 m.",
+      "double_lane_change": "Nach links und zurück, je 40 m.",
+      "curve_entry": "Gerade, dann Radius 60 m mit 20 m Übergang.",
+      "s_curve": "Links, dann rechts, Radius 80 m.",
+      "slalom": "±1,5 m bei 60 m Wellenlänge.",
+      "straight": "Mit Startversatz oder Seitenkraft zeigt sie die reine Reaktion des Regelkreises."
+    },
+    "conditions": "Bedingungen und Störungen",
+    "plant": "Fahrzeugmodell",
+    "plantTip": "Das Modell, das der Regler fährt. Das Entwurfsmodell ist das einfachste; Zweispur- und Mehrkörpermodell bringen Radlastverlagerung, Reifensättigung und Wanken dazu.",
+    "plants": {
+      "werling_desm": "Einspur, Entwurfsmodell",
+      "bicycle_nonlinear": "Einspur, nichtlineare Reifen",
+      "double_track": "Zweispur",
+      "multibody": "Mehrkörper"
+    },
+    "mu": "Reibwert",
+    "muHint": "1,0 trocken, etwa 0,5 nass, 0,2 Eis",
+    "offset": "Start neben der Bahn",
+    "offsetHint": "Positiv: links der Bahn",
+    "gust": "Seitenkraft",
+    "gustTime": "zum Zeitpunkt",
+    "gustHint": "Eine Querkraft im Schwerpunkt für 0,5 s, wie eine Windböe. 3000 N sind für eine Limousine eine starke Böe.",
+    "run": "Vergleich starten",
+    "empty": {
+      "title": "Regler vergleichen",
+      "text": "Regler und Bahn wählen. Das Labor fährt jeden Regler durch dasselbe Manöver und zeigt Fehler, Lenkung und das Regelgesetz."
+    },
+    "result": {
+      "title": "Vergleich",
+      "text": "Fahrzeugmodell: {{plant}} · Reibwert {{mu}} · {{speed}} km/h. Auf eine Zeile klicken, um unten das Regelgesetz zu sehen."
+    },
+    "kpi": {
+      "max_e_n": "Größter Querfehler",
+      "rms_e_n": "Querfehler (RMS)",
+      "settled": "Eingeschwungen nach",
+      "steer": "Größter Lenkwinkel",
+      "steerRate": "Größte Lenkrate",
+      "ay": "Größte Querbeschleunigung",
+      "time": "Rechenzeit pro Schritt",
+      "note": "Eingeschwungen: Der Querfehler bleibt ab diesem Zeitpunkt unter 5 cm."
+    },
+    "notSettled": "nicht eingeschwungen",
+    "unstable": "instabil",
+    "best": "kleinster Fehler",
+    "series": {
+      "e_n": "Querfehler",
+      "delta": "Lenkwinkel an den Rädern",
+      "e_theta": "Kursfehler",
+      "ay": "Querbeschleunigung"
+    },
+    "law": {
+      "title": "Regelgesetz",
+      "text": "Die Formel des gewählten Reglers und der Wert jedes Terms zum Zeitpunkt des Schiebers.",
+      "state": "Zustand und Ausgang",
+      "speed": "Geschwindigkeit",
+      "command": "Soll-Lenkwinkel",
+      "actual": "Ist-Lenkwinkel (nach dem Aktor)",
+      "term": "Term",
+      "noTerms": "Dieser Regler meldet keine einzelnen Terme.",
+      "library": "Dokumentation aus der Bibliothek"
+    },
+    "explain": {
+      "pure_pursuit": "Pure Pursuit lenkt auf einem Kreisbogen von der Hinterachse zu einem Punkt der Bahn, der um die Vorausschau L_d voraus liegt. Eine lange Vorausschau ist ruhig, schneidet aber Kurven; eine kurze folgt eng, schwingt aber.",
+      "stanley": "Stanley betrachtet die Vorderachse. Er richtet die Räder an der Bahn aus (Kursterm), lenkt proportional zum Querfehler und umgekehrt zur Geschwindigkeit zur Bahn hin (Rückführung), addiert den Lenkwinkel, den die Krümmung braucht (Vorsteuerung), und dämpft die Gierrate.",
+      "lqr": "Der LQR nutzt das lineare Einspurmodell in Fehlerkoordinaten. Die Verstärkung K minimiert eine gewichtete Summe aus Fehlern und Lenkaufwand und wird für jede Geschwindigkeit neu berechnet; die Vorsteuerung hält das Fahrzeug ohne Fehler in der Kurve.",
+      "mpc": "Der MPC plant die Lenkrate über einen Horizont, indem er eine Optimierung mit dem Fehlermodell und Grenzen für Winkel und Rate löst, wendet den ersten Teil des Plans an und plant neu.",
+      "werling_bilevel": "Der Werling-Regler invertiert das nichtlineare Einspurmodell so, dass der Querfehler einer gewählten linearen Gleichung zweiter Ordnung folgt. Bei niedriger Geschwindigkeit schaltet er auf ein kinematisches Gesetz um; eine große Abweichung löst eine Reinitialisierung des Planers aus."
+    }
   }
 }

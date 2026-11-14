@@ -15,7 +15,7 @@ import { StackEditor } from "../components/StackEditor";
 import type { JobView, LiveSession, PlannerSnapshot, RunRequest, RunResult, SavedRun, WorkbenchCatalog } from "../lib/api";
 import { fmt, toDeg } from "../lib/format";
 import { useClient, usePersistentState, useQuery } from "../lib/hooks";
-import { downloadBlob, fileToBase64, stackSpecs, useConnections, useStack } from "../lib/stack";
+import { applyConditions, CONDITIONS, downloadBlob, fileToBase64, stackSpecs, useConnections, useStack, type Conditions } from "../lib/stack";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 const ACTIVE = ["queued", "running"];
@@ -23,7 +23,7 @@ const TABS = ["planner", "signals", "kpis", "events", "profile"] as const;
 type Tab = (typeof TABS)[number];
 const HEAD_KPIS = ["min_ttc", "min_distance", "max_ay", "max_e_n", "max_jerk"];
 
-interface Form { scenario: string; seed: number; duration: number }
+interface Form { scenario: string; seed: number; duration: number; conditions?: Conditions }
 interface SavedFile extends Partial<SavedRun> { [key: string]: unknown }
 
 export default function Workbench() {
@@ -74,8 +74,9 @@ export default function Workbench() {
   const request = (): RunRequest | null => {
     const { specs, invalid } = stackSpecs(stack);
     if (invalid) { setError(new Error(t("workbench.invalidParams", { layer: invalid }))); return null; }
+    const cond = applyConditions(specs, form.conditions ?? "ideal");
     return { scenario: form.scenario, seed: Number.isFinite(form.seed) ? form.seed : null, duration: Number.isFinite(form.duration) ? form.duration : null,
-      stack: specs, ...(connections ? { connections } : {}) };
+      stack: cond.stack, ...(cond.friction !== null ? { friction: cond.friction } : {}), ...(connections ? { connections } : {}) };
   };
   const start = async () => {
     const body = request();
@@ -143,6 +144,8 @@ export default function Workbench() {
               <NumberField label={t("workbench.duration")} unit="s" value={form.duration} min={1} max={catalog.data?.limits.max_duration ?? 120}
                 onChange={(v) => setForm({ ...form, duration: v })} hint={scenario ? t("workbench.defaultValue", { v: scenario.duration }) : undefined} />
             </div>
+            <SelectField label={t("workbench.conditions.label")} value={form.conditions ?? "ideal"} onChange={(v) => setForm({ ...form, conditions: v })}
+              options={CONDITIONS.map((c) => ({ value: c, label: t(`workbench.conditions.${c}`) }))} hint={t(`workbench.conditions.hint.${form.conditions ?? "ideal"}`)} />
             {catalog.data ? <StackEditor catalog={catalog.data} stack={stack} onChange={setStack} /> : <Skeleton height={120} />}
             {active ? (
               <button type="button" className="btn btn--secondary btn--lg" onClick={() => job && void client.cancelRun(job.id).then(setJob)}>

@@ -90,7 +90,8 @@ export interface WorkbenchCatalog { scenarios: AdScenario[]; layers: LayerInfo[]
   kpi_info: Record<string, [string, string, string, string]>; limits: { max_duration: number } }
 export interface LayerSpec { component: string; params?: Record<string, unknown> }
 export interface Connection { from: string; to: string }
-export interface RunRequest { scenario: string; seed?: number | null; duration?: number | null; stack?: Record<string, LayerSpec>; name?: string; connections?: Connection[] | null }
+export interface RunRequest { scenario: string; seed?: number | null; duration?: number | null; stack?: Record<string, LayerSpec>; name?: string; connections?: Connection[] | null;
+  friction?: number | null; wind_speed?: number | null }
 export interface LiveActor { type: string; length: number; width: number; t: number; x: number; y: number; psi: number; v?: number }
 export interface LiveFrame { t: number; t_end: number; stopped: boolean; stop_reason: string; row: Record<string, number | string | null>; objects: Record<string, LiveActor>;
   n_steps: number; n_snapshots: number; n_events: number; snapshot: PlannerSnapshot | null; events: ({ t: number; type: string } & Record<string, unknown>)[] }
@@ -131,6 +132,20 @@ export interface Reference { type?: string; authors?: string[]; title?: string; 
 export interface KnowledgeNode { id: string; type: string; label: string }
 export interface KnowledgeExplain { info: Record<string, unknown>; markdown: string; nodes: KnowledgeNode[]; edges: { source: string; target: string; type: string }[] }
 
+export interface ControlCatalog {
+  controllers: { name: string; label: string; params: ComponentParam[]; doc: Record<string, unknown> }[];
+  paths: Record<string, Record<string, number>>; plants: string[]; info_terms: string[];
+}
+export interface ControlRunRequest {
+  controllers: { name: string; params?: Record<string, unknown>; label?: string }[]; path: string; path_params?: Record<string, number>; speed: number;
+  plant?: string; mu?: number; lateral_offset?: number; heading_offset_deg?: number; disturbance?: { t: number; duration: number; fy: number; mz?: number } | null; duration?: number;
+}
+export interface ControlKpis { max_e_n: number; rms_e_n: number; final_e_n: number; max_e_theta_deg: number; max_steer_deg: number; max_steer_rate_deg_s: number; max_ay: number;
+  settled_after: number | null; compute_time_ms: number }
+export interface ControlRun { name: string; label: string; params: Record<string, unknown>; stable: boolean; kpis: ControlKpis | null;
+  signals: Record<string, (number | null)[]>; terms: Record<string, (number | null)[]>; active: string }
+export interface ControlResult { path: { kind: string; x: number[]; y: number[]; kappa: number[]; s: number[]; maneuver_start: number }; speed: number; duration: number; plant: string; mu: number;
+  vehicle: { wheelbase: number; length: number; width: number }; runs: ControlRun[] }
 export interface ChatStatus { available: boolean; installed: boolean; credential: boolean; model: string }
 export interface SimulationView { kind: "simulation"; request: Record<string, unknown>; model: string; stop_code: string; simulated_time: number; wall_time: number; kpis: Kpi[]; signals: Record<string, (number | null)[]> }
 export interface PlanView {
@@ -255,6 +270,8 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     drive: (id: string, body: { situation?: PlanRequest; seed?: number; cycles?: number }) => request<DriveResult>("POST", `/models/${encodeURIComponent(id)}/drive`, body),
     evaluate: (id: string, body: { maneuver: string; duration?: number }) => request<Evaluation>("POST", `/models/${encodeURIComponent(id)}/evaluate`, body),
     park: (body: ParkRequest, s?: AbortSignal) => request<ParkResponse>("POST", "/park", body, s),
+    controlCatalog: (s?: AbortSignal) => request<ControlCatalog>("GET", "/control/catalog", undefined, s),
+    controlRun: (body: ControlRunRequest, s?: AbortSignal) => request<ControlResult>("POST", "/control/run", body, s),
     workbenchCatalog: (s?: AbortSignal) => request<WorkbenchCatalog>("GET", "/workbench/catalog", undefined, s),
     stackGraph: (stack: Record<string, LayerSpec>, s?: AbortSignal, connections?: Connection[] | null) =>
       request<StackGraph>("POST", "/workbench/graph", { stack, ...(connections ? { connections } : {}) }, s),

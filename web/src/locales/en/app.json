@@ -384,6 +384,19 @@
     "geometryInfo": "Turning radius of the reference point {{r}} m · reference point {{p}} m ahead of the rear axle · max. steering front {{f}}°, rear {{rr}}°"
   },
   "workbench": {
+    "conditions": {
+      "label": "Conditions",
+      "ideal": "Ideal (design model, perfect sensors)",
+      "realistic": "Realistic (double track, sensor noise, 0.1 s latency)",
+      "wet": "Wet road (realistic, friction 0.5)",
+      "harsh": "Ice and poor sensors (friction 0.3, 0.2 s latency)",
+      "hint": {
+        "ideal": "The plant is the controller's own design model and every measurement is exact. Good for understanding the algorithms; tracking is almost perfect.",
+        "realistic": "Double-track vehicle with load transfer and tire saturation; objects and the own position are measured with noise and arrive 0.1 s late.",
+        "wet": "As realistic, on a wet road. The planner does not know the friction: watch the lateral acceleration it asks for.",
+        "harsh": "Low friction and poor sensors. Expect missions to fail; that is the point of this preset."
+      }
+    },
     "rewired": "Rewired stack: {{n}} connections (see Architecture)",
     "load": {
       "button": "Load result…",
@@ -747,5 +760,94 @@
     },
     "stackHint": "In the automated-driving stack the model is the planner component “learned” with the parameter “model” set to this id.",
     "useInWorkbench": "Use in the Workbench"
+  },
+  "control": {
+    "title": "Controller lab",
+    "subtitle": "Run several tracking controllers on the same path and vehicle, compare how well they follow it, and see how each term of a control law contributes at any moment.",
+    "setup": "Experiment",
+    "controllers": "Controllers",
+    "params": "Parameters",
+    "paramsChanged": "{{n}} changed",
+    "path": "Reference path",
+    "speed": "Speed",
+    "speedHint": "{{kmh}} km/h, constant along the path",
+    "names": {
+      "pure_pursuit": "Pure Pursuit",
+      "stanley": "Stanley",
+      "lqr": "LQR (gain scheduled)",
+      "mpc": "MPC (linear time-varying)",
+      "werling_bilevel": "Werling (exact linearization)"
+    },
+    "paths": "Reference path and driven paths",
+    "pathHints": {
+      "lane_change": "3.5 m to the left over 50 m.",
+      "double_lane_change": "To the left and back, 40 m each.",
+      "curve_entry": "Straight, then a 60 m radius with a 20 m transition.",
+      "s_curve": "Left then right, 80 m radius.",
+      "slalom": "±1.5 m with a 60 m wavelength.",
+      "straight": "Use it with a start offset or a side force to see the pure reaction of the loop."
+    },
+    "conditions": "Conditions and disturbances",
+    "plant": "Vehicle model",
+    "plantTip": "The model the controller drives. The design model is the simplest; the double-track and multibody models add load transfer, tire saturation and roll.",
+    "plants": {
+      "werling_desm": "Single track, design model",
+      "bicycle_nonlinear": "Single track, nonlinear tires",
+      "double_track": "Double track",
+      "multibody": "Multibody"
+    },
+    "mu": "Friction coefficient",
+    "muHint": "1.0 dry, about 0.5 wet, 0.2 ice",
+    "offset": "Start beside the path",
+    "offsetHint": "Positive: to the left of the path",
+    "gust": "Side force",
+    "gustTime": "at time",
+    "gustHint": "A lateral force at the center of gravity for 0.5 s, like a wind gust. 3000 N is a strong gust for a sedan.",
+    "run": "Run comparison",
+    "empty": {
+      "title": "Compare controllers",
+      "text": "Pick controllers and a path. The lab drives each controller through the same maneuver and shows errors, steering and the control law."
+    },
+    "result": {
+      "title": "Comparison",
+      "text": "Vehicle model: {{plant}} · friction {{mu}} · {{speed}} km/h. Click a row to see its control law below."
+    },
+    "kpi": {
+      "max_e_n": "Largest lateral error",
+      "rms_e_n": "RMS lateral error",
+      "settled": "Settled after",
+      "steer": "Largest steering angle",
+      "steerRate": "Largest steering rate",
+      "ay": "Largest lateral acceleration",
+      "time": "Compute time per step",
+      "note": "Settled: the lateral error stays below 5 cm from this time on."
+    },
+    "notSettled": "not settled",
+    "unstable": "unstable",
+    "best": "smallest error",
+    "series": {
+      "e_n": "Lateral error",
+      "delta": "Steering angle at the wheels",
+      "e_theta": "Heading error",
+      "ay": "Lateral acceleration"
+    },
+    "law": {
+      "title": "Control law",
+      "text": "The formula of the selected controller and the value of each term at the time of the slider.",
+      "state": "State and output",
+      "speed": "Speed",
+      "command": "Commanded steering angle",
+      "actual": "Actual steering angle (after the actuator)",
+      "term": "Term",
+      "noTerms": "This controller reports no separate terms.",
+      "library": "Documentation from the library"
+    },
+    "explain": {
+      "pure_pursuit": "Pure Pursuit steers along a circle from the rear axle to a point on the path that lies the look-ahead distance L_d ahead. A long look-ahead is smooth but cuts corners; a short one follows closely but oscillates.",
+      "stanley": "Stanley looks at the front axle. It aligns the wheels with the path (heading term), steers toward the path in proportion to the lateral error and inversely to the speed (feedback), adds the steering angle the curvature needs (feedforward) and damps the yaw rate.",
+      "lqr": "The LQR uses the linear single-track model in error coordinates. The gain K minimizes a weighted sum of errors and steering effort and is recomputed for each speed; the feedforward holds the vehicle on a curve without error.",
+      "mpc": "The MPC plans the steering rate over a horizon by solving an optimization with the error model and limits on angle and rate, applies the first part of the plan and plans again.",
+      "werling_bilevel": "The Werling controller inverts the nonlinear single-track model so that the lateral error follows a chosen linear second-order equation. At low speed it switches to a kinematic law; a large deviation triggers a re-initialization of the planner."
+    }
   }
 }

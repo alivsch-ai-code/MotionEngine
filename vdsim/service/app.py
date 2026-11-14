@@ -203,7 +203,7 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                     "SI units, ISO 8855 axes (x forward, y left, z up).",
         openapi_tags=[{"name": "service"}, {"name": "vehicle"}, {"name": "trajectory"}, {"name": "simulation"},
                       {"name": "planning"}, {"name": "prediction"}, {"name": "learning"},
-                      {"name": "workbench"}, {"name": "matlab"}, {"name": "knowledge"}, {"name": "chat"}],
+                      {"name": "workbench"}, {"name": "control"}, {"name": "matlab"}, {"name": "knowledge"}, {"name": "chat"}],
     )
     app.state.metrics = metrics
     app.state.model_dir = models.dir
@@ -820,6 +820,9 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
 
     # ------------------------------------------------------------------------- development environment
     from .workbench import create_router as _workbench_router
+    from .control import create_router as _control_router
+
+    app.include_router(_control_router(secured, limiter, catalog["presets"], max_wall_time))
 
     app.include_router(_workbench_router(secured, limiter, max_sim_time, max_wall_time))
 
