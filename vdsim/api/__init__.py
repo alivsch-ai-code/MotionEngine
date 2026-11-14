@@ -50,10 +50,18 @@ def build_graph(stack=None):
     return _build(stack)
 
 
-def run(scenario, stack=None, seed=None, duration=None, scenario_params=None, snapshots=True, progress=None):
+def run(scenario, stack=None, seed=None, duration=None, scenario_params=None, snapshots=True, progress=None,
+        connections=None):
     from ..ad import run_scenario
     return run_scenario(scenario, stack=stack, seed=seed, duration=duration, scenario_params=scenario_params,
-                        record_snapshots=snapshots, progress=progress)
+                        record_snapshots=snapshots, progress=progress, connections=connections)
+
+
+def live(scenario, stack=None, seed=None, duration=None, scenario_params=None, connections=None):
+    """Live session: advance the run step by step (see vdsim.ad.live.LiveSession)."""
+    from ..ad.live import LiveSession
+    return LiveSession(scenario, stack=stack, seed=seed, duration=duration, scenario_params=scenario_params,
+                       connections=connections)
 
 
 def run_batch(jobs, workers=0):

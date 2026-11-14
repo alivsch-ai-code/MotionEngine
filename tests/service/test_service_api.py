@@ -285,3 +285,43 @@ def test_require_returns_catalog_string_not_client_input():
     for bad in ("../suv", "suv.json", "/etc/passwd", "SUV", ""):
         with pytest.raises(HTTPException):
             _require(bad, allowed, "preset")
+
+
+WAYPOINTS = {"waypoints": [{"x": 0, "y": 0, "v_kmh": 50}, {"x": 80, "y": 0, "v_kmh": 50, "radius": 20},
+                           {"x": 120, "y": 40, "v_kmh": 40, "radius": 15}, {"x": 80, "y": 90, "v_kmh": 40}],
+             "ay_max": 4.0}
+
+
+def test_waypoint_trajectory_and_simulation(client):
+    r = client.post("/trajectory/waypoints", json=WAYPOINTS, headers=KEY)
+    assert r.status_code == 200
+    traj = r.json()
+    # two legs of 80 m and 56.6 m plus 64 m, shortened by the two fillets
+    assert 180.0 < traj["length"] < 80.0 + 56.6 + 64.1
+    assert max(abs(k) for k in traj["kappa"]) == pytest.approx(1 / 15, rel=0.2)       # tightest fillet
+    v, kappa = np.array(traj["v"]), np.array(traj["kappa"])
+    assert np.max(v**2 * np.abs(kappa)) <= 4.0 * 1.15                                  # ay_max limits the speed
+    assert client.post("/trajectory/waypoints", json={"waypoints": WAYPOINTS["waypoints"][:1]},
+                       headers=KEY).status_code == 422
+
+    sampled = client.post("/trajectory/waypoints/from-maneuver", json={"maneuver": "iso_double_lane_change",
+                                                                       "n_points": 12}, headers=KEY).json()
+    assert len(sampled["waypoints"]) == 12 and sampled["waypoints"][0]["v_kmh"] == pytest.approx(80.0)
+    assert client.post("/trajectory/waypoints/from-maneuver", json={"maneuver": "step_steer"},
+                       headers=KEY).status_code == 422
+
+    sim = client.post("/simulate", json={"waypoints": WAYPOINTS}, headers=KEY).json()
+    assert sim["name"] == "waypoints" and sim["stop_code"] == "end_of_trajectory" and sim["run_id"]
+    assert sim["signals"]["x"][-1] == pytest.approx(80.0, abs=2.0) and sim["signals"]["y"][-1] == pytest.approx(90.0, abs=2.0)
+    assert max(abs(e) for e in sim["signals"]["lateral_error"]) < 0.5
+
+
+def test_simulation_report(client):
+    ids = [client.post("/simulate", json={"maneuver": "step_steer", "duration": 2.0, "initial_speed": v},
+                       headers=KEY).json()["run_id"] for v in (20.0, 25.0)]
+    pdf = client.post("/simulate/report", json={"run_ids": ids, "title": "Test"}, headers=KEY)
+    assert pdf.status_code == 200 and pdf.headers["content-type"] == "application/pdf"
+    assert pdf.content[:5] == b"%PDF-" and len(pdf.content) > 50_000
+    summary = client.post("/simulate/report", json={"run_ids": ids[:1], "format": "summary"}, headers=KEY)
+    assert summary.status_code == 200 and summary.text.startswith("# Engineering Summary")
+    assert client.post("/simulate/report", json={"run_ids": ["missing"]}, headers=KEY).status_code == 404

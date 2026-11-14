@@ -49,7 +49,7 @@ describe("locales", () => {
 
 // proper names that are the same in every language
 const BRAND = ["Motion", "Engine", "MotionEngine"];
-const PROPER_NAMES = ["controllers.pure_pursuit", "controllers.stanley"];
+const PROPER_NAMES = ["controllers.pure_pursuit", "controllers.stanley", "research.kind.monte_carlo"];
 
 describe("source code", () => {
   const sources = files(SRC);

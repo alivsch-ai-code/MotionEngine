@@ -29,6 +29,13 @@
     "models": { "title": "No neural models yet", "text": "Train a surrogate of the vehicle dynamics on data from a physics model, or connect an external ONNX or HTTP model.", "action": "Train a model" }
   },
   "simulate": {
+    "editorPath": "Editor path",
+    "editorActive": "Trajectory from the editor ({{n}} waypoints) replaces the maneuver",
+    "editorFriction": "Friction map from the editor is active",
+    "editorPatches": "{{n}} friction areas",
+    "editorEdit": "Open editor",
+    "editorRemove": "Remove",
+    "editorLink": "Draw your own trajectory in the editor",
     "drive": "Drive",
     "driveHint": "The vehicle on its driven path; dashed: the reference of the maneuver.",
     "title": "Simulation",
@@ -366,5 +373,329 @@
     "rear": "Rear",
     "speed": "Speed",
     "geometryInfo": "Turning radius of the reference point {{r}} m · reference point {{p}} m ahead of the rear axle · max. steering front {{f}}°, rear {{rr}}°"
+  },
+  "workbench": {
+    "rewired": "Rewired stack: {{n}} connections (see Architecture)",
+    "load": {
+      "button": "Load result…",
+      "hint": "The file from “Download result”, or the .json and .npz files of a result saved by the library (select both)",
+      "needJson": "Select the .json file of the result.",
+      "needNpz": "This is the metadata file of a library result: select the .npz file with the same name too."
+    },
+    "kinds": {
+      "live": "live run",
+      "import": "loaded"
+    },
+    "p95": "95th percentile",
+    "maxTime": "Maximum",
+    "title": "Workbench",
+    "subtitle": "Run the complete automated-driving stack on a scenario and look into every planning cycle: candidates, costs, controller, events and runtime.",
+    "setup": "Run",
+    "scenario": "Scenario",
+    "seed": "Seed",
+    "duration": "Duration",
+    "defaultValue": "Empty = {{v}}",
+    "run": "Run scenario",
+    "running": "Running {{name}}…",
+    "failed": "The run failed.",
+    "invalidParams": "The parameter overrides of the layer \"{{layer}}\" are not a valid JSON object.",
+    "history": "Recent runs ({{n}})",
+    "empty": {
+      "title": "No run yet",
+      "text": "Choose a scenario and start. The stack runs perception, prediction, behavior, trajectory planning, control, actuators and the vehicle in closed loop."
+    },
+    "missionPassed": "Mission passed",
+    "missionFailed": "Mission not passed",
+    "collision": "Collision",
+    "timing": "{{sim}} s simulated in {{wall}} s",
+    "download": "Download result",
+    "scene": "Top view of the run",
+    "candidates": "Candidates",
+    "legend": "Blue: selected trajectory. Green: valid candidates, gray: rejected by a restriction, red: collision. Dashed orange: predicted objects. Gray line: driven path.",
+    "details": "Details of the run",
+    "tabs": {
+      "planner": "Planner and controller",
+      "signals": "Signals",
+      "kpis": "KPIs and mission",
+      "events": "Events",
+      "profile": "Runtime"
+    },
+    "cycle": "Planning cycle",
+    "cycleTime": "Cycle start",
+    "maneuver": "Maneuver",
+    "mode": "Longitudinal mode",
+    "nCandidates": "Candidates / checked",
+    "computeTime": "Compute time",
+    "controller": "Active controller",
+    "flags": "Flags",
+    "fallback": "fallback",
+    "reinit": "re-initialized",
+    "costTerms": "Cost terms of the selected trajectory",
+    "charts": {
+      "speed": "Speed",
+      "accel": "Acceleration",
+      "errors": "Tracking errors",
+      "steering": "Steering angle",
+      "cost": "Cost of the selected trajectory",
+      "planTime": "Planner compute time"
+    },
+    "series": {
+      "actual": "Actual",
+      "planned": "Planned",
+      "target": "Target"
+    },
+    "mission": "Mission criteria",
+    "noMission": "This scenario defines no mission criteria.",
+    "eventType": "Event",
+    "eventDetail": "Details",
+    "node": "Node",
+    "calls": "Calls",
+    "mean": "Mean",
+    "total": "Total",
+    "stack": {
+      "edit": "Edit {{n}} parameters…",
+      "overridden": "changed",
+      "asJson": "Overrides as JSON",
+      "title": "Stack",
+      "changed": "{{n}} changed",
+      "text": "One component per layer. Edit its parameters in the dialog; only changed values are sent. The same overrides can be edited as JSON.",
+      "default": "default",
+      "params": "Parameters ({{n}} groups)",
+      "overrides": "Parameter overrides (JSON)",
+      "placeholder": "{\"cost\": {\"k_lat\": 2.0}}"
+    },
+    "layers": {
+      "world": "World",
+      "perception": "Perception",
+      "prediction": "Prediction",
+      "behavior": "Behavior planning",
+      "planner": "Trajectory planning",
+      "controller": "Vehicle control",
+      "dynamics": "Vehicle dynamics control",
+      "actuators": "Actuators",
+      "plant": "Vehicle"
+    }
+  },
+  "research": {
+    "title": "Research",
+    "subtitle": "Batch experiments on the automated-driving stack: compare components, sweep a parameter or sample it at random, and compare the KPIs.",
+    "setup": "Experiment",
+    "kindLabel": "Type",
+    "kind": {
+      "compare": "Compare components",
+      "sweep": "Parameter sweep",
+      "monte_carlo": "Monte Carlo"
+    },
+    "kindHint": {
+      "compare": "Runs the scenario once per selected component of a layer.",
+      "sweep": "Runs the scenario once per value of a parameter.",
+      "monte_carlo": "Draws the parameter uniformly between two bounds."
+    },
+    "layer": "Layer",
+    "variants": "Components",
+    "path": "Parameter path",
+    "pathHint": "For example stack.planner.params.cost.k_lat or scenario_params.lead_speed",
+    "values": "Values",
+    "valuesHint": "Comma separated",
+    "low": "Lower bound",
+    "high": "Upper bound",
+    "samples": "Runs",
+    "stackNote": "Uses the stack of the workbench ({{n}} layers changed).",
+    "run": "Start experiment",
+    "empty": {
+      "title": "No experiment yet",
+      "text": "Each run is deterministic for its seed, so results are reproducible."
+    },
+    "variant": "Run",
+    "chart": "KPI over the runs",
+    "metric": "KPI",
+    "runIndex": "Run"
+  },
+  "architecture": {
+    "wiring": {
+      "title": "Connections",
+      "text": "Remove a connection or add one between an output and an input of the same type. The check runs on the server; the workbench runs the stack with this wiring.",
+      "reset": "Restore default wiring",
+      "default": "default wiring",
+      "from": "Output",
+      "to": "Input",
+      "type": "Type",
+      "remove": "Remove connection {{from}} to {{to}}",
+      "pickOutput": "Pick an output…",
+      "pickInput": "Pick an input…",
+      "used": "connected",
+      "optional": "optional",
+      "add": "Connect"
+    },
+    "title": "Architecture",
+    "subtitle": "The signal flow of the automated-driving stack: one node per layer, connected through typed ports. Click a node for its documentation.",
+    "valid": "Graph valid: {{nodes}} nodes, {{conns}} connections.",
+    "stackHint": "Changes apply to the workbench and to experiments.",
+    "inputs": "Inputs",
+    "outputs": "Outputs",
+    "doc": {
+      "purpose": "Purpose",
+      "theory": "Theory",
+      "references": "References"
+    },
+    "noDoc": "This component has no documentation."
+  },
+  "matlab": {
+    "title": "MATLAB",
+    "subtitle": "Analyze MATLAB functions and convert them to Python or C, for example to bring an existing controller into the stack.",
+    "source": "MATLAB source",
+    "target": "Target language",
+    "targets": {
+      "python": "Python",
+      "c": "C"
+    },
+    "convert": "Analyze and convert",
+    "sample": "Load example",
+    "empty": {
+      "title": "Paste MATLAB code",
+      "text": "The converter reports functions, variables with roles and types, used built-ins, and generates the code."
+    },
+    "ok": "Converted",
+    "warnings": "Converted with warnings",
+    "analysis": "Analysis",
+    "function": "Function",
+    "variable": "Variable",
+    "role": "Role",
+    "type": "Type",
+    "builtins": "Built-ins used"
+  },
+  "knowledge": {
+    "title": "Knowledge",
+    "subtitle": "What the library knows about itself: components, concepts, classes, equations and the literature they come from.",
+    "tabs": {
+      "graph": "Knowledge graph",
+      "references": "References"
+    },
+    "search": "Search",
+    "noHits": "No matching entries.",
+    "linked": "Linked entries",
+    "empty": {
+      "title": "Pick an entry",
+      "text": "Search on the left and select an entry to see how it works and what it is linked to."
+    },
+    "ref": {
+      "id": "Key",
+      "authors": "Authors",
+      "title": "Title",
+      "year": "Year"
+    }
+  },
+  "params": {
+    "title": "Parameters: {{name}}",
+    "text": "Only values that differ from the defaults are sent with the run. Changed values are marked.",
+    "defaults": "Restore defaults",
+    "changed": "{{n}} changed",
+    "apply": "Apply"
+  },
+  "live": {
+    "start": "Live",
+    "stopped": "stopped",
+    "running": "running",
+    "paused": "paused",
+    "reasons": {
+      "duration": "simulation time reached",
+      "collision": "collision",
+      "goal": "goal reached",
+      "unstable": "numerically unstable",
+      "error": "error in a component",
+      "other": "stopped"
+    },
+    "steps": "{{n}} steps",
+    "pause": "Pause",
+    "play": "Play",
+    "step": "Single step",
+    "step10": "10 steps",
+    "finish": "Keep as run",
+    "discard": "Discard",
+    "hint": "The stack runs on the server. Play advances it in real time (or slower/faster), single step executes one base step. “Keep as run” evaluates the run and opens it with all details.",
+    "telemetry": "Telemetry",
+    "noCycle": "No planning cycle yet.",
+    "signals": {
+      "ego_v": "Speed",
+      "ego_ax": "Longitudinal acceleration",
+      "ego_ay": "Lateral acceleration",
+      "delta": "Steering angle",
+      "e_n": "Lateral tracking error",
+      "e_t": "Longitudinal tracking error",
+      "target_speed": "Target speed",
+      "plan_cost": "Cost of the selected trajectory",
+      "plan_time": "Planning time"
+    }
+  },
+  "compare": {
+    "title": "Run comparison and report ({{n}})",
+    "text": "Every simulation of this session is kept here (the last 8). Tick the runs to compare; the report covers the ticked runs.",
+    "loaded": "from file",
+    "save": "Save",
+    "remove": "Remove run {{name}}",
+    "pdf": "PDF report",
+    "summary": "Summary (Markdown)",
+    "load": "Load run…",
+    "needStored": "The report needs a run simulated in this session (loaded runs have no stored result).",
+    "needTwo": "Tick at least two runs to compare them.",
+    "paths": "Driven paths of the selected runs",
+    "badFile": "{{name}} is not a saved simulation run.",
+    "reportTitle": "Vehicle dynamics simulation report",
+    "signals": {
+      "r": "Yaw rate",
+      "ay": "Lateral acceleration",
+      "delta_f": "Steering angle (front)",
+      "lateral_error": "Lateral error",
+      "vx": "Speed",
+      "beta": "Side-slip angle"
+    }
+  },
+  "editor": {
+    "title": "Trajectory editor",
+    "subtitle": "Draw a path through waypoints, round the corners, limit the speed by lateral acceleration and add areas with their own friction. Then drive it in the simulation.",
+    "canvas": "Editor canvas with waypoints",
+    "waypoint": "Waypoint {{n}}",
+    "hint": "Drag a point to move it (arrow keys work too). Double-click the canvas to insert a point into the nearest segment. Right-click or Delete removes a point. The path color shows the speed: blue is fast, orange is slow.",
+    "length": "Length {{v}} m",
+    "speedRange": "Speed {{min}}–{{max}} km/h",
+    "maxAy": "Lateral acceleration up to {{v}} m/s²",
+    "charts": {
+      "speed": "Speed over distance",
+      "curvature": "Curvature over distance"
+    },
+    "waypoints": "Waypoints ({{n}})",
+    "cols": {
+      "x": "x [m]",
+      "y": "y [m]",
+      "v_kmh": "v [km/h]",
+      "radius": "Radius [m]"
+    },
+    "removeWaypoint": "Remove waypoint {{n}}",
+    "addWaypoint": "Add waypoint",
+    "radius": "Corner radius",
+    "ayMax": "Max. lateral acceleration",
+    "ayMaxHint": "0 = no speed limit in corners",
+    "radiusAll": "Radius for all corners",
+    "undo": "Undo",
+    "save": "Save waypoints",
+    "load": "Load waypoints…",
+    "fromManeuver": "Start from a maneuver",
+    "take": "Take over",
+    "friction": {
+      "title": "Friction map",
+      "text": "Rectangles with their own friction coefficient, for example a wet or icy area.",
+      "cols": {
+        "x_min": "x min [m]",
+        "x_max": "x max [m]",
+        "y_min": "y min [m]",
+        "y_max": "y max [m]",
+        "mu": "μ"
+      },
+      "remove": "Remove area {{n}}",
+      "add": "Add area"
+    },
+    "apply": "Drive this trajectory",
+    "applyFriction": "Use only the friction map",
+    "badFile": "The file contains no waypoints."
   }
 }

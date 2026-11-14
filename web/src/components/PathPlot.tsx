@@ -1,7 +1,8 @@
 // Top view in world coordinates (SVG, equal axis scale): road corridor, candidate set, selected trajectory, objects.
 import { memo, useMemo } from "react";
 
-export interface Polyline { x: (number | null)[]; y: (number | null)[]; kind: "road" | "bound" | "target" | "candidate" | "rejected" | "collision" | "selected" | "prediction" | "physics" | "neural" }
+// color: index of the chart palette (0-5), replaces the stroke of the kind (run comparison)
+export interface Polyline { color?: number; x: (number | null)[]; y: (number | null)[]; kind: "road" | "bound" | "target" | "candidate" | "rejected" | "collision" | "selected" | "prediction" | "physics" | "neural" }
 export interface Box { x: number; y: number; psi: number; length: number; width: number; kind: "ego" | "object" }
 
 const STYLE: Record<Polyline["kind"], { stroke: string; width: number; dash?: string; opacity?: number }> = {
@@ -44,7 +45,7 @@ function PathPlotImpl({ lines, boxes = [], height = 320, ariaLabel, focus, stret
       preserveAspectRatio={stretch ? "none" : "xMidYMid meet"} role="img" aria-label={ariaLabel}>
       {lines.map((l, i) => {
         const s = STYLE[l.kind];
-        return <polyline key={i} points={toPoints(l)} fill="none" stroke={s.stroke} strokeWidth={s.width} strokeDasharray={s.dash}
+        return <polyline key={i} points={toPoints(l)} fill="none" stroke={l.color === undefined ? s.stroke : `var(--me-chart-${(l.color % 6) + 1})`} strokeWidth={s.width} strokeDasharray={s.dash}
           strokeOpacity={s.opacity ?? 1} vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />;
       })}
       {boxes.map((b, i) => (

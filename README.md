@@ -59,13 +59,21 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 
 <img src="docs/images/app/simulate-dark.png" alt="Simulation page: ISO double lane change with the double-track model, KPIs and driven path" width="100%">
 
+<img src="docs/images/app/workbench-dark.png" alt="Workbench: highway overtaking run with the candidate set of one planning cycle, timeline and planner details" width="100%">
+
 <img src="docs/images/app/parking-dark.png" alt="Parking page: reverse parallel parking, planned moves (forward solid, reverse dashed), KPIs and the animated vehicle" width="100%">
 
 | Page | What it does |
 |---|---|
 | **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
-| **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view |
+| **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view; run comparison (KPI table, overlaid paths and signals), PDF report, save and load runs |
+| **Trajectory editor** | draw a path through draggable waypoints with corner radii, limit the speed by lateral acceleration, add a friction map, then drive it in the simulation |
 | **Trajectory inspector** | one planning cycle in seven steps, each with formula, values, source and chart |
+| **Workbench** | run the complete automated-driving stack on one of 14 scenarios; choose the component and parameters of every layer; animated top view with candidates and selected trajectory of each planning cycle; cost terms, signals, KPIs, mission criteria, events and runtime per node; live mode with pause and single step; parameter dialog per component; download a result and load it again |
+| **Research** | compare components of a layer, sweep a parameter or run Monte Carlo, with a KPI table and chart |
+| **Architecture** | signal-flow graph of the stack with validation and the documentation of each component; remove and add connections, the Workbench runs the rewired stack |
+| **MATLAB** | analyze MATLAB functions and convert them to Python or C |
+| **Knowledge** | search the knowledge graph (components, concepts, classes, equations) and 85 literature references |
 | **Parking** | parallel, perpendicular or angled spots, forward or in reverse; front, rear-only or four-wheel steering; front, rear or all-wheel drive; animated maneuver with KPIs |
 | **Neural models** | train an MLP surrogate in the background, connect ONNX or HTTP models, compare them closed loop with the physics model, simulate with them |
 | **Prediction, Vehicles, Settings** | object prediction, every vehicle parameter with unit and meaning, API address and key |
@@ -293,7 +301,7 @@ curl -s -X POST localhost:8000/simulate -H "Content-Type: application/json" \
 ```
 
 Endpoints: `/health`, `/metrics` (Prometheus), `/vehicle`, `/vehicle/{preset}`, `/trajectory`, `/simulate`, `/plan`,
-`/plan/explain`, `/park`, `/predict`, `/models` (train, jobs, connect, evaluate), `/chat` (assistant, server-sent events).
+`/plan/explain`, `/park`, `/predict`, `/workbench` (catalog, runs, live sessions, import, experiments), `/trajectory/waypoints`, `/simulate/report`, `/matlab`, `/knowledge`, `/models` (train, jobs, connect, evaluate), `/chat` (assistant, server-sent events).
 
 | Variable | Effect |
 |---|---|

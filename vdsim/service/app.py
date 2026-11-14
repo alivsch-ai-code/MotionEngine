@@ -20,17 +20,21 @@ from __future__ import annotations
 import math
 import os
 import secrets
+import tempfile
 import threading
 import time
+import uuid
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import fields
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse, StreamingResponse
+from fastapi.responses import PlainTextResponse, Response, StreamingResponse
 from fastapi.security import APIKeyHeader
 
 from .. import __version__
@@ -51,6 +55,7 @@ from .schemas import (
     PredictedObjectModel,
     PredictRequest,
     PredictResponse,
+    ReportRequest,
     RoadGeometry,
     SimulateRequest,
     SimulateResponse,
@@ -61,6 +66,8 @@ from .schemas import (
     VehicleAnalysis,
     VehicleCatalog,
     VehicleResponse,
+    WaypointsFromManeuver,
+    WaypointsRequest,
 )
 
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -194,7 +201,8 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         description="Vehicle dynamics simulation, Werling trajectory planning and motion prediction. "
                     "SI units, ISO 8855 axes (x forward, y left, z up).",
         openapi_tags=[{"name": "service"}, {"name": "vehicle"}, {"name": "trajectory"}, {"name": "simulation"},
-                      {"name": "planning"}, {"name": "prediction"}],
+                      {"name": "planning"}, {"name": "prediction"}, {"name": "learning"},
+                      {"name": "workbench"}, {"name": "matlab"}, {"name": "knowledge"}, {"name": "chat"}],
     )
     app.state.metrics = metrics
     app.state.limits = {"max_concurrency": max_concurrency, "max_sim_time": max_sim_time,
@@ -287,7 +295,48 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                                   open_loop=bool(traj.is_open_loop), n_points=len(idx),
                                   **{k: _list(getattr(traj, k)[idx]) for k in ("s", "x", "y", "psi", "kappa", "v")})
 
+    def waypoint_trajectory(path):
+        from ..trajectory.waypoint_editor import Waypoint, WaypointEditor
+
+        editor = WaypointEditor([Waypoint(w.x, w.y, w.v_kmh, w.radius) for w in path.waypoints])
+        try:
+            return editor.to_trajectory(ay_max=path.ay_max or None)
+        except (ValueError, FloatingPointError, IndexError) as exc:
+            raise HTTPException(status_code=422, detail=f"invalid waypoints: {exc}") from None
+
+    @app.post("/trajectory/waypoints", response_model=TrajectoryResponse, tags=["trajectory"], dependencies=secured,
+              summary="Trajectory through waypoints with corner radii and a speed profile")
+    def trajectory_from_waypoints(req: WaypointsRequest):
+        with limiter.slot():
+            traj = waypoint_trajectory(req)
+        idx = _decimate_index(len(traj.s), req.max_points)
+        return TrajectoryResponse(name="waypoints", length=float(traj.length), open_loop=False, n_points=len(idx),
+                                  **{k: _list(getattr(traj, k)[idx]) for k in ("s", "x", "y", "psi", "kappa", "v")})
+
+    @app.post("/trajectory/waypoints/from-maneuver", tags=["trajectory"], dependencies=secured,
+              summary="Waypoints sampled from the reference trajectory of a maneuver")
+    def waypoints_from_maneuver(req: WaypointsFromManeuver):
+        from ..simulation.scenario import Scenario
+        from ..trajectory.waypoint_editor import WaypointEditor
+
+        maneuver = _require(req.maneuver, catalog["maneuver"], "maneuver")
+        preset = _require(req.vehicle, catalog["presets"], "vehicle preset")
+        with limiter.slot():
+            sc = Scenario(vehicle=preset, maneuver=maneuver, maneuver_params=dict(req.params))
+            try:
+                traj = sc.build_trajectory(sc.build_config())
+            except TypeError as exc:
+                raise HTTPException(status_code=422, detail=f"invalid maneuver parameters: {exc}") from None
+        if traj.is_open_loop:
+            raise HTTPException(status_code=422, detail="open-loop maneuvers have no path to edit")
+        return {"waypoints": [{k: _finite(v) for k, v in w.items()}
+                              for w in WaypointEditor.from_trajectory(traj, req.n_points).to_dict()["waypoints"]]}
+
     # ------------------------------------------------------------------------- simulation
+    sim_results: OrderedDict[str, Any] = OrderedDict()      # recent results for reports, newest last
+    sim_results_lock = threading.Lock()
+    report_lock = threading.Lock()                          # matplotlib's pyplot state is not thread-safe
+
     @app.post("/simulate", response_model=SimulateResponse, tags=["simulation"], dependencies=secured,
               summary="Closed-loop vehicle dynamics simulation of a maneuver")
     def simulate(req: SimulateRequest):
@@ -318,13 +367,18 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         else:
             scenario.model = _require(scenario.model, catalog["vehicle_model"], "vehicle model")
         _require(scenario.maneuver, catalog["maneuver"], "maneuver")
+        waypoint_path = waypoint_trajectory(req.waypoints) if req.waypoints is not None else None
         _require(scenario.lateral_controller, catalog["lateral_controller"], "lateral controller")
         _require(scenario.longitudinal_controller, catalog["longitudinal_controller"], "longitudinal controller")
         for dotted in scenario.vehicle_overrides:
             if dotted.count(".") != 1:
                 raise HTTPException(status_code=422, detail=f"override '{dotted}' must be 'group.field'")
 
-        with limiter.slot():
+        with limiter.slot(), tempfile.TemporaryDirectory() as tmp:
+            if waypoint_path is not None:
+                scenario.name = "waypoints"
+                scenario.trajectory_file = str(Path(tmp) / "waypoints.json")
+                waypoint_path.save(scenario.trajectory_file)
             try:
                 sim = Simulator.from_scenario(scenario)
             except (AttributeError, KeyError, TypeError, ValueError) as exc:
@@ -339,10 +393,34 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
             if key in result:
                 arr = np.asarray(result[key], dtype=float)[idx]
                 signals[key] = [_list(row) if np.ndim(row) else _finite(row) for row in arr]
-        return SimulateResponse(name=scenario.name, model=scenario.model, stop_reason=sim.stop_reason,
+        run_id = uuid.uuid4().hex[:12]
+        with sim_results_lock:
+            sim_results[run_id] = result
+            while len(sim_results) > 20:
+                sim_results.popitem(last=False)
+        return SimulateResponse(run_id=run_id, name=scenario.name, model=scenario.model, stop_reason=sim.stop_reason,
                                 stop_code=STOP_CODES.get(sim.stop_reason, "other"),
                                 simulated_time=float(sim.t), wall_time=float(result.metadata["wall_time"]),
                                 n_samples=n, kpis=kpis, signals=signals)
+
+    @app.post("/simulate/report", tags=["simulation"], dependencies=secured,
+              summary="PDF report or Markdown summary of stored simulation results")
+    def simulate_report(req: ReportRequest):
+        from ..reporting.report_generator import engineering_summary, generate_pdf
+
+        with sim_results_lock:
+            missing = [i for i in req.run_ids if i not in sim_results]
+            results = [sim_results[i] for i in req.run_ids if i in sim_results]
+        if missing:
+            raise HTTPException(status_code=404, detail=f"results no longer stored: {missing}; run them again")
+        if req.format == "summary":
+            return PlainTextResponse(engineering_summary(results), media_type="text/markdown; charset=utf-8",
+                                     headers={"Content-Disposition": 'attachment; filename="summary.md"'})
+        with limiter.slot(), report_lock, tempfile.TemporaryDirectory() as tmp:
+            path = generate_pdf(results, Path(tmp) / "report.pdf", title=req.title)
+            data = path.read_bytes()
+        return Response(data, media_type="application/pdf",
+                        headers={"Content-Disposition": 'attachment; filename="report.pdf"'})
 
     # ------------------------------------------------------------------------- prediction
     @app.post("/predict", response_model=PredictResponse, tags=["prediction"], dependencies=secured,
@@ -678,6 +756,11 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
                                 "traction_limited": [bool(v) for v in d.traction_limited[idx]],
                                 "kpis": {k: _finite(v) for k, v in d.kpis.items()}}
         return result
+
+    # ------------------------------------------------------------------------- development environment
+    from .workbench import create_router as _workbench_router
+
+    app.include_router(_workbench_router(secured, limiter, max_sim_time, max_wall_time))
 
     # ------------------------------------------------------------------------- chat assistant
     from .chat import ChatTools, ConversationStore, chat_events

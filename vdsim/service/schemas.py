@@ -84,6 +84,27 @@ class TrajectoryResponse(BaseModel):
     v: list[float]
 
 
+class WaypointModel(_Strict):
+    x: float = Field(ge=-1e5, le=1e5, description="m")
+    y: float = Field(ge=-1e5, le=1e5, description="m")
+    v_kmh: float = Field(50.0, ge=0.0, le=400.0)
+    radius: float = Field(0.0, ge=0.0, le=5000.0, description="corner radius at this waypoint, m (0 = sharp)")
+
+
+class WaypointPath(_Strict):
+    waypoints: list[WaypointModel] = Field(min_length=2, max_length=200)
+    ay_max: float | None = Field(None, ge=0.0, le=15.0,
+                                 description="m/s^2: limit the speed profile by lateral acceleration (0 = off)")
+
+
+class WaypointsRequest(WaypointPath):
+    max_points: int = Field(2000, ge=2, le=20000)
+
+
+class WaypointsFromManeuver(TrajectoryRequest):
+    n_points: int = Field(25, ge=2, le=200)
+
+
 # ----------------------------------------------------------------------------- simulate
 DEFAULT_SIGNALS = ["t", "x", "y", "psi", "vx", "vy", "r", "ax", "ay", "beta", "delta_f", "lateral_error"]
 
@@ -95,6 +116,7 @@ class SimulateRequest(_Strict):
     model: str | None = Field(None, description="vehicle model (default double_track)")
     maneuver: str | None = None
     maneuver_params: dict[str, ScalarValue] | None = None
+    waypoints: WaypointPath | None = Field(None, description="drive this waypoint path instead of a maneuver")
     lateral_controller: str | None = None
     lateral_params: dict[str, ScalarValue] | None = None
     longitudinal_controller: str | None = None
@@ -120,6 +142,7 @@ class KPIModel(BaseModel):
 
 
 class SimulateResponse(BaseModel):
+    run_id: str = Field("", description="id of the stored result, for POST /simulate/report")
     name: str
     model: str
     stop_reason: str
@@ -129,6 +152,12 @@ class SimulateResponse(BaseModel):
     n_samples: int
     kpis: list[KPIModel]
     signals: dict[str, list]
+
+
+class ReportRequest(_Strict):
+    run_ids: list[str] = Field(min_length=1, max_length=6, description="run_id values of POST /simulate")
+    format: Literal["pdf", "summary"] = "pdf"
+    title: str = Field("Vehicle dynamics simulation report", max_length=120)
 
 
 # ----------------------------------------------------------------------------- objects and prediction

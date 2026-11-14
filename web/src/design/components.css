@@ -269,3 +269,39 @@ details.expert[open] > summary { margin-bottom: var(--me-space-3); color: var(--
 .player__readout { font-size: var(--me-text-sm); color: var(--me-text-muted); min-width: 120px; }
 .select--sm { height: 28px; padding: 0 var(--me-space-2); width: auto; }
 .grid--2-tight { display: grid; grid-template-columns: 1fr 1fr; gap: var(--me-space-3); }
+
+/* ---------------------------------------------------------------- development environment */
+.stack-params summary { cursor: pointer; color: var(--me-text-muted); font-size: var(--me-text-sm); margin-top: 4px; }
+.stack-params__input { height: auto; padding: var(--me-space-2); font-size: var(--me-text-xs); resize: vertical; margin-top: 4px; }
+.stack-params__defaults { font-size: var(--me-text-xs); color: var(--me-text-subtle); max-height: 160px; overflow: auto; margin-top: 4px;
+  background: var(--me-surface-2); padding: var(--me-space-2); border-radius: var(--me-radius-sm); }
+.check { display: flex; align-items: center; gap: var(--me-space-2); font-size: var(--me-text-sm); padding: 2px 0; }
+.code-editor { height: auto; min-height: 320px; padding: var(--me-space-3); font-size: var(--me-text-sm); resize: vertical; white-space: pre; }
+.code-block--scroll { max-height: 420px; overflow: auto; white-space: pre; }
+.knowledge-list { max-height: 70vh; overflow: auto; }
+.knowledge-item { justify-content: flex-start; height: auto; min-height: 28px; text-align: left; white-space: normal; gap: var(--me-space-2); }
+
+/* ---- dialog (parameter editor) ---- */
+.dialog { border: 1px solid var(--me-border-strong); border-radius: var(--me-radius-lg); background: var(--me-surface); color: var(--me-text); padding: 0; width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); box-shadow: var(--me-shadow-lg, 0 20px 60px rgb(0 0 0 / 0.35)); }
+.dialog::backdrop { background: rgb(0 0 0 / 0.5); }
+.dialog__body { display: flex; flex-direction: column; gap: var(--me-space-3); padding: var(--me-space-5); max-height: calc(100vh - 48px); }
+.dialog__scroll { overflow-y: auto; flex: 1; min-height: 120px; display: flex; flex-direction: column; gap: var(--me-space-1); padding-right: var(--me-space-2); }
+.param-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 200px); gap: var(--me-space-3); align-items: center; padding: 3px 0 3px var(--me-space-2); border-left: 2px solid transparent; font-size: var(--me-text-sm); }
+.param-row--changed { border-left-color: var(--me-primary); }
+.param-row--changed label { font-weight: var(--me-weight-medium); color: var(--me-text-strong); }
+.param-row .input, .param-row .select { height: 30px; }
+.param-row input[type="checkbox"] { justify-self: start; }
+.param-group { border: 1px solid var(--me-border); border-radius: var(--me-radius-md); padding: var(--me-space-2) var(--me-space-3); }
+.param-group > summary { cursor: pointer; font-weight: var(--me-weight-medium); display: flex; align-items: center; gap: var(--me-space-2); }
+.param-group .param-group { margin: var(--me-space-1) 0; }
+.stack-params__edit { align-self: flex-start; margin-top: 4px; }
+
+/* ---- trajectory editor, run comparison ---- */
+.editor { background: var(--me-surface-2); border-radius: var(--me-radius-md); touch-action: none; width: 100%; }
+.editor__handle { fill: var(--me-surface); stroke: var(--me-primary); stroke-width: 2.5; vector-effect: non-scaling-stroke; cursor: grab; }
+.editor__handle:hover, .editor__handle:focus-visible { fill: var(--me-primary); outline: none; }
+.table--edit td { padding: 2px 4px; }
+.input--cell { height: 28px; padding: 0 6px; min-width: 64px; font-size: var(--me-text-sm); }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.split--editor { grid-template-columns: minmax(0, 1.25fr) minmax(340px, 1fr); }
+@media (max-width: 1100px) { .split--editor { grid-template-columns: minmax(0, 1fr); } }

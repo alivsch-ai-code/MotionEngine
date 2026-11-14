@@ -224,9 +224,28 @@ def _apply_kicks(ex, rec):
             kick(**deltas)
 
 
+def _finish(res, ex, g, inst, rec, full_stack, seed, stop_reason, wall):
+    # metadata, road, runtime profile, provenance, metrics and mission of a finished run (batch and live)
+    res.metadata.update(stop_reason=stop_reason, wall_time=wall, controllers=rec.controllers, modes=rec.modes,
+                        maneuvers=rec.maneuvers, collision_with=rec.collision_with,
+                        success=getattr(inst, "success", None) if isinstance(getattr(inst, "success", None), (dict, list)) else None)
+    res.road = _road_geometry(inst.road)
+    res.profile = {node: {"calls": s.get("calls", 0), "mean": s.get("mean_us", 0) * 1e-6,
+                          "p95": s.get("p95_us", 0) * 1e-6, "max": s.get("max_us", 0) * 1e-6,
+                          "total": s.get("total_ms", 0) * 1e-3}
+                   for node, s in ex.profiler.report().items()}
+    components = {nid: f"{n.component}" for nid, n in g.nodes.items()}
+    res.provenance = manifest(config={"scenario": res.scenario, "stack": full_stack}, components=components, seed=seed)
+    res.finalize()
+    from ..research.metrics import evaluate
+    evaluate(res)
+    _evaluate_mission(res, inst)
+    return res
+
+
 def run_scenario(scenario, stack=None, seed=None, duration=None, scenario_params=None, record_snapshots=True,
                  vehicle=None, graph=None, progress=None, stop_on_collision=True, stop_on_goal=True,
-                 max_wall_time=None, name=None):
+                 max_wall_time=None, name=None, connections=None):
     from ..runtime import Executor, Graph
     from ..world import build_scenario
 
@@ -239,6 +258,8 @@ def run_scenario(scenario, stack=None, seed=None, duration=None, scenario_params
     scen_stack = (spec.get("stack") if isinstance(spec, dict) else None) or getattr(inst, "metadata", {}).get("stack")
     full_stack = merge_stack(scen_stack, stack)
     graph_dict = graph or build_graph(full_stack, name=f"stack_{spec.get('name', 'scenario') if isinstance(spec, dict) else spec}")
+    if connections is not None:         # rewired stack: same nodes, the caller's connections
+        graph_dict = {**graph_dict, "connections": [dict(c) for c in connections]}
     g = Graph.from_dict(graph_dict)
     report = g.validate()
     report.raise_for_errors()
@@ -288,20 +309,7 @@ def run_scenario(scenario, stack=None, seed=None, duration=None, scenario_params
     finally:
         ex.close()
     wall = time.perf_counter() - wall0
-    res.metadata.update(stop_reason=stop_reason, wall_time=wall, controllers=rec.controllers, modes=rec.modes,
-                        maneuvers=rec.maneuvers, collision_with=rec.collision_with,
-                        success=getattr(inst, "success", None) if isinstance(getattr(inst, "success", None), (dict, list)) else None)
-    res.road = _road_geometry(inst.road)
-    res.profile = {node: {"calls": s.get("calls", 0), "mean": s.get("mean_us", 0) * 1e-6,
-                          "p95": s.get("p95_us", 0) * 1e-6, "max": s.get("max_us", 0) * 1e-6,
-                          "total": s.get("total_ms", 0) * 1e-3}
-                   for node, s in ex.profiler.report().items()}
-    components = {nid: f"{n.component}" for nid, n in g.nodes.items()}
-    res.provenance = manifest(config={"scenario": res.scenario, "stack": full_stack}, components=components, seed=seed)
-    res.finalize()
-    from ..research.metrics import evaluate
-    evaluate(res)
-    _evaluate_mission(res, inst)
+    _finish(res, ex, g, inst, rec, full_stack, seed, stop_reason, wall)
     if progress:
         progress(t_end, t_end)
     log.info("'%s': %.1f s simuliert in %.1f s (%s)", sc_name, res.duration, wall, stop_reason)

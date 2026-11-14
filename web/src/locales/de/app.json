@@ -29,6 +29,13 @@
     "models": { "title": "Noch keine neuronalen Modelle", "text": "Trainiere ein Ersatzmodell der Fahrdynamik mit Daten eines Physikmodells oder schließe ein externes ONNX- oder HTTP-Modell an.", "action": "Modell trainieren" }
   },
   "simulate": {
+    "editorPath": "Editor-Pfad",
+    "editorActive": "Trajektorie aus dem Editor ({{n}} Wegpunkte) ersetzt das Manöver",
+    "editorFriction": "Reibwertkarte aus dem Editor ist aktiv",
+    "editorPatches": "{{n}} Reibwertflächen",
+    "editorEdit": "Editor öffnen",
+    "editorRemove": "Entfernen",
+    "editorLink": "Eigene Trajektorie im Editor zeichnen",
     "drive": "Fahrt",
     "driveHint": "Das Fahrzeug auf der gefahrenen Bahn; gestrichelt: die Sollbahn des Manövers.",
     "title": "Simulation",
@@ -366,5 +373,329 @@
     "rear": "Hinten",
     "speed": "Geschwindigkeit",
     "geometryInfo": "Wenderadius des Referenzpunkts {{r}} m · Referenzpunkt {{p}} m vor der Hinterachse · max. Lenkwinkel vorne {{f}}°, hinten {{rr}}°"
+  },
+  "workbench": {
+    "rewired": "Neu verdrahteter Stack: {{n}} Verbindungen (siehe Architektur)",
+    "load": {
+      "button": "Ergebnis laden …",
+      "hint": "Die Datei aus „Ergebnis herunterladen“ oder die .json- und .npz-Datei eines von der Bibliothek gespeicherten Ergebnisses (beide auswählen)",
+      "needJson": "Bitte die .json-Datei des Ergebnisses auswählen.",
+      "needNpz": "Das ist die Metadaten-Datei eines Bibliotheks-Ergebnisses: bitte auch die .npz-Datei mit demselben Namen auswählen."
+    },
+    "kinds": {
+      "live": "Live-Lauf",
+      "import": "geladen"
+    },
+    "p95": "95. Perzentil",
+    "maxTime": "Maximum",
+    "title": "Workbench",
+    "subtitle": "Den kompletten Fahrstack auf einem Szenario ausführen und in jeden Planungszyklus schauen: Kandidaten, Kosten, Regler, Ereignisse und Laufzeit.",
+    "setup": "Lauf",
+    "scenario": "Szenario",
+    "seed": "Seed",
+    "duration": "Dauer",
+    "defaultValue": "Leer = {{v}}",
+    "run": "Szenario starten",
+    "running": "{{name}} läuft…",
+    "failed": "Der Lauf ist fehlgeschlagen.",
+    "invalidParams": "Die Parameter-Überschreibungen der Schicht „{{layer}}“ sind kein gültiges JSON-Objekt.",
+    "history": "Letzte Läufe ({{n}})",
+    "empty": {
+      "title": "Noch kein Lauf",
+      "text": "Szenario wählen und starten. Der Stack führt Wahrnehmung, Prädiktion, Verhalten, Trajektorienplanung, Regelung, Aktorik und Fahrzeug im geschlossenen Kreis aus."
+    },
+    "missionPassed": "Mission erfüllt",
+    "missionFailed": "Mission nicht erfüllt",
+    "collision": "Kollision",
+    "timing": "{{sim}} s simuliert in {{wall}} s",
+    "download": "Ergebnis herunterladen",
+    "scene": "Draufsicht des Laufs",
+    "candidates": "Kandidaten",
+    "legend": "Blau: gewählte Trajektorie. Grün: gültige Kandidaten, grau: durch Restriktion verworfen, rot: Kollision. Orange gestrichelt: prädizierte Objekte. Graue Linie: gefahrene Bahn.",
+    "details": "Details des Laufs",
+    "tabs": {
+      "planner": "Planer und Regler",
+      "signals": "Signale",
+      "kpis": "Kennwerte und Mission",
+      "events": "Ereignisse",
+      "profile": "Laufzeit"
+    },
+    "cycle": "Planungszyklus",
+    "cycleTime": "Zyklusbeginn",
+    "maneuver": "Manöver",
+    "mode": "Längsmodus",
+    "nCandidates": "Kandidaten / geprüft",
+    "computeTime": "Rechenzeit",
+    "controller": "Aktiver Regler",
+    "flags": "Merker",
+    "fallback": "Rückfall",
+    "reinit": "neu initialisiert",
+    "costTerms": "Kostenterme der gewählten Trajektorie",
+    "charts": {
+      "speed": "Geschwindigkeit",
+      "accel": "Beschleunigung",
+      "errors": "Folgefehler",
+      "steering": "Lenkwinkel",
+      "cost": "Kosten der gewählten Trajektorie",
+      "planTime": "Rechenzeit des Planers"
+    },
+    "series": {
+      "actual": "Ist",
+      "planned": "Geplant",
+      "target": "Ziel"
+    },
+    "mission": "Missionskriterien",
+    "noMission": "Dieses Szenario definiert keine Missionskriterien.",
+    "eventType": "Ereignis",
+    "eventDetail": "Details",
+    "node": "Knoten",
+    "calls": "Aufrufe",
+    "mean": "Mittel",
+    "total": "Gesamt",
+    "stack": {
+      "edit": "{{n}} Parameter bearbeiten …",
+      "overridden": "geändert",
+      "asJson": "Abweichungen als JSON",
+      "title": "Stack",
+      "changed": "{{n}} geändert",
+      "text": "Eine Komponente je Schicht. Die Parameter im Dialog bearbeiten; nur geänderte Werte werden gesendet. Dieselben Abweichungen lassen sich auch als JSON bearbeiten.",
+      "default": "Standard",
+      "params": "Parameter ({{n}} Gruppen)",
+      "overrides": "Parameter-Überschreibungen (JSON)",
+      "placeholder": "{\"cost\": {\"k_lat\": 2.0}}"
+    },
+    "layers": {
+      "world": "Welt",
+      "perception": "Wahrnehmung",
+      "prediction": "Prädiktion",
+      "behavior": "Verhaltensplanung",
+      "planner": "Trajektorienplanung",
+      "controller": "Fahrzeugregelung",
+      "dynamics": "Fahrdynamikregelung",
+      "actuators": "Aktorik",
+      "plant": "Fahrzeug"
+    }
+  },
+  "research": {
+    "title": "Forschung",
+    "subtitle": "Serienversuche mit dem Fahrstack: Komponenten vergleichen, einen Parameter variieren oder zufällig ziehen und die Kennwerte vergleichen.",
+    "setup": "Versuch",
+    "kindLabel": "Art",
+    "kind": {
+      "compare": "Komponenten vergleichen",
+      "sweep": "Parametervariation",
+      "monte_carlo": "Monte Carlo"
+    },
+    "kindHint": {
+      "compare": "Führt das Szenario einmal je gewählter Komponente einer Schicht aus.",
+      "sweep": "Führt das Szenario einmal je Parameterwert aus.",
+      "monte_carlo": "Zieht den Parameter gleichverteilt zwischen zwei Grenzen."
+    },
+    "layer": "Schicht",
+    "variants": "Komponenten",
+    "path": "Parameterpfad",
+    "pathHint": "Zum Beispiel stack.planner.params.cost.k_lat oder scenario_params.lead_speed",
+    "values": "Werte",
+    "valuesHint": "Durch Komma getrennt",
+    "low": "Untere Grenze",
+    "high": "Obere Grenze",
+    "samples": "Läufe",
+    "stackNote": "Verwendet den Stack der Workbench ({{n}} Schichten geändert).",
+    "run": "Versuch starten",
+    "empty": {
+      "title": "Noch kein Versuch",
+      "text": "Jeder Lauf ist für seinen Seed deterministisch, die Ergebnisse sind also reproduzierbar."
+    },
+    "variant": "Lauf",
+    "chart": "Kennwert über die Läufe",
+    "metric": "Kennwert",
+    "runIndex": "Lauf"
+  },
+  "architecture": {
+    "wiring": {
+      "title": "Verbindungen",
+      "text": "Eine Verbindung entfernen oder eine neue zwischen einem Ausgang und einem Eingang desselben Typs anlegen. Die Prüfung läuft auf dem Server; die Workbench fährt den Stack mit dieser Verdrahtung.",
+      "reset": "Standardverdrahtung wiederherstellen",
+      "default": "Standardverdrahtung",
+      "from": "Ausgang",
+      "to": "Eingang",
+      "type": "Typ",
+      "remove": "Verbindung {{from}} nach {{to}} entfernen",
+      "pickOutput": "Ausgang wählen …",
+      "pickInput": "Eingang wählen …",
+      "used": "verbunden",
+      "optional": "optional",
+      "add": "Verbinden"
+    },
+    "title": "Architektur",
+    "subtitle": "Der Signalfluss des Fahrstacks: ein Knoten je Schicht, verbunden über typisierte Ports. Ein Klick auf einen Knoten zeigt seine Dokumentation.",
+    "valid": "Graph gültig: {{nodes}} Knoten, {{conns}} Verbindungen.",
+    "stackHint": "Änderungen gelten für die Workbench und für Versuche.",
+    "inputs": "Eingänge",
+    "outputs": "Ausgänge",
+    "doc": {
+      "purpose": "Zweck",
+      "theory": "Theorie",
+      "references": "Quellen"
+    },
+    "noDoc": "Diese Komponente hat keine Dokumentation."
+  },
+  "matlab": {
+    "title": "MATLAB",
+    "subtitle": "MATLAB-Funktionen analysieren und nach Python oder C umwandeln, zum Beispiel um einen vorhandenen Regler in den Stack zu bringen.",
+    "source": "MATLAB-Quelltext",
+    "target": "Zielsprache",
+    "targets": {
+      "python": "Python",
+      "c": "C"
+    },
+    "convert": "Analysieren und umwandeln",
+    "sample": "Beispiel laden",
+    "empty": {
+      "title": "MATLAB-Code einfügen",
+      "text": "Der Konverter nennt Funktionen, Variablen mit Rolle und Typ sowie verwendete Built-ins und erzeugt den Code."
+    },
+    "ok": "Umgewandelt",
+    "warnings": "Mit Warnungen umgewandelt",
+    "analysis": "Analyse",
+    "function": "Funktion",
+    "variable": "Variable",
+    "role": "Rolle",
+    "type": "Typ",
+    "builtins": "Verwendete Built-ins"
+  },
+  "knowledge": {
+    "title": "Wissen",
+    "subtitle": "Was die Bibliothek über sich selbst weiß: Komponenten, Konzepte, Klassen, Gleichungen und die Literatur dahinter.",
+    "tabs": {
+      "graph": "Wissensgraph",
+      "references": "Literatur"
+    },
+    "search": "Suchen",
+    "noHits": "Keine passenden Einträge.",
+    "linked": "Verknüpfte Einträge",
+    "empty": {
+      "title": "Eintrag wählen",
+      "text": "Links suchen und einen Eintrag wählen, um zu sehen, wie er funktioniert und womit er verknüpft ist."
+    },
+    "ref": {
+      "id": "Schlüssel",
+      "authors": "Autoren",
+      "title": "Titel",
+      "year": "Jahr"
+    }
+  },
+  "params": {
+    "title": "Parameter: {{name}}",
+    "text": "Nur Werte, die von den Standardwerten abweichen, werden mit dem Lauf gesendet. Geänderte Werte sind markiert.",
+    "defaults": "Standardwerte wiederherstellen",
+    "changed": "{{n}} geändert",
+    "apply": "Übernehmen"
+  },
+  "live": {
+    "start": "Live",
+    "stopped": "gestoppt",
+    "running": "läuft",
+    "paused": "pausiert",
+    "reasons": {
+      "duration": "Simulationsdauer erreicht",
+      "collision": "Kollision",
+      "goal": "Ziel erreicht",
+      "unstable": "numerisch instabil",
+      "error": "Fehler in einer Komponente",
+      "other": "gestoppt"
+    },
+    "steps": "{{n}} Schritte",
+    "pause": "Pause",
+    "play": "Start",
+    "step": "Einzelschritt",
+    "step10": "10 Schritte",
+    "finish": "Als Lauf übernehmen",
+    "discard": "Verwerfen",
+    "hint": "Der Stack läuft auf dem Server. Start lässt ihn in Echtzeit (oder langsamer/schneller) laufen, Einzelschritt führt einen Basisschritt aus. „Als Lauf übernehmen“ wertet den Lauf aus und öffnet ihn mit allen Details.",
+    "telemetry": "Telemetrie",
+    "noCycle": "Noch kein Planungszyklus.",
+    "signals": {
+      "ego_v": "Geschwindigkeit",
+      "ego_ax": "Längsbeschleunigung",
+      "ego_ay": "Querbeschleunigung",
+      "delta": "Lenkwinkel",
+      "e_n": "Querabweichung",
+      "e_t": "Längsabweichung",
+      "target_speed": "Zielgeschwindigkeit",
+      "plan_cost": "Kosten der gewählten Trajektorie",
+      "plan_time": "Planungszeit"
+    }
+  },
+  "compare": {
+    "title": "Laufvergleich und Bericht ({{n}})",
+    "text": "Jede Simulation dieser Sitzung bleibt hier erhalten (die letzten 8). Läufe zum Vergleichen anhaken; der Bericht enthält die angehakten Läufe.",
+    "loaded": "aus Datei",
+    "save": "Speichern",
+    "remove": "Lauf {{name}} entfernen",
+    "pdf": "PDF-Bericht",
+    "summary": "Zusammenfassung (Markdown)",
+    "load": "Lauf laden …",
+    "needStored": "Der Bericht braucht einen in dieser Sitzung simulierten Lauf (geladene Läufe haben kein gespeichertes Ergebnis).",
+    "needTwo": "Mindestens zwei Läufe anhaken, um sie zu vergleichen.",
+    "paths": "Gefahrene Pfade der gewählten Läufe",
+    "badFile": "{{name}} ist kein gespeicherter Simulationslauf.",
+    "reportTitle": "Fahrdynamik-Simulationsbericht",
+    "signals": {
+      "r": "Gierrate",
+      "ay": "Querbeschleunigung",
+      "delta_f": "Lenkwinkel (vorn)",
+      "lateral_error": "Querabweichung",
+      "vx": "Geschwindigkeit",
+      "beta": "Schwimmwinkel"
+    }
+  },
+  "editor": {
+    "title": "Trajektorien-Editor",
+    "subtitle": "Einen Pfad durch Wegpunkte zeichnen, die Ecken abrunden, die Geschwindigkeit über die Querbeschleunigung begrenzen und Flächen mit eigenem Reibwert anlegen. Danach in der Simulation fahren.",
+    "canvas": "Editorfläche mit Wegpunkten",
+    "waypoint": "Wegpunkt {{n}}",
+    "hint": "Einen Punkt ziehen, um ihn zu verschieben (Pfeiltasten gehen auch). Doppelklick auf die Fläche fügt einen Punkt in das nächste Segment ein. Rechtsklick oder Entf entfernt einen Punkt. Die Pfadfarbe zeigt die Geschwindigkeit: Blau ist schnell, Orange ist langsam.",
+    "length": "Länge {{v}} m",
+    "speedRange": "Geschwindigkeit {{min}}–{{max}} km/h",
+    "maxAy": "Querbeschleunigung bis {{v}} m/s²",
+    "charts": {
+      "speed": "Geschwindigkeit über dem Weg",
+      "curvature": "Krümmung über dem Weg"
+    },
+    "waypoints": "Wegpunkte ({{n}})",
+    "cols": {
+      "x": "x [m]",
+      "y": "y [m]",
+      "v_kmh": "v [km/h]",
+      "radius": "Radius [m]"
+    },
+    "removeWaypoint": "Wegpunkt {{n}} entfernen",
+    "addWaypoint": "Wegpunkt hinzufügen",
+    "radius": "Eckradius",
+    "ayMax": "Max. Querbeschleunigung",
+    "ayMaxHint": "0 = keine Begrenzung in Kurven",
+    "radiusAll": "Radius für alle Ecken",
+    "undo": "Rückgängig",
+    "save": "Wegpunkte speichern",
+    "load": "Wegpunkte laden …",
+    "fromManeuver": "Von einem Manöver ausgehen",
+    "take": "Übernehmen",
+    "friction": {
+      "title": "Reibwertkarte",
+      "text": "Rechtecke mit eigenem Reibwert, zum Beispiel eine nasse oder vereiste Fläche.",
+      "cols": {
+        "x_min": "x min [m]",
+        "x_max": "x max [m]",
+        "y_min": "y min [m]",
+        "y_max": "y max [m]",
+        "mu": "μ"
+      },
+      "remove": "Fläche {{n}} entfernen",
+      "add": "Fläche hinzufügen"
+    },
+    "apply": "Diese Trajektorie fahren",
+    "applyFriction": "Nur die Reibwertkarte verwenden",
+    "badFile": "Die Datei enthält keine Wegpunkte."
   }
 }

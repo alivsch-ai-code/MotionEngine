@@ -25,7 +25,7 @@ const SCREENS = process.argv.includes("--screens");
 const OUT = new URL("./output/", import.meta.url).pathname;
 if (SCREENS) mkdirSync(OUT, { recursive: true });
 
-const PAGES = ["/", "/app", "/app/assistant", "/app/simulate", "/app/inspector", "/app/parking", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
+const PAGES = ["/", "/app", "/app/assistant", "/app/simulate", "/app/trajectory", "/app/inspector", "/app/parking", "/app/workbench", "/app/research", "/app/architecture", "/app/matlab", "/app/knowledge", "/app/predict", "/app/vehicles", "/app/models", "/app/settings", "/app/design", "/app/does-not-exist"];
 // raw i18n keys look like "simulate.title" or "app:models.x": letters, dots, no spaces
 const RAW_KEY = /(^|\s)(common|app|domain|inspector|landing):[a-z]|(^|\s)[a-z]+(\.[a-zA-Z_]+){2,}(\s|$)/;
 const failures = [];
@@ -109,6 +109,29 @@ await page.getByRole("button", { name: "Compare with physics" }).click();
 await page.getByText("Max. position difference").waitFor({ timeout: 60000 });
 await checkText(page, "models");
 if (SCREENS) await page.screenshot({ path: `${OUT}models-evaluated-en-dark.png`, fullPage: true });
+
+// live mode of the workbench: steps, then keep the result as a run
+t0 = Date.now();
+await page.goto(BASE + "/app/workbench", { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "Live", exact: true }).click();
+await page.locator(".player__view").waitFor({ timeout: 30000 });
+await page.getByRole("button", { name: "10 steps" }).click();
+await page.getByRole("button", { name: "Keep as run" }).click();
+await page.locator(".tabs").waitFor({ timeout: 30000 });
+timings["workflow live"] = Date.now() - t0;
+await checkText(page, "workbench live");
+
+// trajectory editor: drive the drawn path, then the run comparison lists it
+await page.goto(BASE + "/app/trajectory", { waitUntil: "networkidle" });
+await page.locator(".editor__handle").first().waitFor();
+await page.getByText(/^Length /).waitFor({ timeout: 20000 });
+await page.getByRole("button", { name: "Drive this trajectory" }).click();
+await page.getByText(/Trajectory from the editor/).waitFor();
+await page.getByRole("button", { name: "Run simulation" }).click();
+await page.getByText(/Run comparison and report/).waitFor({ timeout: 60000 });
+if ((await page.getByText(/Editor path/).count()) === 0) failures.push("editor run: not listed in the run comparison");
+await checkText(page, "editor run");
+await page.getByRole("button", { name: "Remove", exact: true }).click();
 
 // German workflow labels
 const de = await newPage("de", "dark");
