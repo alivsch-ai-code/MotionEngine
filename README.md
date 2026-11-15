@@ -42,6 +42,8 @@ stack, neural vehicle models, a REST API and a web app, in one open-source Pytho
 | **Faithful to the paper** | The Werling planner implements Werling (2011) closely, including the time-consistent replanning: changing the replanning period changes the result by 0.00 cm, while a naive Frenet planner drifts by 6.5 cm. Each step cites the section and equation it implements. |
 | **Physics at the fidelity you need** | Five vehicle models from a 4-state kinematic bicycle to a 24-state multibody model, three tire models (linear, Pacejka Magic Formula, brush), powertrain, brakes, actuators with latency, ABS/TCS/ESP. All models share one interface and run faster than real time. |
 | **Neural vehicle models included** | Train a neural surrogate of any physics model in seconds without extra frameworks, or connect your own ONNX file or HTTP endpoint. A closed-loop comparison against the physics model shows how far you can trust it before you use it in a simulation. |
+| **Made for learning** | Twelve lessons ask a question, run a real experiment and show the numbers that answer it. The controller lab shows every control law as a formula with the value of each term at any moment; the trajectory inspector does the same for one planning cycle. Conditions go from ideal to realistic (double-track vehicle, actuator dynamics, sensor noise, friction), so you see what an algorithm is worth outside the textbook. |
+| **Checked against real cars** | The single-track model is replayed with 46 hours of measured drives of four production cars. With public parameters and no fit it explains 79 to 95 % of the measured lateral acceleration of three of them; the [validation report](docs/validation/measured_data.md) also shows where it does not. |
 | **Ready to deploy** | REST API with OpenAPI, API key, concurrency and runtime limits, Prometheus metrics and a Docker image that ships the web app. `docker compose up` gives you the whole platform on port 8000. |
 | **Tested and measured** | 860+ tests including physical plausibility, Monte Carlo and scenario regression against golden KPIs; CI on Linux and Windows with Python 3.10–3.13, CodeQL and secret scanning. Every performance number in this README is reproducible with `benchmarks/run_benchmarks.py`. |
 | **Just ask** | The assistant in the web app turns a sentence like *"double lane change at 100 km/h on a wet road with the sports car"* into simulations and plans, runs them with the real models and explains the numbers. It answers in English or German. |
@@ -57,16 +59,24 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 |---|---|
 | <img src="docs/images/app/physics-dark.png" alt="Vehicle physics step: axle forces, slip angles, steering angle and friction utilization with values"> | <img src="docs/images/app/models-dark.png" alt="Neural model with R² per output, training loss and closed-loop comparison with the physics model"> |
 
+| Learn: a lesson with its experiment and answer | Controller lab: the control law with the value of every term |
+|---|---|
+| <img src="docs/images/app/learn-dark.png" alt="Lesson 1: Pure Pursuit with three look-ahead gains on an S-curve, table of errors, error curves and the answer"> | <img src="docs/images/app/control-law-dark.png" alt="Stanley control law as a formula, with the vehicle state and the value of each term at 5.5 s"> |
+
+<img src="docs/images/app/control-dark.png" alt="Controller lab: Pure Pursuit, Stanley and LQR on an S-curve with KPIs, paths and error curves" width="100%">
+
 <img src="docs/images/app/simulate-dark.png" alt="Simulation page: ISO double lane change with the double-track model, KPIs and driven path" width="100%">
 
 <img src="docs/images/app/workbench-dark.png" alt="Workbench: highway overtaking run with the candidate set of one planning cycle, timeline and planner details" width="100%">
+
+<img src="docs/images/app/editor-dark.png" alt="Trajectory editor: draggable waypoints, path colored by speed, friction area, speed and curvature over distance" width="100%">
 
 <img src="docs/images/app/parking-dark.png" alt="Parking page: reverse parallel parking, planned moves (forward solid, reverse dashed), KPIs and the animated vehicle" width="100%">
 
 | Page | What it does |
 |---|---|
 | **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
-| **Learn** | nine lessons on tracking control, planning and the whole system: a question, a real experiment, the numbers, the answer |
+| **Learn** | twelve lessons on tracking control, planning and the whole system: a question, a real experiment, the numbers, the answer |
 | **Controller lab** | Pure Pursuit, Stanley, LQR, MPC and the Werling controller on the same path and vehicle; KPIs, signals and the control law with the value of every term at any moment; friction, actuator dynamics, side force |
 | **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view; run comparison (KPI table, overlaid paths and signals), PDF report, save and load runs |
 | **Trajectory editor** | draw a path through draggable waypoints with corner radii, limit the speed by lateral acceleration, add a friction map, then drive it in the simulation |
@@ -96,6 +106,12 @@ docker compose up --build
 ```
 
 Open http://localhost:8000 for the web app and http://localhost:8000/docs for the API reference.
+
+**First steps in the web app:**
+
+1. **Learn**: run lesson 1. It takes a minute and shows what the look-ahead distance of Pure Pursuit does.
+2. **Controller lab**: compare controllers on the same path and move the slider through the control law.
+3. **Workbench**: run a scenario with ideal conditions, then with realistic ones, and compare the tracking error.
 
 **As a Python package:**
 
@@ -448,7 +464,8 @@ MotionEngine/
 │   ├── ad/, world/             Automated driving stack, AD scenarios and missions
 │   ├── prediction/             Object prediction
 │   ├── service/                REST API (FastAPI), trajectory derivation (/plan/explain)
-│   ├── learning/               Neural vehicle models (MLP training, ONNX/HTTP backends)
+│   ├── learning/               Neural vehicle models and the learned trajectory planner (MLP, ONNX/HTTP backends)
+│   ├── validation/             Single-track model against measured drives of production cars
 │   ├── visualization/          Plots, animation, dashboard widgets
 │   └── gui/                    PySide6 desktop application
 ├── web/                        Web app (React, TypeScript, Vite; locales en/de)
@@ -495,6 +512,8 @@ MotionEngine/
 See [ROADMAP.md](ROADMAP.md) for the full development plan.
 
 **Next milestones:**
+- Friction-aware planning: lateral acceleration limit and curve speed from the friction of the road
+- Lessons on behavior planning and the learned planner; an inspector for longitudinal control
 - Pacejka MF 6.2 with TIR file import
 - Tire relaxation length (transient behavior)
 - OpenSCENARIO import

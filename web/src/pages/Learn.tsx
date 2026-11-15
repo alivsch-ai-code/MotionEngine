@@ -10,7 +10,7 @@ import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import type { ControlRunRequest, ExperimentRequest, LayerSpec, RunRequest } from "../lib/api";
 import { fmt } from "../lib/format";
-import { useClient, usePersistentState } from "../lib/hooks";
+import { useClient } from "../lib/hooks";
 import { applyConditions, type Conditions } from "../lib/stack";
 import { CONTROL_DEFAULT, CONTROL_FORM_KEY, type ControlForm } from "./ControlLab";
 
@@ -41,19 +41,29 @@ const LESSONS: Lesson[] = [
     requests: [1.0, 0.5, 0.3].map((mu) => ({ label: `μ = ${mu}`, body: { path: "curve_entry", speed: 18, plant: "double_track", mu, controllers: [c("werling_bilevel")] } })) } },
   { id: "jerk", topic: "planning", action: { kind: "experiment", open: "/app/research", kpis: ["max_ay", "rms_jerk_lat", "max_jerk", "mean_speed"],
     body: { kind: "sweep", base: { scenario: "autobahn_ueberholen", duration: 14 }, grid: { "stack.planner.params.cost.jerk.k_lat": [0.05, 1, 20] } } } },
+  { id: "prediction", topic: "planning", action: { kind: "experiment", open: "/app/research", kpis: ["min_distance", "min_ax", "max_ay", "max_jerk"],
+    body: { kind: "sweep", base: { scenario: "einscherer" }, grid: { "stack.prediction.params.horizon": [1, 3, 6] } } } },
+  { id: "replan", topic: "planning", action: { kind: "experiment", open: "/app/research", kpis: ["min_distance", "min_ttc", "max_jerk"],
+    body: { kind: "sweep", base: { scenario: "einscherer" }, grid: { "stack.planner.period": [0.1, 0.3, 1] } } } },
+  { id: "margin", topic: "planning", action: { kind: "experiment", open: "/app/research", kpis: ["min_distance", "max_ay", "max_jerk"],
+    body: { kind: "sweep", base: { scenario: "notausweichen_hindernis" }, grid: { "stack.planner.params.collision.margin_car": [0.2, 0.5, 1.5] } } } },
   { id: "stack", topic: "system", action: { kind: "experiment", open: "/app/research", kpis: ["max_e_n", "max_ay", "max_jerk", "mission_passed"],
     body: { kind: "compare", base: { scenario: "kreisverkehr" }, layer: "controller",
       variants: Object.fromEntries(["werling_bilevel", "mpc", "pure_pursuit", "stanley", "lqr"].map((n) => [n, { component: `tracking_controller/${n}` } as LayerSpec])) } } },
   { id: "conditions", topic: "system", action: { kind: "runs", open: "/app/workbench", kpis: ["max_e_n", "max_ay", "max_jerk", "min_distance", "mission_passed"],
     runs: (["ideal", "realistic", "wet"] as const).map((conditions) => ({ label: conditions, scenario: "notausweichen_hindernis", conditions })) } },
 ];
-const UNITS: Record<string, string> = { max_e_n: "m", rms_e_n: "m", max_ay: "m/s²", max_jerk: "m/s³", rms_jerk_lat: "m/s³", mean_speed: "m/s", min_distance: "m", mission_passed: "", steer_rate: "°/s" };
+const UNITS: Record<string, string> = { max_e_n: "m", rms_e_n: "m", max_ay: "m/s²", max_jerk: "m/s³", rms_jerk_lat: "m/s³", mean_speed: "m/s", min_distance: "m", min_ttc: "s", min_ax: "m/s²", mission_passed: "", steer_rate: "°/s" };
 const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
 
 export default function Learn() {
   const { t, i18n } = useTranslation(["app", "common", "domain"]);
   const lang = i18n.language;
-  const [done, setDone] = usePersistentState<string[]>("me.learn.done", []);
+  // progress is kept on this device (local storage), not only for the session
+  const [done, setDoneState] = useState<string[]>(() => {
+    try { const v: unknown = JSON.parse(localStorage.getItem("me.learn.done") ?? "[]"); return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []; } catch { return []; }
+  });
+  const setDone = (v: string[]) => { setDoneState(v); try { localStorage.setItem("me.learn.done", JSON.stringify(v)); } catch { /* storage unavailable: progress lasts until the page is closed */ } };
   const topics = ["control", "planning", "system"] as const;
   return (
     <div className="stack stack--lg">
@@ -156,7 +166,7 @@ function LessonCard({ lesson, lang, done, onDone }: { lesson: Lesson; lang: stri
               <thead><tr><th>{t("learn.variant")}</th>{outcome.columns.map((k, i) => <th key={k} className="num">{kpiName(k)}{outcome.units[i] ? ` [${outcome.units[i]}]` : ""}</th>)}</tr></thead>
               <tbody>{outcome.rows.map((r) => (
                 <tr key={r.label}><td>{r.label}{r.flag === "fail" ? <span className="badge badge--danger">{lesson.action.kind === "control" ? t("learn.lost") : t("learn.failed")}</span> : null}</td>
-                  {r.values.map((v, i) => <td key={i} className="num mono">{outcome.columns[i] === "mission_passed" ? (v === null ? "–" : v ? t("learn.yes") : t("learn.no")) : fmt(v, lang, 3)}</td>)}</tr>
+                  {r.values.map((v, i) => <td key={i} className="num mono">{outcome.columns[i] === "mission_passed" ? (v === null ? "–" : v ? t("learn.yes") : t("learn.no")) : fmt(v !== null && Math.abs(v) < 1e-9 ? 0 : v, lang, 3)}</td>)}</tr>
               ))}</tbody></table></div>
             {outcome.chart ? <Suspense fallback={<Skeleton height={200} />}><div className="chart-title">{t("control.series.e_n")}</div>
               <Chart x={outcome.chart.x} xLabel="t [s]" yLabel="m" height={200} ariaLabel={t("control.series.e_n")}

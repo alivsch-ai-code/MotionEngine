@@ -79,7 +79,7 @@ export default function ControlLab() {
                 const info = catalog.data?.controllers.find((c) => c.name === name);
                 const changed = Object.keys(form.params[name] ?? {}).length;
                 return (
-                  <div key={name} className="row row--between">
+                  <div key={name} className="control-row">
                     <CheckboxField label={t(`control.names.${name}`)} checked={form.controllers.includes(name)} onChange={(v) => toggle(name, v)} />
                     {info?.params.length ? <button type="button" className="btn btn--ghost btn--sm" onClick={() => setDialog(name)}>
                       <Icon name="settings" size={14} />{changed ? t("control.paramsChanged", { n: changed }) : t("control.params")}</button> : null}
@@ -133,6 +133,11 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
   const tt = (data.runs[0].signals.t ?? []) as number[];
   const lines = useMemo<Polyline[]>(() => [{ x: data.path.x, y: data.path.y, kind: "road" },
     ...data.runs.map((r, i) => ({ x: r.signals.x, y: r.signals.y, kind: "physics" as const, color: i }))], [data]);
+  // a lane change is a few meters wide and more than a hundred long: with equal axes it would be a line
+  const flat = useMemo(() => {
+    const span = (v: number[]) => Math.max(...v) - Math.min(...v);
+    return span(data.path.y) < 0.15 * span(data.path.x);
+  }, [data]);
   const best = Math.min(...data.runs.filter((r) => r.on_path).map((r) => r.kpis?.max_e_n ?? Infinity));
   const current = data.runs.find((r) => r.name === focus) ?? data.runs[0];
   const k = Math.max(0, Math.min(tt.length - 1, tt.findIndex((x) => x >= time) < 0 ? tt.length - 1 : tt.findIndex((x) => x >= time)));
@@ -145,7 +150,7 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
             <th className="num">{t("control.kpi.steer")}</th><th className="num">{t("control.kpi.steerRate")}</th><th className="num">{t("control.kpi.ay")}</th><th className="num">{t("control.kpi.time")}</th></tr></thead>
           <tbody>{data.runs.map((r, i) => (
             <tr key={r.name} onClick={() => onFocus(r.name)} style={{ cursor: "pointer", background: r.name === current.name ? "var(--me-surface-2)" : undefined }}>
-              <td><span className="swatch" style={{ background: `var(--me-chart-${(i % 6) + 1})` }} /> {r.label}
+              <td className="control-name"><span className="swatch" style={{ background: `var(--me-chart-${(i % 6) + 1})` }} /> {r.label}
                 {!r.stable ? <span className="badge badge--danger">{t("control.unstable")}</span> : !r.on_path ? <span className="badge badge--danger">{t("learn.lost")}</span> : r.kpis?.max_e_n === best && data.runs.length > 1 ? <span className="badge badge--success">{t("control.best")}</span> : null}</td>
               <td className="num">{fmt(r.kpis?.max_e_n ?? null, lang, 3)} m</td><td className="num">{fmt(r.kpis?.rms_e_n ?? null, lang, 3)} m</td>
               <td className="num">{r.kpis?.settled_after === null || r.kpis === null ? t("control.notSettled") : `${fmt(r.kpis.settled_after, lang, 3)} s`}</td>
@@ -153,7 +158,8 @@ function Results({ data, lang, focus, onFocus, time, onTime, docs }:
               <td className="num">{fmt(r.kpis?.max_ay ?? null, lang, 3)} m/s²</td><td className="num">{fmt(r.kpis?.compute_time_ms ?? null, lang, 2)} ms</td></tr>
           ))}</tbody></table>
           <p className="subtle">{t("control.kpi.note")}</p></div></div>
-      <div className="card"><div className="card__body"><PathPlot height={220} ariaLabel={t("control.pathsPlot")} lines={lines} /></div></div>
+      <div className="card"><div className="card__body"><PathPlot height={220} ariaLabel={t("control.pathsPlot")} lines={lines} stretch={flat} />
+        {flat ? <p className="subtle">{t("control.stretched")}</p> : null}</div></div>
       <Suspense fallback={<Skeleton height={220} />}>
         <div className="grid grid--2">
           {SERIES.map(([key, unit, label]) => (
@@ -185,7 +191,7 @@ function Law({ run, runs, onFocus, k, tt, time, onTime, duration, lang, doc }:
           <input type="range" className="player__scrub" min={0} max={duration} step={0.02} value={time} aria-label={t("common:player.time")} onChange={(e) => onTime(Number(e.target.value))} />
           <span className="player__readout mono">{fmt(tt[k] ?? 0, lang, 3)} s</span>
         </div>
-        <div className="grid grid--2">
+        <div className="law-tables">
           <div className="table-wrap"><table className="table">
             <thead><tr><th>{t("control.law.state")}</th><th className="num">{t("simulate.kpiTable.value")}</th></tr></thead>
             <tbody>

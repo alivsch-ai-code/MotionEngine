@@ -1,11 +1,14 @@
 {
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Fahrdynamik simulieren, die Berechnung jeder geplanten Trajektorie nachvollziehen und neuronale Ersatzmodelle trainieren.",
+    "subtitle": "Trajektorienplanung und Regelung lernen und entwickeln: Lektionen mit echten Versuchen, Werkzeuge, die jede Formel mit ihren Zahlen zeigen, und eine Workbench für den ganzen Stack.",
     "startSimulation": "Simulation starten",
     "stats": { "api": "API-Version", "vehicles": "Fahrzeug-Presets", "models": "Fahrzeugmodelle", "neural": "Neuronale Modelle" },
     "quickActions": "Schnellzugriff",
     "actions": {
+      "learn": { "title": "Mit einer Lektion beginnen", "text": "Zwölf kurze Lektionen: eine Frage, ein echter Versuch, die Zahlen, die Antwort." },
+      "control": { "title": "Regler vergleichen", "text": "Pure Pursuit, Stanley, LQR, MPC und Werling auf derselben Bahn, jedes Regelgesetz erklärt." },
+      "workbench": { "title": "Den ganzen Stack fahren", "text": "Von der Wahrnehmung bis zu den Aktoren auf 14 Szenarien, von idealen bis realistischen Bedingungen." },
       "simulate": { "title": "Simulation starten", "text": "ISO-Manöver mit Einspur-, Zweispur- oder Mehrkörpermodell." },
       "inspector": { "title": "Trajektorie untersuchen", "text": "Einen Planungszyklus Schritt für Schritt verfolgen, mit Formeln und Zahlen." },
       "models": { "title": "Neuronales Modell trainieren", "text": "Fahrdynamik aus einem Physikmodell lernen und validieren." },
@@ -15,6 +18,8 @@
     "table": { "maneuver": "Manöver", "model": "Modell", "maxAy": "Max. a_y", "wall": "Rechenzeit" },
     "gettingStarted": {
       "title": "Erste Schritte",
+      "lesson": { "title": "Die erste Lektion machen", "text": "Lektion 1 zeigt in einer Minute, was die Vorausschau von Pure Pursuit bewirkt." },
+      "stack": { "title": "Ein Szenario unter realistischen Bedingungen fahren", "text": "In der Workbench die Bedingungen auf realistisch stellen und mit dem idealen Lauf vergleichen." },
       "connect": { "title": "API verbinden", "text": "Die Statusanzeige im Kopfbereich wird grün, sobald der MotionEngine-Dienst erreichbar ist." },
       "simulate": { "title": "Erste Simulation ausführen", "text": "Die Voreinstellungen fahren einen ISO-Doppelspurwechsel mit 80 km/h im Zweispurmodell." },
       "inspect": { "title": "In den Planer schauen", "text": "Der Trajektorien-Inspektor zeigt Polynome, Kosten und Restriktionen eines Werling-Zyklus." },
@@ -174,6 +179,8 @@
       "demonstrations": "Demonstrationen",
       "demonstrationsTip": "Planungszyklen des Werling-Planers in zufälligen Situationen (Straßen, Geschwindigkeiten, Spurversätze, Objekte). Das Sammeln braucht die meiste Zeit: etwa 25 ms pro Zyklus.",
       "title": "Ersatzmodell trainieren",
+      "titlePlanner": "Trajektorienplaner trainieren",
+      "textPlanner": "Das Netz lernt vom Werling-Planer, welche Trajektorie er auswählt, aus Demonstrationen in zufälligen Situationen.",
       "text": "Das Netz lernt die Beschleunigungen eines Physikmodells aus Monte-Carlo-Stichproben des Fahrbereichs.",
       "teacher": "Physik-Lehrer",
       "teacherTip": "Das Modell, dessen exakte Ableitungen die Trainingsdaten liefern.",
@@ -192,6 +199,7 @@
     "howPlanner": { "text": "Das Netz lernt, welche Trajektorie der Werling-Planer auswählt: Endversatz und Endzeit der Querbewegung sowie Endgeschwindigkeit und Endzeit der Längsbewegung. In jedem Zyklus baut der Planer nur die Kandidaten neben diesem Vorschlag und prüft sie mit denselben Restriktionen und derselben Kollisionsprüfung wie immer.", "validation": "Nach dem Training fahren der geführte Planer und der Werling-Planer dieselben zurückgehaltenen Situationen. Ist kein Kandidat neben dem Vorschlag gültig oder liegt der beste am Rand der lokalen Menge, nutzt der Zyklus die vollständige Werling-Suche." },
     "how": {
       "title": "So funktioniert das Ersatzmodell",
+      "titlePlanner": "So funktioniert der gelernte Planer",
       "text": "Die ebene Kinematik bleibt exakt; nur die Beschleunigungen kommen aus dem Netz. Das Modell ersetzt damit das Fahrzeugmodell in jeder Simulation.",
       "validation": "Nach dem Training werden R² und RMSE je Ausgang auf Testdaten angezeigt, und ein Vergleich im geschlossenen Regelkreis prüft den Fehler, der für die Planung zählt."
     },
@@ -406,15 +414,15 @@
   "workbench": {
     "conditions": {
       "label": "Bedingungen",
-      "ideal": "Ideal (Entwurfsmodell, perfekte Sensoren)",
-      "realistic": "Realistisch (Zweispur, Aktordynamik, Sensorrauschen, 0,1 s Latenz)",
-      "wet": "Nasse Fahrbahn (realistisch, Reibwert 0,5)",
-      "harsh": "Eis und schlechte Sensoren (Reibwert 0,3, 0,2 s Latenz)",
+      "ideal": "Ideal",
+      "realistic": "Realistisch",
+      "wet": "Nasse Fahrbahn",
+      "harsh": "Eis und schlechte Sensoren",
       "hint": {
         "ideal": "Die Strecke ist das Entwurfsmodell des Reglers und jede Messung ist exakt. Gut, um die Algorithmen zu verstehen; die Bahnfolge ist fast perfekt.",
-        "realistic": "Zweispurfahrzeug mit Radlastverlagerung und Reifensättigung; Objekte und die eigene Position werden verrauscht gemessen und kommen 0,1 s verspätet an.",
-        "wet": "Wie realistisch, auf nasser Fahrbahn. Der Planer kennt den Reibwert nicht: auf die geforderte Querbeschleunigung achten.",
-        "harsh": "Niedriger Reibwert und schlechte Sensoren. Missionen werden scheitern; genau das zeigt diese Voreinstellung."
+        "realistic": "Zweispurfahrzeug mit Radlastverlagerung und Reifensättigung, Lenkung mit Totzeit und Ratenbegrenzung; Objekte und die eigene Position werden verrauscht gemessen und kommen 0,1 s verspätet an.",
+        "wet": "Wie realistisch, auf nasser Fahrbahn (Reibwert 0,5). Der Planer kennt den Reibwert nicht: auf die geforderte Querbeschleunigung achten.",
+        "harsh": "Reibwert 0,3, 0,2 s Latenz und mehr Rauschen. Missionen werden scheitern; genau das zeigt diese Voreinstellung."
       }
     },
     "rewired": "Neu verdrahteter Stack: {{n}} Verbindungen (siehe Architektur)",
@@ -783,6 +791,7 @@
     "useInWorkbench": "In der Workbench verwenden"
   },
   "control": {
+    "stretched": "Die Bahn ist mit gestreckter Querachse gezeichnet, damit die Unterschiede sichtbar sind.",
     "actuator": "Lenkaktor", "actuatorHint": "Realistisch: 30 ms Totzeit, 50 ms Verzögerung und höchstens 0,6 rad/s an den Rädern; Antrieb und Bremse mit Verzögerung.", "actuators": {"ideal": "Ideal (folgt dem Sollwert sofort)", "realistic": "Realistisch (Totzeit, Verzögerung, Ratenbegrenzung)"},
     "title": "Regler-Labor",
     "subtitle": "Mehrere Folgeregler auf derselben Bahn und demselben Fahrzeug fahren lassen, vergleichen, wie gut sie folgen, und sehen, welchen Beitrag jeder Term eines Regelgesetzes in jedem Moment liefert.",
@@ -836,13 +845,13 @@
       "text": "Fahrzeugmodell: {{plant}} · Reibwert {{mu}} · {{speed}} km/h. Auf eine Zeile klicken, um unten das Regelgesetz zu sehen."
     },
     "kpi": {
-      "max_e_n": "Größter Querfehler",
-      "rms_e_n": "Querfehler (RMS)",
+      "max_e_n": "Max. Fehler",
+      "rms_e_n": "Fehler (RMS)",
       "settled": "Eingeschwungen nach",
-      "steer": "Größter Lenkwinkel",
-      "steerRate": "Größte Lenkrate",
-      "ay": "Größte Querbeschleunigung",
-      "time": "Rechenzeit pro Schritt",
+      "steer": "Max. Lenkwinkel",
+      "steerRate": "Max. Lenkrate",
+      "ay": "Max. a_y",
+      "time": "Rechenzeit",
       "note": "Eingeschwungen: Der Querfehler bleibt ab diesem Zeitpunkt unter 5 cm."
     },
     "notSettled": "nicht eingeschwungen",
@@ -875,7 +884,7 @@
   },
   "learn": {
     "title": "Lernen",
-    "subtitle": "Neun kurze Lektionen zu Bahnfolgeregelung und Planung. Jede stellt eine Frage, fährt einen echten Versuch mit den Reglern und dem Planer der Bibliothek und zeigt die Zahlen, die sie beantworten.",
+    "subtitle": "Zwölf kurze Lektionen zu Bahnfolgeregelung und Planung. Jede stellt eine Frage, fährt einen echten Versuch mit den Reglern und dem Planer der Bibliothek und zeigt die Zahlen, die sie beantworten.",
     "progress": "{{done}} von {{n}} Lektionen erledigt",
     "note": "Jeder Versuch wird beim Start berechnet; nichts ist aufgezeichnet.",
     "topics": {
@@ -920,7 +929,20 @@
       "k_lat=1": "Ruckgewicht 1",
       "k_lat=20": "Ruckgewicht 20",
       "k_lat=1.0": "Ruckgewicht 1",
-      "k_lat=20.0": "Ruckgewicht 20"
+      "k_lat=20.0": "Ruckgewicht 20",
+      "horizon=1.0": "Prädiktion 1 s",
+      "horizon=3.0": "Prädiktion 3 s",
+      "horizon=6.0": "Prädiktion 6 s",
+      "period=0.1": "Neuplanung alle 0,1 s",
+      "period=0.3": "Neuplanung alle 0,3 s",
+      "period=1.0": "Neuplanung alle 1 s",
+      "margin_car=0.2": "Abstand 0,2 m",
+      "margin_car=0.5": "Abstand 0,5 m",
+      "margin_car=1.5": "Abstand 1,5 m",
+      "horizon=1": "Prädiktion 1 s",
+      "horizon=3": "Prädiktion 3 s",
+      "horizon=6": "Prädiktion 6 s",
+      "period=1": "Neuplanung alle 1 s"
     },
     "lessons": {
       "lookahead": {
@@ -979,8 +1001,32 @@
         "question": "Das kleine Gewicht wechselt die Spur mit 3,9 m/s², das große mit 0,7 m/s². Was wägt der Planer ab?",
         "answer": "Die Kosten eines Kandidaten sind das Ruckintegral plus die Dauer plus die Endabweichung. Bei kleinem Ruckgewicht dominiert der Zeitterm, und der Planer wählt einen kurzen, scharfen Spurwechsel. Bei großem wählt er einen langen, sanften. Alle Kandidaten sind dieselben Polynome; die Gewichte entscheiden nur, welcher am billigsten ist."
       },
+      "prediction": {
+        "title": "8 · Wie weit die Prädiktion vorausschaut",
+        "goal": "Sehen, warum der Planer wissen muss, wo die anderen sein werden, und nicht nur, wo sie sind.",
+        "experiment": "Auf der Autobahn schert ein Fahrzeug vor dem Ego-Fahrzeug ein. Der Stack fährt die Szene dreimal; die anderen Fahrzeuge werden 1, 3 und 6 Sekunden vorausgesagt.",
+        "watch": "Die stärkste Verzögerung, die Querbeschleunigung und der Ruck.",
+        "question": "Mit 1 s Prädiktion bremst das Fahrzeug mit 9,5 m/s² und weicht aus. Mit 3 s bremst es mit 3,2 m/s² und bleibt in der Spur. Warum ändern 6 s fast nichts mehr?",
+        "answer": "Die Kollisionsprüfung sieht nur den Teil eines Kandidaten, den die Prädiktion abdeckt. Mit 1 s taucht der Einscherer erst im Weg auf, wenn wenig Platz bleibt, und nur ein hartes Manöver ist noch kollisionsfrei. Mit 3 s erkennt der Planer den Konflikt früh, und eine sanfte Verzögerung genügt. Über die Zeit hinaus, in der sich der Konflikt entwickelt, bringt ein längerer Horizont hier keine Information mehr; er kostet nur Rechenzeit und stützt sich auf eine Vorhersage, die unsicherer wird."
+      },
+      "replan": {
+        "title": "9 · Wie oft der Planer plant",
+        "goal": "Verstehen, warum die Trajektorie mehrmals pro Sekunde neu geplant wird.",
+        "experiment": "Dieselbe Einscherer-Szene mit drei Planungstakten: eine neue Trajektorie alle 0,1, 0,3 und 1 Sekunde.",
+        "watch": "Der kleinste Abstand zu den anderen Fahrzeugen und der größte Ruck.",
+        "question": "Mit einem Plan pro Sekunde fällt der kleinste Abstand von 7,8 m auf 4,9 m, und der Ruck verdoppelt sich mehr als. Woher kommt der Unterschied?",
+        "answer": "Zwischen zwei Plänen folgt das Fahrzeug der alten Trajektorie, die für die damalige Szene geplant wurde. Bei langem Takt reagiert der Planer bis zu eine Sekunde zu spät auf den Einscherer und muss danach stärker korrigieren. Kurze Takte halten den Plan nah an der aktuellen Szene; der Planer setzt auf seiner vorherigen Trajektorie auf, deshalb macht das häufige Neuplanen die Bewegung nicht unruhig."
+      },
+      "margin": {
+        "title": "10 · Der Sicherheitsabstand der Kollisionsprüfung",
+        "goal": "Sehen, was der Abstand um andere Objekte kostet und was er bringt.",
+        "experiment": "Bei 90 km/h steht ein Hindernis in der Spur, und der Stack weicht aus. Der Sicherheitsabstand der Kollisionsprüfung ist 0,2, 0,5 und 1,5 m.",
+        "watch": "Der kleinste Abstand zum Hindernis, die Querbeschleunigung und der Ruck.",
+        "question": "Der Abstand wächst von 0,7 m auf 2,0 m. Warum wachsen auch Querbeschleunigung und Ruck?",
+        "answer": "Der Abstand wird zu den Kreisen addiert, die Fahrzeug und Objekt abdecken; ein Kandidat, der näher kommt, wird verworfen. Ein größerer Abstand entfernt die sanften Kandidaten, die knapp vorbeiführen, und der billigste verbleibende weicht auf derselben Strecke weiter aus: 3,3 statt 2,0 m/s². Der Abstand tauscht Freiraum gegen Komfort, und bei zu großem Abstand bleibt womöglich kein Kandidat übrig."
+      },
       "stack": {
-        "title": "8 · Fünf Regler im Kreisverkehr",
+        "title": "11 · Fünf Regler im Kreisverkehr",
         "goal": "Regler im kompletten Stack für automatisiertes Fahren vergleichen.",
         "experiment": "Der Stack fährt fünfmal durch einen Kreisverkehr. Nur der Folgeregler wechselt.",
         "watch": "Der größte Querfehler, der Ruck und ob die Mission bestanden wird.",
@@ -988,7 +1034,7 @@
         "answer": "Der Kreisverkehr ist langsam und eng gekrümmt. Der LQR ist mit dem linearen Einspurmodell für kleine Winkel und höhere Geschwindigkeiten ausgelegt und hat kein eigenes Gesetz für langsame Fahrt. Die Werling-Stabilisierung schaltet bei niedriger Geschwindigkeit auf ein kinematisches Gesetz um, und der MPC plant mit den Grenzen; beide bleiben innerhalb von 20 cm. Ein Regler ist nur in dem Bereich gut, für den er ausgelegt wurde."
       },
       "conditions": {
-        "title": "9 · Von ideal zu realistisch",
+        "title": "12 · Von ideal zu realistisch",
         "goal": "Sehen, wie viel der Leistung von idealen Bedingungen kommt.",
         "experiment": "Der Stack weicht dreimal einem Hindernis aus: unter idealen Bedingungen, mit realistischem Fahrzeug, Aktoren und Sensoren und auf nasser Fahrbahn.",
         "watch": "Der größte Querfehler und der Ruck.",
