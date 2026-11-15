@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Live mode with the model and its signals:** the live run of the Workbench shows the block diagram of the running
+  stack; a click on a block shows its inputs (with their source) and outputs at this moment, "Next block" executes
+  one block of the current step (`LiveSession.step_node()`, `LiveSession.inspect()`, `blocks` and `inspect` in
+  `POST /workbench/live/{id}/advance`, `GET /workbench/live/{id}/blocks`). A badge shows how much faster than real
+  time the run computes. The Architecture page and the live mode share one diagram.
+- **Reports in English:** `generate_pdf(..., lang="en")`, `engineering_summary(..., lang="en")` and `lang` in
+  `POST /simulate/report` (default `en`); KPI labels, groups, ratings, findings, stop reasons and plot labels are
+  translated (`vdsim/reporting/texts_en.py`). The library default stays German.
+- **Component notes in English:** theory, expert notes, assumptions and limitations of all 29 stack components
+  (Architecture page and controller lab); the generator fails when a German note has no English text.
+- **Lessons:** fourteen in total, new ones on the prediction horizon, the replanning cycle, the safety margin, the
+  behavior layer and the learned planner.
 - **Learned planner, more ways to learn:** approach selectable (`regression`, `classification` over the teacher's
   grid, `dagger` with the learner driving and the teacher labeling), training situations configurable (speed range,
   objects, curves, lane changes), and your own planner model connectable as ONNX or HTTP

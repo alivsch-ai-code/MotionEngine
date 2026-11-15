@@ -4,12 +4,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { JobView, LiveFrame, LiveSession, PlannerSnapshot, RunActor, RunResult } from "../lib/api";
+import type { JobView, LiveBlock, LiveFrame, LiveSession, PlannerSnapshot, RunActor, RunResult } from "../lib/api";
 import { fmt, toDeg } from "../lib/format";
 import { useClient } from "../lib/hooks";
 import { ErrorAlert } from "./ErrorAlert";
 import { Icon } from "./Icon";
 import { SceneView } from "./SceneView";
+import { SignalTree } from "./SignalTree";
+import { StackDiagram } from "./StackDiagram";
 
 const SIGNALS = ["t", "ego_x", "ego_y", "ego_psi", "ego_v"];
 const SPEEDS = [0.25, 0.5, 1, 2];
@@ -32,6 +34,11 @@ export function LivePanel({ session, lang, onFinished, onClosed }:
   const [showCandidates, setShowCandidates] = useState(true);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
+  const [waiting, setWaiting] = useState(false);      // a step request is on its way: further clicks would be dropped
+  const [selected, setSelected] = useState(() => (session.graph.nodes.some((n) => n.id === "planner") ? "planner" : session.graph.nodes[0]?.id ?? ""));
+  const [block, setBlock] = useState<LiveBlock | null>(null);
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
   const buffers = useRef<Buffers>({ signals: {}, objects: {} });
   const known = useRef(session.frame.n_snapshots);
   const pending = useRef(false);
@@ -48,22 +55,25 @@ export function LivePanel({ session, lang, onFinished, onClosed }:
     }
     known.current = f.n_snapshots;
     if (f.snapshot) setSnapshot(f.snapshot);
+    if (f.block) setBlock(f.block);
     setFrame(f);
     if (f.stopped) setPlaying(false);
   }, []);
   useEffect(() => { buffers.current = { signals: {}, objects: {} }; take(session.frame); }, [session, take]);
 
-  const advance = useCallback(async (body: { seconds?: number; steps?: number }) => {
+  const advance = useCallback(async (body: { seconds?: number; steps?: number; blocks?: number }) => {
     if (pending.current || done.current) return;
     pending.current = true;
+    if (!body.seconds) setWaiting(true);
     try {
-      take(await client.liveAdvance(session.id, { ...body, known_snapshots: known.current }));
+      take(await client.liveAdvance(session.id, { ...body, known_snapshots: known.current, ...(selectedRef.current ? { inspect: selectedRef.current } : {}) }));
       setError(null);
     } catch (err) {
       setError(err);
       setPlaying(false);
     } finally {
       pending.current = false;
+      setWaiting(false);
     }
   }, [client, session.id, take]);
 
@@ -79,6 +89,14 @@ export function LivePanel({ session, lang, onFinished, onClosed }:
     })();
     return () => { stop = true; };
   }, [playing, speed, advance, session.base_dt]);
+
+  // the signals of the selected block, read whenever another block is selected (also while paused)
+  useEffect(() => {
+    if (!selected || done.current) return;
+    const ctrl = new AbortController();
+    client.liveBlocks(session.id, selected, ctrl.signal).then((r) => setBlock(r.blocks[selected] ?? null)).catch(() => undefined);
+    return () => ctrl.abort();
+  }, [client, session.id, selected]);
 
   // a session that is left open is removed on the server
   useEffect(() => () => { if (!done.current) void client.liveDelete(session.id).catch(() => undefined); }, [client, session.id]);
@@ -106,6 +124,9 @@ export function LivePanel({ session, lang, onFinished, onClosed }:
   }), [session, frame]);
   const num = (key: string) => (typeof frame.row[key] === "number" ? (frame.row[key] as number) : null);
   const behavior = snapshot?.behavior as { maneuver?: string } | null | undefined;
+  // how much faster than real time the server computes this run (simulated time per second of computing)
+  const reserve = frame.wall > 0.05 && frame.t > 0 ? frame.t / frame.wall : null;
+  const node = session.graph.nodes.find((n) => n.id === selected);
 
   return (
     <>
@@ -115,6 +136,8 @@ export function LivePanel({ session, lang, onFinished, onClosed }:
           <span className={`badge ${frame.stopped ? "badge--warning" : playing ? "badge--success" : "badge--info"}`}>
             {frame.stopped ? t("live.stopped") : playing ? t("live.running") : t("live.paused")}</span>
           {frame.stopped && frame.stop_reason ? <span className="subtle">{t(`live.reasons.${reasonKey(frame.stop_reason)}`, { defaultValue: frame.stop_reason })}</span> : null}
+          {reserve !== null ? <span className={`badge ${reserve < speed ? "badge--warning" : "badge--info"}`}>{t(reserve < speed ? "live.tooSlow" : "live.realtime", { x: fmt(reserve, lang, 2) })}</span> : null}
+          {frame.mid_step ? <span className="badge badge--warning">{t("live.midStep")}</span> : null}
         </div>
         <span className="subtle mono">{fmt(frame.t, lang, 4)} / {fmt(frame.t_end, lang, 3)} s · {t("live.steps", { n: frame.n_steps })}</span>
       </div>
@@ -125,8 +148,9 @@ export function LivePanel({ session, lang, onFinished, onClosed }:
         <div className="player__controls">
           <button type="button" className="btn btn--primary btn--sm" disabled={frame.stopped || busy} onClick={() => setPlaying((p) => !p)}>
             <Icon name={playing ? "pause" : "play"} size={16} />{playing ? t("live.pause") : t("live.play")}</button>
-          <button type="button" className="btn btn--secondary btn--sm" disabled={playing || frame.stopped || busy} onClick={() => void advance({ steps: 1 })}>{t("live.step")}</button>
-          <button type="button" className="btn btn--secondary btn--sm" disabled={playing || frame.stopped || busy} onClick={() => void advance({ steps: 10 })}>{t("live.step10")}</button>
+          <button type="button" className="btn btn--secondary btn--sm" disabled={playing || frame.stopped || busy || waiting} onClick={() => void advance({ blocks: 1 })}>{t("live.blockStep")}</button>
+          <button type="button" className="btn btn--secondary btn--sm" disabled={playing || frame.stopped || busy || waiting} onClick={() => void advance({ steps: 1 })}>{t("live.step")}</button>
+          <button type="button" className="btn btn--secondary btn--sm" disabled={playing || frame.stopped || busy || waiting} onClick={() => void advance({ steps: 10 })}>{t("live.step10")}</button>
           <select className="select select--sm" value={speed} aria-label={t("common:player.speed")} onChange={(e) => setSpeed(Number(e.target.value))}>
             {SPEEDS.map((s) => <option key={s} value={s}>{s}×</option>)}</select>
           <button type="button" className={`btn btn--sm ${showCandidates ? "btn--secondary" : "btn--ghost"}`} aria-pressed={showCandidates}
@@ -138,6 +162,27 @@ export function LivePanel({ session, lang, onFinished, onClosed }:
         </div>
         <p className="subtle">{t("live.hint")}</p>
       </div></div>
+      <div className="card">
+        <div className="card__header"><div><h2>{t("live.model")}</h2><p>{t("live.modelText")}</p></div>
+          {frame.last_block ? <span className="badge badge--success">{t("live.lastBlock", { name: t(`workbench.layers.${frame.last_block.node}`, { defaultValue: frame.last_block.node }) })}</span> : null}</div>
+        <div className="card__body stack">
+          <StackDiagram nodes={session.graph.nodes} connections={session.graph.connections} selected={selected} onSelect={setSelected} active={frame.mid_step ? frame.last_block?.node : null}
+            height={300} ariaLabel={t("live.model")} />
+          {node ? <div className="row row--between"><h3>{t(`workbench.layers.${node.id}`, { defaultValue: node.id })} · <span className="mono">{node.component}</span></h3>
+            {block?.profile ? <span className="subtle">{t("live.callTime", { calls: block.profile.calls, mean: fmt(block.profile.mean_us / 1000, lang, 3), max: fmt(block.profile.max_us / 1000, lang, 3) })}</span> : null}</div> : null}
+          {block ? <div className="grid grid--2">
+            {(["inputs", "outputs"] as const).map((side) => { const ports = Object.entries(side === "inputs" ? block.inputs : block.outputs); return (
+              <div key={side} className="stack stack--sm"><div className="chart-title">{t(`live.${side}`)}</div>
+                {ports.length ? ports.map(([port, v]) => { const src = side === "inputs" ? (v as LiveBlock["inputs"][string]).from : null; return (
+                  <details key={port} className="expert" open={ports.length <= 2}>
+                    <summary><span className="mono">{port}</span>{src ? <span className="subtle"> ← {src}</span> : null}
+                      {side === "outputs" && block.summary[port] ? <span className="subtle"> · {block.summary[port]}</span> : null}</summary>
+                    <SignalTree value={side === "inputs" ? (v as LiveBlock["inputs"][string]).value : (v as LiveBlock["outputs"][string])} lang={lang} />
+                  </details>); }) : <p className="subtle">{t("live.noPorts")}</p>}
+              </div>); })}
+          </div> : <p className="subtle">{t("live.noBlock")}</p>}
+        </div>
+      </div>
       <div className="grid grid--2">
         <div className="card"><div className="card__header"><h2>{t("live.telemetry")}</h2></div><div className="card__body table-wrap"><table className="table"><tbody>
           {TELEMETRY.map(([key, unit, conv, digits]) => { const v = num(key); return (

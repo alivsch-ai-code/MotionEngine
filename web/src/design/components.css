@@ -311,3 +311,10 @@ details.expert[open] > summary { margin-bottom: var(--me-space-3); color: var(--
 .control-name { white-space: nowrap; }
 .control-name .badge { margin-left: var(--me-space-2); }
 .law-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--me-space-4); align-items: start; }
+
+/* signal values of a block (live mode) */
+.signal-tree { display: grid; gap: 2px; font-size: var(--me-text-sm, 0.875rem); }
+.signal-tree .signal-tree { margin-left: var(--me-space-3); }
+.signal-tree__row { display: grid; grid-template-columns: minmax(7rem, max-content) 1fr; gap: var(--me-space-3); align-items: baseline; overflow-wrap: anywhere; }
+.signal-tree__key { color: var(--me-text-muted); }
+.signal-tree > summary { cursor: pointer; color: var(--me-text-subtle); }

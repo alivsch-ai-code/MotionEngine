@@ -95,8 +95,14 @@ export interface RunRequest { scenario: string; seed?: number | null; duration?:
   friction?: number | null; wind_speed?: number | null }
 export interface LiveActor { type: string; length: number; width: number; t: number; x: number; y: number; psi: number; v?: number }
 export interface LiveFrame { t: number; t_end: number; stopped: boolean; stop_reason: string; row: Record<string, number | string | null>; objects: Record<string, LiveActor>;
-  n_steps: number; n_snapshots: number; n_events: number; snapshot: PlannerSnapshot | null; events: ({ t: number; type: string } & Record<string, unknown>)[] }
-export interface LiveSession { id: string; name: string; base_dt: number; road: RunResult["road"]; ego: { length: number; width: number }; frame: LiveFrame }
+  n_steps: number; n_snapshots: number; n_events: number; snapshot: PlannerSnapshot | null; events: ({ t: number; type: string } & Record<string, unknown>)[];
+  wall: number; mid_step: boolean; block: LiveBlock | null; last_block: { node: string; phase: string | null } | null }
+// a signal value as plain data: numbers, texts, lists, objects; long arrays as { _kind: "array", shape, min, max, first, last }
+export type SignalValue = number | string | boolean | null | SignalValue[] | { [key: string]: SignalValue };
+export interface LiveBlock { inputs: Record<string, { from: string | null; value: SignalValue }>; outputs: Record<string, SignalValue>; summary: Record<string, string>;
+  profile: { calls: number; mean_us: number; p95_us: number; max_us: number; total_ms: number } | null }
+export interface LiveSession { id: string; name: string; base_dt: number; road: RunResult["road"]; ego: { length: number; width: number }; frame: LiveFrame;
+  graph: { nodes: { id: string; component: string; label: string; position: [number, number]; period?: number | null }[]; connections: Connection[] } }
 export interface SavedRun { format?: string; name?: string; meta: Record<string, unknown>; npz: string }
 export interface MissionResult { passed: boolean; criteria: Record<string, { ok: boolean; detail: string }> }
 export interface JobView { id: string; kind: string; name: string; state: "queued" | "running" | "done" | "failed" | "cancelled"; progress: number; error: string | null;
@@ -249,10 +255,10 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     simulate: (body: SimulateRequest, s?: AbortSignal) => request<SimulateResponse>("POST", "/simulate", body, s),
     waypointTrajectory: (body: WaypointPath, s?: AbortSignal) => request<TrajectoryData>("POST", "/trajectory/waypoints", { ...body, max_points: 1500 }, s),
     waypointsFromManeuver: (body: { maneuver: string; vehicle: string; n_points: number }) => request<{ waypoints: Waypoint[] }>("POST", "/trajectory/waypoints/from-maneuver", body),
-    async report(runIds: string[], format: "pdf" | "summary", title: string): Promise<Blob> {
+    async report(runIds: string[], format: "pdf" | "summary", title: string, lang: "en" | "de" = "en"): Promise<Blob> {
       let res: Response;
       try {
-        res = await fetch(`${base}/simulate/report`, { method: "POST", headers: headers(true), body: JSON.stringify({ run_ids: runIds, format, title }) });
+        res = await fetch(`${base}/simulate/report`, { method: "POST", headers: headers(true), body: JSON.stringify({ run_ids: runIds, format, title, lang }) });
       } catch (err) {
         throw new ApiError("errors.network", 0, String(err));
       }
@@ -278,7 +284,9 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     stackGraph: (stack: Record<string, LayerSpec>, s?: AbortSignal, connections?: Connection[] | null) =>
       request<StackGraph>("POST", "/workbench/graph", { stack, ...(connections ? { connections } : {}) }, s),
     liveStart: (body: RunRequest) => request<LiveSession>("POST", "/workbench/live", body),
-    liveAdvance: (id: string, body: { seconds?: number; steps?: number; known_snapshots: number }, s?: AbortSignal) =>
+    liveBlocks: (id: string, node?: string, s?: AbortSignal) =>
+      request<{ t: number; mid_step: boolean; blocks: Record<string, LiveBlock> }>("GET", `/workbench/live/${encodeURIComponent(id)}/blocks${node ? `?node=${encodeURIComponent(node)}` : ""}`, undefined, s),
+    liveAdvance: (id: string, body: { seconds?: number; steps?: number; blocks?: number; inspect?: string; known_snapshots: number }, s?: AbortSignal) =>
       request<LiveFrame>("POST", `/workbench/live/${encodeURIComponent(id)}/advance`, body, s),
     liveFinish: (id: string) => request<JobView>("POST", `/workbench/live/${encodeURIComponent(id)}/finish`),
     liveDelete: (id: string) => request<void>("DELETE", `/workbench/live/${encodeURIComponent(id)}`),

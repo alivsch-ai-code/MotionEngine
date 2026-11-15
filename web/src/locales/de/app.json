@@ -6,7 +6,7 @@
     "stats": { "api": "API-Version", "vehicles": "Fahrzeug-Presets", "models": "Fahrzeugmodelle", "neural": "Neuronale Modelle" },
     "quickActions": "Schnellzugriff",
     "actions": {
-      "learn": { "title": "Mit einer Lektion beginnen", "text": "Dreizehn kurze Lektionen: eine Frage, ein echter Versuch, die Zahlen, die Antwort." },
+      "learn": { "title": "Mit einer Lektion beginnen", "text": "Vierzehn kurze Lektionen: eine Frage, ein echter Versuch, die Zahlen, die Antwort." },
       "control": { "title": "Regler vergleichen", "text": "Pure Pursuit, Stanley, LQR, MPC und Werling auf derselben Bahn, jedes Regelgesetz erklärt." },
       "workbench": { "title": "Den ganzen Stack fahren", "text": "Von der Wahrnehmung bis zu den Aktoren auf 14 Szenarien, von idealen bis realistischen Bedingungen." },
       "simulate": { "title": "Simulation starten", "text": "ISO-Manöver mit Einspur-, Zweispur- oder Mehrkörpermodell." },
@@ -583,11 +583,14 @@
     "stackHint": "Änderungen gelten für die Workbench und für Versuche.",
     "inputs": "Eingänge",
     "outputs": "Ausgänge",
-    "doc": { "german": "Die Theorie-Notizen der Bibliothek sind auf Deutsch verfasst.",
+    "doc": {
       "purpose": "Zweck",
       "theory": "Theorie",
+      "assumptions": "Annahmen",
+      "limitations": "Grenzen",
       "references": "Quellen"
     },
+    "runLive": "Dieses Modell live in der Workbench fahren",
     "noDoc": "Diese Komponente hat keine Dokumentation."
   },
   "matlab": {
@@ -659,10 +662,25 @@
     "pause": "Pause",
     "play": "Start",
     "step": "Einzelschritt",
+    "blockStep": "Nächster Block",
+    "model": "Modell und Signale",
+    "modelText": "Das Blockschaltbild des laufenden Stacks. Ein Klick auf einen Block zeigt seine Ein- und Ausgänge in diesem Moment; „Nächster Block“ führt einen Block des aktuellen Schritts aus.",
+    "lastBlock": "zuletzt ausgeführt: {{name}}",
+    "midStep": "mitten im Schritt",
+    "realtime": "rechnet {{x}}× schneller als Echtzeit",
+    "tooSlow": "rechnet nur {{x}}× Echtzeit: langsamer als das gewählte Tempo",
+    "callTime": "{{calls}} Aufrufe · Mittel {{mean}} ms · max. {{max}} ms",
+    "inputs": "Eingänge",
+    "outputs": "Ausgänge",
+    "noPorts": "keine",
+    "noBlock": "Noch keine Werte: Lauf starten oder einen Schritt ausführen.",
+    "array": "{{n}} Werte, {{min}} bis {{max}}",
+    "list": "{{n}} Einträge (die ersten {{shown}} gezeigt)",
+    "fields": "{{n}} Felder",
     "step10": "10 Schritte",
     "finish": "Als Lauf übernehmen",
     "discard": "Verwerfen",
-    "hint": "Der Stack läuft auf dem Server. Start lässt ihn in Echtzeit (oder langsamer/schneller) laufen, Einzelschritt führt einen Basisschritt aus. „Als Lauf übernehmen“ wertet den Lauf aus und öffnet ihn mit allen Details.",
+    "hint": "Der Stack läuft auf dem Server. Start lässt ihn in Echtzeit (oder langsamer/schneller) laufen, Einzelschritt führt einen Basisschritt aus, „Nächster Block“ einen Block davon. In der Pause zeigt jeder Block seine Ein- und Ausgänge. „Als Lauf übernehmen“ wertet den Lauf aus und öffnet ihn mit allen Details.",
     "telemetry": "Telemetrie",
     "noCycle": "Noch kein Planungszyklus.",
     "signals": {
@@ -884,7 +902,7 @@
   },
   "learn": {
     "title": "Lernen",
-    "subtitle": "Dreizehn kurze Lektionen zu Bahnfolgeregelung und Planung. Jede stellt eine Frage, fährt einen echten Versuch mit den Reglern und dem Planer der Bibliothek und zeigt die Zahlen, die sie beantworten.",
+    "subtitle": "Vierzehn kurze Lektionen zu Bahnfolgeregelung und Planung. Jede stellt eine Frage, fährt einen echten Versuch mit den Reglern und dem Planer der Bibliothek und zeigt die Zahlen, die sie beantworten.",
     "progress": "{{done}} von {{n}} Lektionen erledigt",
     "note": "Jeder Versuch wird beim Start berechnet; nichts ist aufgezeichnet.",
     "topics": {
@@ -897,10 +915,13 @@
     "watch": "Worauf achten",
     "run": "Versuch starten",
     "takes": "Läufe des kompletten Stacks dauern 10 bis 40 Sekunden.",
+    "takesTraining": "Zwei Modelle werden trainiert; der erste Lauf dauert etwa eine Minute, spätere Läufe nutzen die trainierten Modelle.",
+    "demonstrations": "{{n}} Demonstrationen",
     "open": {
       "control": "Im Regler-Labor weitermachen",
       "experiment": "In der Forschung weitermachen",
-      "runs": "In der Workbench weitermachen"
+      "runs": "In der Workbench weitermachen",
+      "train": "Weiter bei Modelle"
     },
     "variant": "Variante",
     "failed": "gescheitert",
@@ -916,7 +937,12 @@
       "rms_jerk_lat": "Querruck (RMS)",
       "mean_speed": "Mittlere Geschwindigkeit",
       "min_distance": "Kleinster Abstand zu Objekten",
-      "mission_passed": "Mission bestanden"
+      "mission_passed": "Mission bestanden",
+      "same_choice": "Gleiche Wahl wie der Lehrer",
+      "within_5": "Kosten innerhalb 5 % des Lehrers",
+      "cost_p90": "Kostenverhältnis, 90. Perzentil",
+      "network_share": "Vom Netz geplante Zyklen",
+      "collisions": "Kollisionen"
     },
     "labels": {
       "on": "Vorsteuerung an",
@@ -1039,8 +1065,16 @@
         "question": "Bei der Grenze von 1 m/s² erreicht das Fahrzeug trotzdem 2,2 m/s². Warum wird die Grenze nicht genau eingehalten?",
         "answer": "Der Verhaltensplaner macht aus der Grenze eine Zielgeschwindigkeit aus der Krümmung der Straße voraus: v = √(a / κ). Das ist ein Wunsch an den Trajektorienplaner, keine Nebenbedingung. Der Planer nähert sich der Zielgeschwindigkeit entlang seiner Kandidaten, und beim Ein- und Ausfahren ist die gefahrene Bahn stärker gekrümmt als die Mittellinie, für die das Tempo berechnet wurde. Die Ebenen teilen sich die Arbeit: Das Verhalten entscheidet wie schnell und wohin, der Trajektorienplaner entscheidet wie, und seine eigenen Nebenbedingungen setzen die harten Grenzen. Eine höhere Grenze spart hier Zeit, 25 statt 32 Sekunden, und kostet Komfort."
       },
+      "learned": {
+        "title": "12 · Ein Netz, das den Planer nachahmt",
+        "goal": "Sehen, was ein gelernter Planer durch mehr Demonstrationen gewinnt und was das Fahrzeug vor einem schwachen schützt.",
+        "experiment": "Zwei kleine Netze lernen vorherzusagen, welchen Kandidaten der Werling-Planer auswählt, eines aus 500 und eines aus 2000 Demonstrationen. Beide werden danach auf 40 Situationen geprüft, die sie nicht gesehen haben.",
+        "watch": "Wie oft das Netz dieselbe Wahl trifft wie sein Lehrer, wie nah seine Kosten bleiben, und die Kollisionen.",
+        "question": "Der kleine Datensatz trifft die Wahl des Lehrers in 63 % der Zyklen, der große in 79 %. Warum fahren beide ohne Kollision und planen denselben Anteil der Zyklen selbst?",
+        "answer": "Das Netz gibt keine Trajektorie aus. Es sagt vorher, wo im Kandidatenraster der beste liegt, und der Planer durchsucht dann ein kleines Fenster um diesen Tipp mit seiner üblichen Kostenfunktion, den Nebenbedingungen und der Kollisionsprüfung. Ein schlechter Tipp kostet Optimalität, nicht Sicherheit: Mit 500 Demonstrationen kostet ein Zehntel der Zyklen 19 % mehr als die Wahl des Lehrers, mit 2000 nur 7 % mehr. Liegt der beste Kandidat des Fensters an dessen Rand, wird dem Tipp nicht vertraut, und der volle Planer übernimmt diesen Zyklus. In den übrigen Zyklen wurde dem Tipp nicht vertraut, oder es war gar kein Kandidat zulässig, auch für den Lehrer nicht. Beides hängt mehr von der Situation ab als von der Menge der Trainingsdaten, deshalb planen beide Modelle 93 % der Zyklen."
+      },
       "stack": {
-        "title": "12 · Fünf Regler im Kreisverkehr",
+        "title": "13 · Fünf Regler im Kreisverkehr",
         "goal": "Regler im kompletten Stack für automatisiertes Fahren vergleichen.",
         "experiment": "Der Stack fährt fünfmal durch einen Kreisverkehr. Nur der Folgeregler wechselt.",
         "watch": "Der größte Querfehler, der Ruck und ob die Mission bestanden wird.",
@@ -1048,7 +1082,7 @@
         "answer": "Der Kreisverkehr ist langsam und eng gekrümmt. Der LQR ist mit dem linearen Einspurmodell für kleine Winkel und höhere Geschwindigkeiten ausgelegt und hat kein eigenes Gesetz für langsame Fahrt. Die Werling-Stabilisierung schaltet bei niedriger Geschwindigkeit auf ein kinematisches Gesetz um, und der MPC plant mit den Grenzen; beide bleiben innerhalb von 20 cm. Ein Regler ist nur in dem Bereich gut, für den er ausgelegt wurde."
       },
       "conditions": {
-        "title": "13 · Von ideal zu realistisch",
+        "title": "14 · Von ideal zu realistisch",
         "goal": "Sehen, wie viel der Leistung von idealen Bedingungen kommt.",
         "experiment": "Der Stack weicht dreimal einem Hindernis aus: unter idealen Bedingungen, mit realistischem Fahrzeug, Aktoren und Sensoren und auf nasser Fahrbahn.",
         "watch": "Der größte Querfehler und der Ruck.",

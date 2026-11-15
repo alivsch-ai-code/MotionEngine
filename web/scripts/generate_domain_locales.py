@@ -21,7 +21,10 @@ sys.path.insert(0, str(ROOT))
 
 import logging  # noqa: E402
 
+from component_notes_en import NOTES_EN  # noqa: E402
+
 from vdsim.core.parameters import VehicleConfig  # noqa: E402
+from vdsim.reporting.texts_en import KPI_LABELS_EN as KPIS_EN  # noqa: E402
 from vdsim.trajectory import MANEUVER_INFO  # noqa: E402
 
 PARAMS_EN = {
@@ -132,61 +135,6 @@ GROUPS = {
     "powertrain": ("Powertrain", "Antrieb"),
     "brakes": ("Brakes", "Bremsen"),
     "systems": ("Control systems", "Regelsysteme"),
-}
-
-KPIS_EN = {
-    "max_ay": "Max. lateral acceleration",
-    "max_ax": "Max. longitudinal acceleration",
-    "min_ax": "Max. deceleration",
-    "max_yaw_rate": "Max. yaw rate",
-    "max_beta": "Max. side-slip angle",
-    "max_roll": "Max. roll angle",
-    "max_steer": "Max. road-wheel angle",
-    "max_lateral_error": "Max. path deviation",
-    "rms_lateral_error": "RMS path deviation",
-    "max_friction_utilization": "Max. friction utilization",
-    "stability_reserve": "Stability reserve (1 - utilization)",
-    "mean_speed": "Mean speed",
-    "distance": "Distance",
-    "duration": "Simulated time",
-    "iso2631_aw": "Weighted vertical accel. a_w (ISO 2631)",
-    "iso2631_rating": "Comfort rating (ISO 2631)",
-    "max_pitch": "Max. pitch angle",
-    "rms_ay": "RMS lateral acceleration",
-    "rms_lateral_jerk": "RMS lateral jerk",
-    "max_lateral_jerk": "Max. lateral jerk",
-    "energy_drive": "Energy demand (drive)",
-    "energy_regen": "Recuperated energy",
-    "consumption": "Consumption",
-    "cone_hits": "Lane gate violations",
-    "test_passed": "Test passed",
-    "entry_speed": "Entry speed",
-    "understeer_gradient": "Understeer gradient",
-    "understeer_gradient_g": "Understeer gradient",
-    "max_ay_steady": "Max. steady-state lateral acceleration",
-    "yaw_gain": "Steady-state yaw gain",
-    "ay_gain": "Steady-state lateral acceleration gain",
-    "response_time": "Yaw rate response time (90 %)",
-    "peak_response_time": "Time to yaw rate peak",
-    "yaw_overshoot": "Yaw rate overshoot",
-    "yaw_ratio_1s": "Yaw rate 1.0 s after steering end",
-    "yaw_ratio_175s": "Yaw rate 1.75 s after steering end",
-    "lateral_displacement": "Lateral displacement 1.07 s after steering start",
-    "stopping_distance": "Stopping distance",
-    "brake_speed": "Initial braking speed",
-    "mfdd": "Mean fully developed deceleration (MFDD)",
-    "max_yaw_deviation": "Max. yaw angle deviation",
-    "lap_time": "Lap time",
-    "yaw_resonance": "Frequency of max. yaw gain",
-    "yaw_gain_peak_ratio": "Yaw gain peak ratio",
-    "yaw_gain_1hz_ratio": "Yaw gain 1 Hz / steady state",
-    "min_gap": "Min. gap",
-    "min_time_gap": "Min. time gap",
-    "collision": "Collision",
-    "aeb_trigger_ttc": "AEB triggered at TTC",
-    "min_distance_to_line": "Min. distance to lane marking",
-    "lane_departure": "Lane departure",
-    "lka_active_time": "LKA intervention time",
 }
 
 MANEUVERS_EN = {
@@ -436,6 +384,25 @@ COMPONENT_DOCS_EN = {  # (summary, purpose)
 }
 
 
+NOTE_FIELDS = ("theory", "expert", "assumptions", "limitations")
+
+
+def _notes_missing(notes_de):
+    # every German note needs an English text of the same shape; formulas use single braces only
+    missing = []
+    for spec, fields_de in notes_de.items():
+        en = NOTES_EN.get(spec, {})
+        for name, value in fields_de.items():
+            other = en.get(name)
+            same_shape = isinstance(other, type(value)) and (isinstance(value, str) or len(other) == len(value))
+            if not other or not same_shape:
+                missing.append(f"{spec}:{name}")
+            for text in ([value] if isinstance(value, str) else value) + ([other] if isinstance(other, str) else list(other or [])):
+                if "{{" in text or "$t(" in text:
+                    missing.append(f"{spec}:{name} (i18next syntax in the text)")
+    return missing
+
+
 def ad_library():
     # German texts of the automated-driving stack, read from the library
     from vdsim import api
@@ -446,11 +413,12 @@ def ad_library():
     groups = sorted({v[2] for v in KPI_INFO.values()})
     components = {f"{c['kind']}/{c['name']}": c.get("label") or c["name"] for c in api.list_components()
                   if c["kind"] in STACK_KINDS}
-    docs = {}
+    docs, notes = {}, {}
     for spec in components:
         doc = api.describe_component(spec).get("doc") or {}
         docs[spec] = (doc.get("summary") or "", doc.get("purpose") or "")
-    return scenarios, kpis, groups, components, docs
+        notes[spec] = {k: doc[k] for k in NOTE_FIELDS if doc.get(k)}
+    return scenarios, kpis, groups, components, docs, notes
 
 
 def kpi_labels_de():
@@ -484,10 +452,10 @@ def build():
         + sorted(set(MANEUVER_INFO) - set(MANEUVERS_EN))
     )
     missing += sorted({p for info in MANEUVER_INFO.values() for p in info["params"]} - set(MANEUVER_PARAMS_EN))
-    scenarios_de, ad_kpis_de, ad_groups, components_de, docs_de = ad_library()
+    scenarios_de, ad_kpis_de, ad_groups, components_de, docs_de, notes_de = ad_library()
     missing += sorted(set(scenarios_de) - set(AD_SCENARIOS_EN)) + sorted(set(ad_kpis_de) - set(AD_KPIS_EN))
     missing += sorted(set(ad_groups) - set(AD_GROUPS_EN)) + sorted(set(components_de) - set(COMPONENTS_EN))
-    missing += sorted(set(docs_de) - set(COMPONENT_DOCS_EN))
+    missing += sorted(set(docs_de) - set(COMPONENT_DOCS_EN)) + _notes_missing(notes_de)
     if missing:
         raise SystemExit(f"missing English texts: {missing}")
     out = {}
@@ -512,7 +480,8 @@ def build():
             "adCriterion": {k: v[0 if en else 1] for k, v in AD_CRITERIA.items()},
             "component": _nest({k.replace("/", ".", 1): (COMPONENTS_EN[k] if en else v) for k, v in components_de.items()}),
             "componentDoc": _nest({k.replace("/", ".", 1): {"summary": (COMPONENT_DOCS_EN[k] if en else v)[0],
-                                                             "purpose": (COMPONENT_DOCS_EN[k] if en else v)[1]}
+                                                             "purpose": (COMPONENT_DOCS_EN[k] if en else v)[1],
+                                                             **(NOTES_EN.get(k, {}) if en else notes_de[k])}
                                    for k, v in docs_de.items()}),
             "maneuverParam": {
                 p: (MANEUVER_PARAMS_EN[p] if en else lab)

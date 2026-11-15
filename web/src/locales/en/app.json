@@ -6,7 +6,7 @@
     "stats": { "api": "API version", "vehicles": "Vehicle presets", "models": "Vehicle models", "neural": "Neural models" },
     "quickActions": "Quick actions",
     "actions": {
-      "learn": { "title": "Start with a lesson", "text": "Thirteen short lessons: a question, a real experiment, the numbers, the answer." },
+      "learn": { "title": "Start with a lesson", "text": "Fourteen short lessons: a question, a real experiment, the numbers, the answer." },
       "control": { "title": "Compare controllers", "text": "Pure Pursuit, Stanley, LQR, MPC and Werling on the same path, with each control law explained." },
       "workbench": { "title": "Run the whole stack", "text": "Perception to actuators on 14 scenarios, from ideal to realistic conditions." },
       "simulate": { "title": "Run a simulation", "text": "ISO maneuvers with single-track, double-track or multibody models." },
@@ -583,11 +583,14 @@
     "stackHint": "Changes apply to the workbench and to experiments.",
     "inputs": "Inputs",
     "outputs": "Outputs",
-    "doc": { "german": "The theory notes of the library are written in German.",
+    "doc": {
       "purpose": "Purpose",
       "theory": "Theory",
+      "assumptions": "Assumptions",
+      "limitations": "Limitations",
       "references": "References"
     },
+    "runLive": "Run this model live in the Workbench",
     "noDoc": "This component has no documentation."
   },
   "matlab": {
@@ -659,10 +662,25 @@
     "pause": "Pause",
     "play": "Play",
     "step": "Single step",
+    "blockStep": "Next block",
+    "model": "Model and signals",
+    "modelText": "The block diagram of the running stack. Click a block to see its inputs and outputs at this moment; “Next block” executes one block of the current step.",
+    "lastBlock": "last executed: {{name}}",
+    "midStep": "inside a step",
+    "realtime": "computes {{x}}× faster than real time",
+    "tooSlow": "computes only {{x}}× real time: slower than the chosen speed",
+    "callTime": "{{calls}} calls · mean {{mean}} ms · max. {{max}} ms",
+    "inputs": "Inputs",
+    "outputs": "Outputs",
+    "noPorts": "none",
+    "noBlock": "No values yet: start the run or execute a step.",
+    "array": "{{n}} values, {{min}} to {{max}}",
+    "list": "{{n}} entries (first {{shown}} shown)",
+    "fields": "{{n}} fields",
     "step10": "10 steps",
     "finish": "Keep as run",
     "discard": "Discard",
-    "hint": "The stack runs on the server. Play advances it in real time (or slower/faster), single step executes one base step. “Keep as run” evaluates the run and opens it with all details.",
+    "hint": "The stack runs on the server. Play advances it in real time (or slower/faster), single step executes one base step, “Next block” one block of it. While paused, every block shows its inputs and outputs. “Keep as run” evaluates the run and opens it with all details.",
     "telemetry": "Telemetry",
     "noCycle": "No planning cycle yet.",
     "signals": {
@@ -884,7 +902,7 @@
   },
   "learn": {
     "title": "Learn",
-    "subtitle": "Thirteen short lessons on trajectory tracking and planning. Each one asks a question, runs a real experiment with the library's controllers and planner, and shows the numbers that answer it.",
+    "subtitle": "Fourteen short lessons on trajectory tracking and planning. Each one asks a question, runs a real experiment with the library's controllers and planner, and shows the numbers that answer it.",
     "progress": "{{done}} of {{n}} lessons done",
     "note": "Every experiment is computed when you start it; nothing is pre-recorded.",
     "topics": {
@@ -897,10 +915,13 @@
     "watch": "What to look at",
     "run": "Run the experiment",
     "takes": "Runs of the complete stack take 10 to 40 seconds.",
+    "takesTraining": "Two models are trained; the first run takes about a minute, later runs use the trained models.",
+    "demonstrations": "{{n}} demonstrations",
     "open": {
       "control": "Continue in the Controller lab",
       "experiment": "Continue in Research",
-      "runs": "Continue in the Workbench"
+      "runs": "Continue in the Workbench",
+      "train": "Continue in Models"
     },
     "variant": "Variant",
     "failed": "failed",
@@ -916,7 +937,12 @@
       "rms_jerk_lat": "Lateral jerk (RMS)",
       "mean_speed": "Mean speed",
       "min_distance": "Smallest distance to objects",
-      "mission_passed": "Mission passed"
+      "mission_passed": "Mission passed",
+      "same_choice": "Same choice as the teacher",
+      "within_5": "Cost within 5 % of the teacher",
+      "cost_p90": "Cost ratio, 90th percentile",
+      "network_share": "Cycles planned by the network",
+      "collisions": "Collisions"
     },
     "labels": {
       "on": "feedforward on",
@@ -1039,8 +1065,16 @@
         "question": "With the limit of 1 m/s² the vehicle still reaches 2.2 m/s². Why is the limit not kept exactly?",
         "answer": "The behavior planner turns the limit into a target speed from the curvature of the road ahead: v = √(a / κ). That is a wish for the trajectory planner, not a constraint. The planner approaches the target speed along its candidates, and entering and leaving the roundabout the driven path is curved more strongly than the centre line the speed was computed for. The layers share the work: behavior decides how fast and where to, the trajectory planner decides how, and its own constraints set the hard limits. A higher limit saves time here, 25 instead of 32 seconds, and costs comfort."
       },
+      "learned": {
+        "title": "12 · A network that imitates the planner",
+        "goal": "See what a learned planner gains from more demonstrations and what protects the vehicle from a weak one.",
+        "experiment": "Two small networks learn to predict which candidate the Werling planner selects, one from 500 and one from 2000 demonstrations. Both are then tested on 40 situations they have not seen.",
+        "watch": "How often the network makes the same choice as its teacher, how close its cost stays, and the collisions.",
+        "question": "The small data set makes the teacher's choice in 63 % of the cycles, the large one in 79 %. Why do both drive without a collision and plan the same share of cycles themselves?",
+        "answer": "The network does not output a trajectory. It predicts where in the candidate grid the best one lies, and the planner then searches a small window around that guess with its usual cost function, constraints and collision check. A poor guess costs optimality, not safety: with 500 demonstrations a tenth of the cycles cost 19 % more than the teacher's choice, with 2000 only 7 % more. If the best candidate of the window lies on its edge, the guess is not trusted and the full planner takes over for that cycle. In the remaining cycles the guess was not trusted or no candidate was feasible at all, for the teacher as well. Both depend on the situation more than on the amount of training data, which is why both models plan 93 % of the cycles."
+      },
       "stack": {
-        "title": "12 · Five controllers in the roundabout",
+        "title": "13 · Five controllers in the roundabout",
         "goal": "Compare controllers inside the complete automated-driving stack.",
         "experiment": "The stack drives through a roundabout five times. Only the tracking controller changes.",
         "watch": "The largest lateral error, the jerk and whether the mission is passed.",
@@ -1048,7 +1082,7 @@
         "answer": "The roundabout is slow and tightly curved. The LQR is designed with the linear single-track model for small angles and higher speeds, and it has no special law for slow driving. The Werling stabilization switches to a kinematic law at low speed and the MPC plans with the limits, so both stay within 20 cm. A controller is only good in the range it was designed for."
       },
       "conditions": {
-        "title": "13 · From ideal to realistic",
+        "title": "14 · From ideal to realistic",
         "goal": "See how much of the performance comes from ideal conditions.",
         "experiment": "The stack avoids an obstacle three times: with ideal conditions, with a realistic vehicle, actuators and sensors, and on a wet road.",
         "watch": "The largest lateral error and the jerk.",

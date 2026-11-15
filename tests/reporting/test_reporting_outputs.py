@@ -118,8 +118,38 @@ def test_reports(dt_result, mb_result, tmp_path):
     text = engineering_summary([dt_result, mb_result])
     assert "# Engineering Summary" in text and "## Vergleich" in text and "| Max. Querbeschleunigung" in text
     assert save_summary(dt_result, tmp_path / "s.md").read_text().startswith("# Engineering Summary")
+    english = engineering_summary([dt_result, mb_result], lang="en")
+    assert "## Comparison" in english and "| Max. lateral acceleration" in english and "**Findings:**" in english
+    assert not any(word in english for word in ("Kennwert", "Gruppe", "Befunde", "Querbeschleunigung", "erreicht", "| ja |", "| nein |"))
+    assert generate_pdf(dt_result, tmp_path / "en.pdf", lang="en").read_bytes()[:4] == b"%PDF"
+    with pytest.raises(ValueError, match="unknown report language"):
+        engineering_summary(dt_result, lang="fr")
     table = compare([dt_result, mb_result])
     assert len(table["max_ay"]["values"]) == 2
+
+
+def test_report_figures_have_english_labels(dt_result, mb_result):
+    # every German label of the plot module has an English text, and the report figures use it
+    import ast
+    import inspect
+    import re
+
+    import matplotlib.pyplot as plt
+    import matplotlib.text as mtext
+
+    from vdsim.reporting.texts_en import KPI_LABELS_EN, PLOT_LABELS_EN, translate_figure
+
+    german = {n.value for n in ast.walk(ast.parse(inspect.getsource(plotter)))
+              if isinstance(n, ast.Constant) and isinstance(n.value, str) and re.search("[äöüß]|winkel|rate|Reifen|Energie", n.value)}
+    german = {g for g in german if not g.endswith("(") and "\n" not in g and g not in ("yaw_rate",)}
+    assert german - set(PLOT_LABELS_EN) == set()
+    for result in (dt_result, mb_result):
+        assert set(result.kpis or {k.key for k in evaluate(result)}) - set(KPI_LABELS_EN) == set()
+        for fig in (plotter.overview_figure(result), plotter.tire_figure(result), plotter.energy_figure(result),
+                    plotter.suspension_figure(result), plotter.compare_figure([dt_result, mb_result])):
+            texts = {t.get_text() for t in translate_figure(fig).findobj(mtext.Text)}
+            plt.close(fig)
+            assert texts & set(PLOT_LABELS_EN) == set()
 
 
 # ----------------------------------------------------------------------------- figures

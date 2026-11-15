@@ -18,6 +18,14 @@ export const unitLabel = (unit: string) => unit.replace("°/s", "°/s").replace(
 
 export const adScenarioLabel = (t: TFunction, s: { name: string; label?: string }) => t(`domain:adScenarioLabel.${s.name}`, { defaultValue: s.label || s.name });
 export const componentLabel = (t: TFunction, spec: string, fallback = "") => t(`domain:component.${spec.replace("/", ".")}`, { defaultValue: fallback || spec });
+// Notes of a component (theory, expert notes) in the current language; the library text is the fallback.
+export const componentNote = (t: TFunction, spec: string, field: "summary" | "purpose" | "theory" | "expert", fallback: unknown) =>
+  t(`domain:componentDoc.${spec.replace("/", ".")}.${field}`, { defaultValue: typeof fallback === "string" ? fallback : "" });
+export function componentList(t: TFunction, spec: string, field: "assumptions" | "limitations", fallback: unknown): string[] {
+  const own = Array.isArray(fallback) ? fallback.filter((x): x is string => typeof x === "string") : [];
+  const v: unknown = t(`domain:componentDoc.${spec.replace("/", ".")}.${field}`, { returnObjects: true, defaultValue: own });
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : own;
+}
 
 // Sentences the library builds at run time (mission criteria, graph validation, stop reasons) are German.
 // For other languages the known patterns are translated here; an unknown sentence is shown unchanged.

@@ -19,6 +19,7 @@ const Chart = lazy(() => import("../components/Chart"));
 type Action =
   | { kind: "control"; requests: { label: string; body: ControlRunRequest }[]; open: Partial<ControlForm> }
   | { kind: "experiment"; body: ExperimentRequest; kpis: string[]; open: string }
+  | { kind: "train"; samples: number[]; open: string }
   | { kind: "runs"; runs: { label: string; scenario: string; conditions: Conditions }[]; kpis: string[]; open: string };
 interface Lesson { id: string; topic: "control" | "planning" | "system"; action: Action }
 interface Row { label: string; values: (number | null)[]; flag?: "ok" | "fail" }
@@ -49,6 +50,7 @@ const LESSONS: Lesson[] = [
     body: { kind: "sweep", base: { scenario: "notausweichen_hindernis" }, grid: { "stack.planner.params.collision.margin_car": [0.2, 0.5, 1.5] } } } },
   { id: "behavior", topic: "planning", action: { kind: "experiment", open: "/app/research", kpis: ["duration", "mean_speed", "max_ay", "max_jerk"],
     body: { kind: "sweep", base: { scenario: "kreisverkehr" }, grid: { "stack.behavior.params.a_lat_max": [1, 2, 4] } } } },
+  { id: "learned", topic: "planning", action: { kind: "train", open: "/app/models", samples: [500, 2000] } },
   { id: "stack", topic: "system", action: { kind: "experiment", open: "/app/research", kpis: ["max_e_n", "max_ay", "max_jerk", "mission_passed"],
     body: { kind: "compare", base: { scenario: "kreisverkehr" }, layer: "controller",
       variants: Object.fromEntries(["werling_bilevel", "mpc", "pure_pursuit", "stanley", "lqr"].map((n) => [n, { component: `tracking_controller/${n}` } as LayerSpec])) } } },
@@ -121,6 +123,24 @@ function LessonCard({ lesson, lang, done, onDone }: { lesson: Lesson; lang: stri
         if (job.state !== "done") throw new Error(job.error ?? job.state);
         setOutcome({ columns: a.kpis, units: a.kpis.map((k) => UNITS[k] ?? ""),
           rows: job.records.map((r) => ({ label: label(r.label), values: a.kpis.map((k) => r.kpis[k] ?? null), flag: r.kpis.mission_passed === 0 && a.kpis.includes("mission_passed") ? "fail" : undefined })) });
+      } else if (a.kind === "train") {
+        // a model trained by an earlier run of this lesson is used again
+        const columns = ["same_choice", "within_5", "cost_p90", "network_share", "collisions"];
+        const rows: Row[] = [];
+        const existing = await client.models();
+        for (const n of a.samples) {
+          const name = `Lesson: ${n} demonstrations`;
+          let id = existing.find((m) => m.name === name && m.kind === "trajectory_planner")?.id ?? null;
+          if (!id) {
+            let job = await client.train({ kind: "trajectory_planner", vehicle: "mid_size_sedan", teacher: "bicycle_nonlinear", n_samples: n, hidden: [64, 64], epochs: 60, learning_rate: 0.002, seed: 1, name });
+            while (job.state === "queued" || job.state === "running") { await sleep(800); job = await client.job(job.id); }
+            if (job.state !== "done" || !job.model_id) throw new Error(job.error ?? job.state);
+            id = job.model_id;
+          }
+          const m = (await client.model(id)).planner_metrics;
+          rows.push({ label: t("learn.demonstrations", { n }), values: m ? [m.same_choice_share * 100, m.within_5_percent_share === null ? null : m.within_5_percent_share * 100, m.cost_ratio_p90, m.network_share * 100, m.collisions] : columns.map(() => null) });
+          setOutcome({ columns, units: ["%", "%", "", "%", ""], rows: [...rows] });
+        }
       } else {
         const rows: Row[] = [];
         for (const r of a.runs) {
@@ -158,7 +178,7 @@ function LessonCard({ lesson, lang, done, onDone }: { lesson: Lesson; lang: stri
         <div className="row">
           <button type="button" className="btn btn--primary" disabled={busy} onClick={() => void run()}>{busy ? <span className="spinner" /> : <Icon name="play" />}{t("learn.run")}</button>
           <button type="button" className="btn btn--secondary" onClick={open}><Icon name="arrowRight" size={16} />{t(`learn.open.${lesson.action.kind}`)}</button>
-          {busy && lesson.action.kind !== "control" ? <span className="subtle">{t("learn.takes")}</span> : null}
+          {busy && lesson.action.kind !== "control" ? <span className="subtle">{t(lesson.action.kind === "train" ? "learn.takesTraining" : "learn.takes")}</span> : null}
         </div>
         <ErrorAlert error={error} />
         {busy && !outcome ? <Skeleton height={120} /> : null}
