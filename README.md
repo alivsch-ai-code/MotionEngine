@@ -42,7 +42,7 @@ stack, neural vehicle models, a REST API and a web app, in one open-source Pytho
 | **Faithful to the paper** | The Werling planner implements Werling (2011) closely, including the time-consistent replanning: changing the replanning period changes the result by 0.00 cm, while a naive Frenet planner drifts by 6.5 cm. Each step cites the section and equation it implements. |
 | **Physics at the fidelity you need** | Five vehicle models from a 4-state kinematic bicycle to a 24-state multibody model, three tire models (linear, Pacejka Magic Formula, brush), powertrain, brakes, actuators with latency, ABS/TCS/ESP. All models share one interface and run faster than real time. |
 | **Neural vehicle models included** | Train a neural surrogate of any physics model in seconds without extra frameworks, or connect your own ONNX file or HTTP endpoint. A closed-loop comparison against the physics model shows how far you can trust it before you use it in a simulation. |
-| **Made for learning** | Twelve lessons ask a question, run a real experiment and show the numbers that answer it. The controller lab shows every control law as a formula with the value of each term at any moment; the trajectory inspector does the same for one planning cycle. Conditions go from ideal to realistic (double-track vehicle, actuator dynamics, sensor noise, friction), so you see what an algorithm is worth outside the textbook. |
+| **Made for learning** | Thirteen lessons ask a question, run a real experiment and show the numbers that answer it. The controller lab shows every control law as a formula with the value of each term at any moment; the trajectory inspector does the same for one planning cycle. Conditions go from ideal to realistic (double-track vehicle, actuator dynamics, sensor noise, friction), so you see what an algorithm is worth outside the textbook. |
 | **Checked against real cars** | The single-track model is replayed with 46 hours of measured drives of four production cars. With public parameters and no fit it explains 79 to 95 % of the measured lateral acceleration of three of them; the [validation report](docs/validation/measured_data.md) also shows where it does not. |
 | **Ready to deploy** | REST API with OpenAPI, API key, concurrency and runtime limits, Prometheus metrics and a Docker image that ships the web app. `docker compose up` gives you the whole platform on port 8000. |
 | **Tested and measured** | 860+ tests including physical plausibility, Monte Carlo and scenario regression against golden KPIs; CI on Linux and Windows with Python 3.10–3.13, CodeQL and secret scanning. Every performance number in this README is reproducible with `benchmarks/run_benchmarks.py`. |
@@ -76,7 +76,7 @@ A browser UI on top of the REST API, in **English and German**, with a **dark an
 | Page | What it does |
 |---|---|
 | **Assistant** | type what you want to try; Claude runs simulations, planning cycles and predictions with MotionEngine's tools, shows each result as a card with KPIs and plots, and explains it |
-| **Learn** | twelve lessons on tracking control, planning and the whole system: a question, a real experiment, the numbers, the answer |
+| **Learn** | thirteen lessons on tracking control, planning and the whole system: a question, a real experiment, the numbers, the answer |
 | **Controller lab** | Pure Pursuit, Stanley, LQR, MPC and the Werling controller on the same path and vehicle; KPIs, signals and the control law with the value of every term at any moment; friction, actuator dynamics, side force |
 | **Simulation** | maneuver, vehicle, vehicle model and controllers; KPIs with units, time series and top view; run comparison (KPI table, overlaid paths and signals), PDF report, save and load runs |
 | **Trajectory editor** | draw a path through draggable waypoints with corner radii, limit the speed by lateral acceleration, add a friction map, then drive it in the simulation |
@@ -513,7 +513,7 @@ See [ROADMAP.md](ROADMAP.md) for the full development plan.
 
 **Next milestones:**
 - Friction-aware planning: lateral acceleration limit and curve speed from the friction of the road
-- Lessons on behavior planning and the learned planner; an inspector for longitudinal control
+- A lesson on the learned planner; an inspector for longitudinal control
 - Pacejka MF 6.2 with TIR file import
 - Tire relaxation length (transient behavior)
 - OpenSCENARIO import

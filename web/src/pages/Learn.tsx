@@ -47,13 +47,15 @@ const LESSONS: Lesson[] = [
     body: { kind: "sweep", base: { scenario: "einscherer" }, grid: { "stack.planner.period": [0.1, 0.3, 1] } } } },
   { id: "margin", topic: "planning", action: { kind: "experiment", open: "/app/research", kpis: ["min_distance", "max_ay", "max_jerk"],
     body: { kind: "sweep", base: { scenario: "notausweichen_hindernis" }, grid: { "stack.planner.params.collision.margin_car": [0.2, 0.5, 1.5] } } } },
+  { id: "behavior", topic: "planning", action: { kind: "experiment", open: "/app/research", kpis: ["duration", "mean_speed", "max_ay", "max_jerk"],
+    body: { kind: "sweep", base: { scenario: "kreisverkehr" }, grid: { "stack.behavior.params.a_lat_max": [1, 2, 4] } } } },
   { id: "stack", topic: "system", action: { kind: "experiment", open: "/app/research", kpis: ["max_e_n", "max_ay", "max_jerk", "mission_passed"],
     body: { kind: "compare", base: { scenario: "kreisverkehr" }, layer: "controller",
       variants: Object.fromEntries(["werling_bilevel", "mpc", "pure_pursuit", "stanley", "lqr"].map((n) => [n, { component: `tracking_controller/${n}` } as LayerSpec])) } } },
   { id: "conditions", topic: "system", action: { kind: "runs", open: "/app/workbench", kpis: ["max_e_n", "max_ay", "max_jerk", "min_distance", "mission_passed"],
     runs: (["ideal", "realistic", "wet"] as const).map((conditions) => ({ label: conditions, scenario: "notausweichen_hindernis", conditions })) } },
 ];
-const UNITS: Record<string, string> = { max_e_n: "m", rms_e_n: "m", max_ay: "m/s²", max_jerk: "m/s³", rms_jerk_lat: "m/s³", mean_speed: "m/s", min_distance: "m", min_ttc: "s", min_ax: "m/s²", mission_passed: "", steer_rate: "°/s" };
+const UNITS: Record<string, string> = { max_e_n: "m", rms_e_n: "m", max_ay: "m/s²", max_jerk: "m/s³", rms_jerk_lat: "m/s³", mean_speed: "m/s", min_distance: "m", min_ttc: "s", duration: "s", min_ax: "m/s²", mission_passed: "", steer_rate: "°/s" };
 const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
 
 export default function Learn() {
