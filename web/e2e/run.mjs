@@ -116,6 +116,12 @@ await page.goto(BASE + "/app/workbench", { waitUntil: "networkidle" });
 await page.getByRole("button", { name: "Live", exact: true }).click();
 await page.locator(".player__view").waitFor({ timeout: 30000 });
 await page.getByRole("button", { name: "10 steps" }).click();
+// one block of the next step, then the signals of the controller block
+await page.locator("span.mono", { hasText: "· 10 steps" }).waitFor({ timeout: 10000 });
+await page.getByRole("button", { name: "Next block", exact: true }).click();
+await page.getByText("inside a step").waitFor({ timeout: 10000 });
+await page.getByRole("button", { name: "Vehicle control", exact: true }).click();
+await page.getByText("← planner.trajectory").waitFor({ timeout: 10000 });
 await page.getByRole("button", { name: "Keep as run" }).click();
 await page.locator(".tabs").waitFor({ timeout: 30000 });
 timings["workflow live"] = Date.now() - t0;

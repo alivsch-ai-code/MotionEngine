@@ -77,7 +77,9 @@ class GraphRequest(_Strict):
 class AdvanceRequest(_Strict):
     seconds: float | None = Field(None, gt=0.0, le=2.0, description="simulated time to advance")
     steps: int | None = Field(None, ge=1, le=200, description="base steps to advance (single step: 1)")
+    blocks: int | None = Field(None, ge=1, le=200, description="single blocks of the base step to execute (debugger step)")
     known_snapshots: int = Field(0, ge=0, description="planner snapshots the client already has")
+    inspect: str | None = Field(None, max_length=40, description="block whose inputs and outputs the frame should carry")
 
 
 class ImportRequest(_Strict):
@@ -468,9 +470,11 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
         entry["used"] = time.time()
         return entry
 
-    def live_frame(entry, known_snapshots=0):
+    def live_frame(entry, known_snapshots=0, inspect=None, last_block=None):
         session = entry["session"]
         frame = session.frame()
+        frame["block"] = session.inspect(inspect).get(inspect) if inspect else None
+        frame["last_block"] = last_block
         snaps = session.result.snapshots
         frame["snapshot"] = _snapshot_view(snaps[-1], 60) if len(snaps) > known_snapshots else None
         frame["events"] = session.result.events[-20:]
@@ -498,8 +502,21 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
         with live_lock:
             live[entry["id"]] = entry
         ego = {"length": float(session.ego_dims["length"]), "width": float(session.ego_dims["width"])}
+        g = session.graph.to_dict()
+        model = {"nodes": [{k: n.get(k) for k in ("id", "component", "label", "position", "period")} for n in g["nodes"]],
+                 "connections": [{"from": c["from"], "to": c["to"]} for c in g["connections"]]}
         return _clean({"id": entry["id"], "name": entry["name"], "base_dt": session.base_dt, "road": session.road,
-                       "ego": ego, "frame": live_frame(entry)})
+                       "ego": ego, "graph": model, "frame": live_frame(entry)})
+
+    @router.get("/workbench/live/{session_id}/blocks", tags=["workbench"],
+                summary="Inputs and outputs of the blocks of a live session at the current moment")
+    def live_blocks(session_id: str, node: str | None = None):
+        entry = live_get(session_id)
+        session = entry["session"]
+        with entry["lock"]:
+            if node is not None and node not in session.graph.nodes:
+                raise HTTPException(status_code=404, detail=f"unknown block '{node}', available: {sorted(session.graph.nodes)}")
+            return _clean({"t": session.t, "mid_step": session.mid_step, "blocks": session.inspect(node)})
 
     @router.post("/workbench/live/{session_id}/advance", tags=["workbench"],
                  summary="Advance a live session by simulated seconds or base steps")
@@ -509,13 +526,22 @@ def create_router(secured, limiter, max_sim_time, max_wall_time):
         with entry["lock"]:
             if session.finished:
                 raise HTTPException(status_code=409, detail="the session is finished")
-            if req.steps:
+            if req.inspect is not None and req.inspect not in session.graph.nodes:
+                raise HTTPException(status_code=422, detail=f"unknown block '{req.inspect}'")
+            last = None
+            if req.blocks:
+                for _ in range(req.blocks):
+                    done = session.step_node()
+                    if done is None:
+                        break
+                    last = done
+            elif req.steps:
                 for _ in range(req.steps):
                     if not session.step():
                         break
             else:
                 session.advance(req.seconds or 0.1, max_wall_time=5.0)
-            return live_frame(entry, req.known_snapshots)
+            return live_frame(entry, req.known_snapshots, req.inspect, last)
 
     @router.post("/workbench/live/{session_id}/finish", tags=["workbench"],
                  summary="End a live session and keep its result as a run")

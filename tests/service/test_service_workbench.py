@@ -148,3 +148,45 @@ def test_live_session_limits(client):
     assert client.post(f"/workbench/live/{sid}/advance", json={"seconds": 5.0}).status_code == 422
     assert client.delete(f"/workbench/live/{sid}").status_code == 204
     assert client.post(f"/workbench/live/{sid}/advance", json={"steps": 1}).status_code == 404
+
+
+def test_live_block_stepping_and_inspection(client):
+    body = {"scenario": "einscherer", "duration": 1.0}
+    live = client.post("/workbench/live", json=body).json()
+    sid, dt = live["id"], live["base_dt"]
+    nodes = {n["id"] for n in live["graph"]["nodes"]}
+    assert {"planner", "controller", "plant"} <= nodes and {"from": "planner.trajectory", "to": "controller.trajectory"} in live["graph"]["connections"]
+    client.post(f"/workbench/live/{sid}/advance", json={"seconds": 0.3})
+
+    # one block at a time: the base step stays open until its last block has run
+    first = client.post(f"/workbench/live/{sid}/advance", json={"blocks": 1, "inspect": "controller"}).json()
+    assert first["mid_step"] and first["last_block"]["node"] in nodes and first["n_steps"] == round(0.3 / dt) + 1
+    seen, frame = [first["last_block"]["node"]], first
+    while frame["mid_step"]:
+        frame = client.post(f"/workbench/live/{sid}/advance", json={"blocks": 1, "inspect": "controller"}).json()
+        seen.append(frame["last_block"]["node"])
+    assert frame["n_steps"] == first["n_steps"] + 1 and {"controller", "plant", "world"} <= set(seen)
+
+    # the inspected block carries its inputs (with their source) and outputs as plain values
+    block = frame["block"]
+    assert block["inputs"]["trajectory"]["from"] == "planner.trajectory"
+    assert block["inputs"]["trajectory"]["value"]["x"]["_kind"] == "array" and block["inputs"]["trajectory"]["value"]["x"]["shape"][0] > 10
+    assert isinstance(block["inputs"]["ego"]["value"]["vx"], float) and "command" in block["outputs"]
+    assert isinstance(block["summary"]["command"], str) and block["profile"]["calls"] > 0
+    blocks = client.get(f"/workbench/live/{sid}/blocks").json()
+    assert set(blocks["blocks"]) == nodes and blocks["t"] == frame["t"] and not blocks["mid_step"]
+    assert set(client.get(f"/workbench/live/{sid}/blocks", params={"node": "planner"}).json()["blocks"]) == {"planner"}
+    assert client.get(f"/workbench/live/{sid}/blocks", params={"node": "nope"}).status_code == 404
+    assert client.post(f"/workbench/live/{sid}/advance", json={"steps": 1, "inspect": "nope"}).status_code == 422
+
+    # stepping block by block does not change the run
+    client.post(f"/workbench/live/{sid}/advance", json={"blocks": 3})
+    end = client.post(f"/workbench/live/{sid}/advance", json={"seconds": 2.0}).json()
+    assert end["stopped"] and end["wall"] > 0
+    job = client.post(f"/workbench/live/{sid}/finish").json()
+    live_result = client.get(f"/workbench/runs/{job['id']}/result").json()
+    batch = client.post("/workbench/runs", json=body).json()
+    assert _wait(client, f"/workbench/runs/{batch['id']}")["state"] == "done"
+    batch_result = client.get(f"/workbench/runs/{batch['id']}/result").json()
+    assert live_result["signals"]["ego_x"] == pytest.approx(batch_result["signals"]["ego_x"], abs=1e-9)
+    assert live_result["kpis"]["min_distance"] == batch_result["kpis"]["min_distance"]
