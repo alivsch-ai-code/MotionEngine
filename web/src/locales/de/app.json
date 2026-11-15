@@ -6,7 +6,7 @@
     "stats": { "api": "API-Version", "vehicles": "Fahrzeug-Presets", "models": "Fahrzeugmodelle", "neural": "Neuronale Modelle" },
     "quickActions": "Schnellzugriff",
     "actions": {
-      "learn": { "title": "Mit einer Lektion beginnen", "text": "Neun kurze Lektionen: eine Frage, ein echter Versuch, die Zahlen, die Antwort." },
+      "learn": { "title": "Mit einer Lektion beginnen", "text": "Zwölf kurze Lektionen: eine Frage, ein echter Versuch, die Zahlen, die Antwort." },
       "control": { "title": "Regler vergleichen", "text": "Pure Pursuit, Stanley, LQR, MPC und Werling auf derselben Bahn, jedes Regelgesetz erklärt." },
       "workbench": { "title": "Den ganzen Stack fahren", "text": "Von der Wahrnehmung bis zu den Aktoren auf 14 Szenarien, von idealen bis realistischen Bedingungen." },
       "simulate": { "title": "Simulation starten", "text": "ISO-Manöver mit Einspur-, Zweispur- oder Mehrkörpermodell." },
@@ -884,7 +884,7 @@
   },
   "learn": {
     "title": "Lernen",
-    "subtitle": "Neun kurze Lektionen zu Bahnfolgeregelung und Planung. Jede stellt eine Frage, fährt einen echten Versuch mit den Reglern und dem Planer der Bibliothek und zeigt die Zahlen, die sie beantworten.",
+    "subtitle": "Zwölf kurze Lektionen zu Bahnfolgeregelung und Planung. Jede stellt eine Frage, fährt einen echten Versuch mit den Reglern und dem Planer der Bibliothek und zeigt die Zahlen, die sie beantworten.",
     "progress": "{{done}} von {{n}} Lektionen erledigt",
     "note": "Jeder Versuch wird beim Start berechnet; nichts ist aufgezeichnet.",
     "topics": {
@@ -929,7 +929,20 @@
       "k_lat=1": "Ruckgewicht 1",
       "k_lat=20": "Ruckgewicht 20",
       "k_lat=1.0": "Ruckgewicht 1",
-      "k_lat=20.0": "Ruckgewicht 20"
+      "k_lat=20.0": "Ruckgewicht 20",
+      "horizon=1.0": "Prädiktion 1 s",
+      "horizon=3.0": "Prädiktion 3 s",
+      "horizon=6.0": "Prädiktion 6 s",
+      "period=0.1": "Neuplanung alle 0,1 s",
+      "period=0.3": "Neuplanung alle 0,3 s",
+      "period=1.0": "Neuplanung alle 1 s",
+      "margin_car=0.2": "Abstand 0,2 m",
+      "margin_car=0.5": "Abstand 0,5 m",
+      "margin_car=1.5": "Abstand 1,5 m",
+      "horizon=1": "Prädiktion 1 s",
+      "horizon=3": "Prädiktion 3 s",
+      "horizon=6": "Prädiktion 6 s",
+      "period=1": "Neuplanung alle 1 s"
     },
     "lessons": {
       "lookahead": {
@@ -988,8 +1001,32 @@
         "question": "Das kleine Gewicht wechselt die Spur mit 3,9 m/s², das große mit 0,7 m/s². Was wägt der Planer ab?",
         "answer": "Die Kosten eines Kandidaten sind das Ruckintegral plus die Dauer plus die Endabweichung. Bei kleinem Ruckgewicht dominiert der Zeitterm, und der Planer wählt einen kurzen, scharfen Spurwechsel. Bei großem wählt er einen langen, sanften. Alle Kandidaten sind dieselben Polynome; die Gewichte entscheiden nur, welcher am billigsten ist."
       },
+      "prediction": {
+        "title": "8 · Wie weit die Prädiktion vorausschaut",
+        "goal": "Sehen, warum der Planer wissen muss, wo die anderen sein werden, und nicht nur, wo sie sind.",
+        "experiment": "Auf der Autobahn schert ein Fahrzeug vor dem Ego-Fahrzeug ein. Der Stack fährt die Szene dreimal; die anderen Fahrzeuge werden 1, 3 und 6 Sekunden vorausgesagt.",
+        "watch": "Die stärkste Verzögerung, die Querbeschleunigung und der Ruck.",
+        "question": "Mit 1 s Prädiktion bremst das Fahrzeug mit 9,5 m/s² und weicht aus. Mit 3 s bremst es mit 3,2 m/s² und bleibt in der Spur. Warum ändern 6 s fast nichts mehr?",
+        "answer": "Die Kollisionsprüfung sieht nur den Teil eines Kandidaten, den die Prädiktion abdeckt. Mit 1 s taucht der Einscherer erst im Weg auf, wenn wenig Platz bleibt, und nur ein hartes Manöver ist noch kollisionsfrei. Mit 3 s erkennt der Planer den Konflikt früh, und eine sanfte Verzögerung genügt. Über die Zeit hinaus, in der sich der Konflikt entwickelt, bringt ein längerer Horizont hier keine Information mehr; er kostet nur Rechenzeit und stützt sich auf eine Vorhersage, die unsicherer wird."
+      },
+      "replan": {
+        "title": "9 · Wie oft der Planer plant",
+        "goal": "Verstehen, warum die Trajektorie mehrmals pro Sekunde neu geplant wird.",
+        "experiment": "Dieselbe Einscherer-Szene mit drei Planungstakten: eine neue Trajektorie alle 0,1, 0,3 und 1 Sekunde.",
+        "watch": "Der kleinste Abstand zu den anderen Fahrzeugen und der größte Ruck.",
+        "question": "Mit einem Plan pro Sekunde fällt der kleinste Abstand von 7,8 m auf 4,9 m, und der Ruck verdoppelt sich mehr als. Woher kommt der Unterschied?",
+        "answer": "Zwischen zwei Plänen folgt das Fahrzeug der alten Trajektorie, die für die damalige Szene geplant wurde. Bei langem Takt reagiert der Planer bis zu eine Sekunde zu spät auf den Einscherer und muss danach stärker korrigieren. Kurze Takte halten den Plan nah an der aktuellen Szene; der Planer setzt auf seiner vorherigen Trajektorie auf, deshalb macht das häufige Neuplanen die Bewegung nicht unruhig."
+      },
+      "margin": {
+        "title": "10 · Der Sicherheitsabstand der Kollisionsprüfung",
+        "goal": "Sehen, was der Abstand um andere Objekte kostet und was er bringt.",
+        "experiment": "Bei 90 km/h steht ein Hindernis in der Spur, und der Stack weicht aus. Der Sicherheitsabstand der Kollisionsprüfung ist 0,2, 0,5 und 1,5 m.",
+        "watch": "Der kleinste Abstand zum Hindernis, die Querbeschleunigung und der Ruck.",
+        "question": "Der Abstand wächst von 0,7 m auf 2,0 m. Warum wachsen auch Querbeschleunigung und Ruck?",
+        "answer": "Der Abstand wird zu den Kreisen addiert, die Fahrzeug und Objekt abdecken; ein Kandidat, der näher kommt, wird verworfen. Ein größerer Abstand entfernt die sanften Kandidaten, die knapp vorbeiführen, und der billigste verbleibende weicht auf derselben Strecke weiter aus: 3,3 statt 2,0 m/s². Der Abstand tauscht Freiraum gegen Komfort, und bei zu großem Abstand bleibt womöglich kein Kandidat übrig."
+      },
       "stack": {
-        "title": "8 · Fünf Regler im Kreisverkehr",
+        "title": "11 · Fünf Regler im Kreisverkehr",
         "goal": "Regler im kompletten Stack für automatisiertes Fahren vergleichen.",
         "experiment": "Der Stack fährt fünfmal durch einen Kreisverkehr. Nur der Folgeregler wechselt.",
         "watch": "Der größte Querfehler, der Ruck und ob die Mission bestanden wird.",
@@ -997,7 +1034,7 @@
         "answer": "Der Kreisverkehr ist langsam und eng gekrümmt. Der LQR ist mit dem linearen Einspurmodell für kleine Winkel und höhere Geschwindigkeiten ausgelegt und hat kein eigenes Gesetz für langsame Fahrt. Die Werling-Stabilisierung schaltet bei niedriger Geschwindigkeit auf ein kinematisches Gesetz um, und der MPC plant mit den Grenzen; beide bleiben innerhalb von 20 cm. Ein Regler ist nur in dem Bereich gut, für den er ausgelegt wurde."
       },
       "conditions": {
-        "title": "9 · Von ideal zu realistisch",
+        "title": "12 · Von ideal zu realistisch",
         "goal": "Sehen, wie viel der Leistung von idealen Bedingungen kommt.",
         "experiment": "Der Stack weicht dreimal einem Hindernis aus: unter idealen Bedingungen, mit realistischem Fahrzeug, Aktoren und Sensoren und auf nasser Fahrbahn.",
         "watch": "Der größte Querfehler und der Ruck.",

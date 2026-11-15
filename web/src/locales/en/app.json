@@ -6,7 +6,7 @@
     "stats": { "api": "API version", "vehicles": "Vehicle presets", "models": "Vehicle models", "neural": "Neural models" },
     "quickActions": "Quick actions",
     "actions": {
-      "learn": { "title": "Start with a lesson", "text": "Nine short lessons: a question, a real experiment, the numbers, the answer." },
+      "learn": { "title": "Start with a lesson", "text": "Twelve short lessons: a question, a real experiment, the numbers, the answer." },
       "control": { "title": "Compare controllers", "text": "Pure Pursuit, Stanley, LQR, MPC and Werling on the same path, with each control law explained." },
       "workbench": { "title": "Run the whole stack", "text": "Perception to actuators on 14 scenarios, from ideal to realistic conditions." },
       "simulate": { "title": "Run a simulation", "text": "ISO maneuvers with single-track, double-track or multibody models." },
@@ -884,7 +884,7 @@
   },
   "learn": {
     "title": "Learn",
-    "subtitle": "Nine short lessons on trajectory tracking and planning. Each one asks a question, runs a real experiment with the library's controllers and planner, and shows the numbers that answer it.",
+    "subtitle": "Twelve short lessons on trajectory tracking and planning. Each one asks a question, runs a real experiment with the library's controllers and planner, and shows the numbers that answer it.",
     "progress": "{{done}} of {{n}} lessons done",
     "note": "Every experiment is computed when you start it; nothing is pre-recorded.",
     "topics": {
@@ -929,7 +929,20 @@
       "k_lat=1": "jerk weight 1",
       "k_lat=20": "jerk weight 20",
       "k_lat=1.0": "jerk weight 1",
-      "k_lat=20.0": "jerk weight 20"
+      "k_lat=20.0": "jerk weight 20",
+      "horizon=1.0": "prediction 1 s",
+      "horizon=3.0": "prediction 3 s",
+      "horizon=6.0": "prediction 6 s",
+      "period=0.1": "replanning every 0.1 s",
+      "period=0.3": "replanning every 0.3 s",
+      "period=1.0": "replanning every 1 s",
+      "margin_car=0.2": "margin 0.2 m",
+      "margin_car=0.5": "margin 0.5 m",
+      "margin_car=1.5": "margin 1.5 m",
+      "horizon=1": "prediction 1 s",
+      "horizon=3": "prediction 3 s",
+      "horizon=6": "prediction 6 s",
+      "period=1": "replanning every 1 s"
     },
     "lessons": {
       "lookahead": {
@@ -988,8 +1001,32 @@
         "question": "The low weight changes lanes with 3.9 m/s², the high one with 0.7 m/s². What does the planner trade?",
         "answer": "The cost of a candidate is the jerk integral plus the duration plus the end deviation. With a small jerk weight the time term dominates and the planner selects a short, sharp lane change. With a large one it selects a long, gentle one. All candidates are the same polynomials; the weights only decide which one is cheapest."
       },
+      "prediction": {
+        "title": "8 · How far the prediction looks ahead",
+        "goal": "See why the planner needs to know where the others will be, not only where they are.",
+        "experiment": "A car cuts in ahead of the ego vehicle on the highway. The stack drives the scene three times; the other cars are predicted 1, 3 and 6 seconds ahead.",
+        "watch": "The strongest deceleration, the lateral acceleration and the jerk.",
+        "question": "With 1 s of prediction the vehicle brakes with 9.5 m/s² and swerves. With 3 s it brakes with 3.2 m/s² and stays in its lane. Why does 6 s change almost nothing more?",
+        "answer": "The collision check only sees the part of a candidate that the prediction covers. With 1 s the cutting-in car appears in the way when little room is left, and only a hard manoeuvre is still free of collision. With 3 s the planner sees the conflict early and a gentle deceleration is enough. Beyond the time the conflict needs to develop, a longer horizon adds no information here; it only costs computing time and relies on a prediction that gets less certain."
+      },
+      "replan": {
+        "title": "9 · How often the planner plans",
+        "goal": "Understand why the trajectory is planned again several times per second.",
+        "experiment": "The same cut-in scene with three planning cycles: a new trajectory every 0.1, 0.3 and 1 second.",
+        "watch": "The smallest distance to the other cars and the largest jerk.",
+        "question": "With one plan per second the smallest distance falls from 7.8 m to 4.9 m and the jerk more than doubles. Where does the difference come from?",
+        "answer": "Between two plans the vehicle follows the old trajectory, which was planned for the scene as it was then. With a long cycle the planner reacts up to one second late to the cut-in and has to correct more strongly afterwards. Short cycles keep the plan close to the current scene; the planner continues from its previous trajectory, so the frequent replanning does not make the motion restless."
+      },
+      "margin": {
+        "title": "10 · The safety margin of the collision check",
+        "goal": "See what the margin around other objects costs and what it buys.",
+        "experiment": "An obstacle stands in the lane at 90 km/h and the stack swerves around it. The safety margin of the collision check is 0.2, 0.5 and 1.5 m.",
+        "watch": "The smallest distance to the obstacle, the lateral acceleration and the jerk.",
+        "question": "The distance grows from 0.7 m to 2.0 m. Why do the lateral acceleration and the jerk grow as well?",
+        "answer": "The margin is added to the circles that cover the vehicle and the object; a candidate that comes closer is discarded. A larger margin removes the gentle candidates that pass close by, and the cheapest remaining one swerves further in the same distance: 3.3 instead of 2.0 m/s². The margin trades clearance against comfort, and with a margin that is too large no candidate may remain."
+      },
       "stack": {
-        "title": "8 · Five controllers in the roundabout",
+        "title": "11 · Five controllers in the roundabout",
         "goal": "Compare controllers inside the complete automated-driving stack.",
         "experiment": "The stack drives through a roundabout five times. Only the tracking controller changes.",
         "watch": "The largest lateral error, the jerk and whether the mission is passed.",
@@ -997,7 +1034,7 @@
         "answer": "The roundabout is slow and tightly curved. The LQR is designed with the linear single-track model for small angles and higher speeds, and it has no special law for slow driving. The Werling stabilization switches to a kinematic law at low speed and the MPC plans with the limits, so both stay within 20 cm. A controller is only good in the range it was designed for."
       },
       "conditions": {
-        "title": "9 · From ideal to realistic",
+        "title": "12 · From ideal to realistic",
         "goal": "See how much of the performance comes from ideal conditions.",
         "experiment": "The stack avoids an obstacle three times: with ideal conditions, with a realistic vehicle, actuators and sensors, and on a wet road.",
         "watch": "The largest lateral error and the jerk.",
