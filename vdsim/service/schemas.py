@@ -158,6 +158,7 @@ class ReportRequest(_Strict):
     run_ids: list[str] = Field(min_length=1, max_length=6, description="run_id values of POST /simulate")
     format: Literal["pdf", "summary"] = "pdf"
     title: str = Field("Vehicle dynamics simulation report", max_length=120)
+    lang: Literal["en", "de"] = Field("en", description="language of the labels in the report")
 
 
 # ----------------------------------------------------------------------------- objects and prediction

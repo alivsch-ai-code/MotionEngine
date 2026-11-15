@@ -10,7 +10,7 @@ import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { RichText } from "../components/RichText";
 import { StackEditor } from "../components/StackEditor";
-import { componentLabel, libraryText } from "../lib/domain";
+import { componentLabel, componentList, componentNote, libraryText } from "../lib/domain";
 import { useClient, useQuery } from "../lib/hooks";
 import type { Connection } from "../lib/api";
 import { stackSpecs, useConnections, useStack } from "../lib/stack";
@@ -139,8 +139,9 @@ export default function Architecture() {
             {typeof d.summary === "string" && node ? <p>{t(`domain:componentDoc.${node.component.replace("/", ".")}.summary`, { defaultValue: d.summary })}</p> : null}
             {typeof d.purpose === "string" && d.purpose && node ? <div><h3>{t("architecture.doc.purpose")}</h3>
               <p>{t(`domain:componentDoc.${node.component.replace("/", ".")}.purpose`, { defaultValue: d.purpose })}</p></div> : null}
-            {typeof d.theory === "string" && d.theory ? <div><h3>{t("architecture.doc.theory")}</h3><RichText text={d.theory} />
-              {i18n.language.startsWith("de") ? null : <p className="subtle">{t("architecture.doc.german")}</p>}</div> : null}
+            {typeof d.theory === "string" && d.theory && node ? <div><h3>{t("architecture.doc.theory")}</h3><RichText text={componentNote(t, node.component, "theory", d.theory)} /></div> : null}
+            {node ? (["assumptions", "limitations"] as const).map((field) => { const items = componentList(t, node.component, field, d[field]); return items.length ? (
+              <div key={field}><h3>{t(`architecture.doc.${field}`)}</h3><ul>{items.map((x) => <li key={x}>{x}</li>)}</ul></div>) : null; }) : null}
             {Array.isArray(d.references) && d.references.length ? <p className="subtle">{t("architecture.doc.references")}: {(d.references as string[]).join(", ")}</p> : null}
           </> : !doc.loading ? <p className="subtle">{t("architecture.noDoc")}</p> : null}
         </div></div>

@@ -21,7 +21,7 @@ const OVERLAYS: { key: string; unit: string; conv?: (v: number) => number }[] = 
 ];
 
 export function RunCompare({ lang }: { lang: string }) {
-  const { t } = useTranslation(["app", "common", "domain"]);
+  const { t, i18n } = useTranslation(["app", "common", "domain"]);
   const client = useClient();
   const runs = useRuns();
   const [off, setOff] = useState<string[]>([]);
@@ -46,7 +46,7 @@ export function RunCompare({ lang }: { lang: string }) {
     setBusy(format);
     try {
       setError(null);
-      const blob = await client.report(stored.map((r) => r.data.run_id as string), format, t("compare.reportTitle"));
+      const blob = await client.report(stored.map((r) => r.data.run_id as string), format, t("compare.reportTitle"), i18n.language.startsWith("de") ? "de" : "en");
       downloadBlob(blob, format === "pdf" ? "report.pdf" : "summary.md");
     } catch (err) { setError(err); } finally { setBusy(""); }
   };

@@ -583,9 +583,11 @@
     "stackHint": "Changes apply to the workbench and to experiments.",
     "inputs": "Inputs",
     "outputs": "Outputs",
-    "doc": { "german": "The theory notes of the library are written in German.",
+    "doc": {
       "purpose": "Purpose",
       "theory": "Theory",
+      "assumptions": "Assumptions",
+      "limitations": "Limitations",
       "references": "References"
     },
     "noDoc": "This component has no documentation."

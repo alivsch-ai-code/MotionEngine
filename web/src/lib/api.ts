@@ -249,10 +249,10 @@ export function createClient(settings: Pick<Settings, "apiBase" | "apiKey">) {
     simulate: (body: SimulateRequest, s?: AbortSignal) => request<SimulateResponse>("POST", "/simulate", body, s),
     waypointTrajectory: (body: WaypointPath, s?: AbortSignal) => request<TrajectoryData>("POST", "/trajectory/waypoints", { ...body, max_points: 1500 }, s),
     waypointsFromManeuver: (body: { maneuver: string; vehicle: string; n_points: number }) => request<{ waypoints: Waypoint[] }>("POST", "/trajectory/waypoints/from-maneuver", body),
-    async report(runIds: string[], format: "pdf" | "summary", title: string): Promise<Blob> {
+    async report(runIds: string[], format: "pdf" | "summary", title: string, lang: "en" | "de" = "en"): Promise<Blob> {
       let res: Response;
       try {
-        res = await fetch(`${base}/simulate/report`, { method: "POST", headers: headers(true), body: JSON.stringify({ run_ids: runIds, format, title }) });
+        res = await fetch(`${base}/simulate/report`, { method: "POST", headers: headers(true), body: JSON.stringify({ run_ids: runIds, format, title, lang }) });
       } catch (err) {
         throw new ApiError("errors.network", 0, String(err));
       }

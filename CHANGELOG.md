@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Reports in English:** `generate_pdf(..., lang="en")`, `engineering_summary(..., lang="en")` and `lang` in
+  `POST /simulate/report` (default `en`); KPI labels, groups, ratings, findings, stop reasons and plot labels are
+  translated (`vdsim/reporting/texts_en.py`). The library default stays German.
+- **Component notes in English:** theory, expert notes, assumptions and limitations of all 29 stack components
+  (Architecture page and controller lab); the generator fails when a German note has no English text.
+- **Lessons:** fourteen in total, new ones on the prediction horizon, the replanning cycle, the safety margin, the
+  behavior layer and the learned planner.
 - **Learned planner, more ways to learn:** approach selectable (`regression`, `classification` over the teacher's
   grid, `dagger` with the learner driving and the teacher labeling), training situations configurable (speed range,
   objects, curves, lane changes), and your own planner model connectable as ONNX or HTTP

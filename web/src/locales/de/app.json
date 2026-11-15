@@ -583,9 +583,11 @@
     "stackHint": "Änderungen gelten für die Workbench und für Versuche.",
     "inputs": "Eingänge",
     "outputs": "Ausgänge",
-    "doc": { "german": "Die Theorie-Notizen der Bibliothek sind auf Deutsch verfasst.",
+    "doc": {
       "purpose": "Zweck",
       "theory": "Theorie",
+      "assumptions": "Annahmen",
+      "limitations": "Grenzen",
       "references": "Quellen"
     },
     "noDoc": "Diese Komponente hat keine Dokumentation."

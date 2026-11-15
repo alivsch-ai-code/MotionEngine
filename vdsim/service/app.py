@@ -420,10 +420,10 @@ def create_app(api_key=None, max_concurrency=None, max_sim_time=None, max_wall_t
         if missing:
             raise HTTPException(status_code=404, detail=f"results no longer stored: {missing}; run them again")
         if req.format == "summary":
-            return PlainTextResponse(engineering_summary(results), media_type="text/markdown; charset=utf-8",
+            return PlainTextResponse(engineering_summary(results, lang=req.lang), media_type="text/markdown; charset=utf-8",
                                      headers={"Content-Disposition": 'attachment; filename="summary.md"'})
         with limiter.slot(), report_lock, tempfile.TemporaryDirectory() as tmp:
-            path = generate_pdf(results, Path(tmp) / "report.pdf", title=req.title)
+            path = generate_pdf(results, Path(tmp) / "report.pdf", title=req.title, lang=req.lang)
             data = path.read_bytes()
         return Response(data, media_type="application/pdf",
                         headers={"Content-Disposition": 'attachment; filename="report.pdf"'})

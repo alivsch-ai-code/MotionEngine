@@ -137,14 +137,30 @@
  "componentDoc": {
   "actuator": {
    "steering_powertrain": {
+    "assumptions": [
+     "Konstanter Schritt dt (Komponentenperiode bzw. Executor-Schritt)"
+    ],
+    "expert": "Die Integration von $\\dot\\delta$ erfolgt mit Begrenzung (Anti-Windup), damit der Integrator an der Lenkanschlaggrenze nicht wegläuft.",
+    "limitations": [
+     "Kennlinienfehler wirkt auf die Krümmung tan(delta)/l (wie vdsim.actuators)"
+    ],
     "purpose": "Verbindet die Stellgrößen der Trajektorienregelung mit der Strecke; die Latenzkette der ursprünglichen Spurwechsel-Latenzstudie bleibt in der Wirkkette nutzbar.",
     "summary": "Integriert die Lenkrate bzw. übernimmt den Lenkwinkel, bildet Lenkaktor (Latenz, Kennlinie, Ratenbegrenzung) sowie verzögerte Antriebs- und Bremsmomente nach."
    }
   },
   "behavior_planner": {
    "rule_based": {
+    "assumptions": [
+     "Kartenwissen (Spuren, Markierungen, Haltelinien) ist exakt bekannt",
+     "Objekte tragen lane_id/s/d der Szenario-Engine bzw. Perception"
+    ],
+    "limitations": [
+     "keine Neuplanung der Route bei verpasster Ausfahrt",
+     "Linksabbiegen bei Grün: einfache Zeitlückenprüfung gegen den Gegenverkehr"
+    ],
     "purpose": "Verhaltensebene nach Werling 3.6: Sollvorgaben so wählen, dass die reaktive Trajektorienplanung möglichst selten eine Kollision vermeiden muss.",
-    "summary": "Zustandsautomat für Spurhalten, Spurwechsel, Einfädeln, Überholen, Kreuzung/Kreisverkehr und Einparken; erzeugt Referenzkurve, Längsmodi und Box-Restriktion für den Trajektorienplaner."
+    "summary": "Zustandsautomat für Spurhalten, Spurwechsel, Einfädeln, Überholen, Kreuzung/Kreisverkehr und Einparken; erzeugt Referenzkurve, Längsmodi und Box-Restriktion für den Trajektorienplaner.",
+    "theory": "Spurwechsel MOBIL-artig: $\\tilde a_c - a_c + p(\\tilde a_n - a_n) \\pm a_{bias} > \\Delta a_{th}$ mit IDM-Beschleunigungen und Sicherheitsprüfung über die Prädiktion. Einfädeln: Lückenmitte $s_{ref} = \\tfrac12 (s_a + s_b)$ (3.15), Lückenwahl nach erforderlicher Beschleunigung. Vorfahrt: Zeitlückenannahme mit prädizierten Konfliktzonenbelegungen."
    }
   },
   "perception": {
@@ -153,120 +169,334 @@
     "summary": "Gibt die Objekte der Szenario-Engine und den wahren Eigenzustand unverändert weiter."
    },
    "object_sensor": {
+    "assumptions": [
+     "Objekte als Rechtecke, Verdeckung nur in der Ebene (keine Höheninformation)",
+     "Rauschen weiß und normalverteilt, Objekte unabhängig"
+    ],
+    "limitations": [
+     "kein Tracking, keine Falschalarme (Geisterobjekte)",
+     "keine Sensorfusion mehrerer Sensoren"
+    ],
     "purpose": "Realistischere Eingangsdaten für Prädiktion und Verhalten: begrenzte Sicht, Verdeckung, Messrauschen, Fehldetektionen und Latenz; reproduzierbar über den Szenario-Seed.",
-    "summary": "Erzeugt aus der Ground Truth eine gestörte Objektliste und eine Eigenzustandsschätzung."
+    "summary": "Erzeugt aus der Ground Truth eine gestörte Objektliste und eine Eigenzustandsschätzung.",
+    "theory": "Polares Messmodell: $r_m = r + n_r$, $\\varphi_m = \\varphi + n_\\varphi$ mit $n \\sim \\mathcal{N}(0, \\sigma^2)$, zusätzlich additives Rauschen auf Position, Geschwindigkeit, Orientierung und Beschleunigung. Ein Objekt ist sichtbar, wenn ein Eckpunkt in Reichweite liegt, es den Öffnungswinkel schneidet und nicht überwiegend von näheren Objekten abgeschattet wird."
    }
   },
   "predictor": {
    "constant_acceleration": {
+    "assumptions": [
+     "Beschleunigung über den Horizont konstant",
+     "keine Querbewegung relativ zur Spur",
+     "an Verzweigungen folgt das Objekt der Standardfortsetzung der Spur"
+    ],
+    "limitations": [
+     "Spurwechsel und Abbiegen anderer Verkehrsteilnehmer werden nicht vorhergesagt"
+    ],
     "purpose": "Prädiktion der Vorder- und Lückenfahrzeuge für Folge- und Einfädelmodus nach Werling 3.5.2.",
-    "summary": "Prädiziert Objekte mit konstanter Beschleunigung entlang ihrer Spur in Frenet-Koordinaten."
+    "summary": "Prädiziert Objekte mit konstanter Beschleunigung entlang ihrer Spur in Frenet-Koordinaten.",
+    "theory": "$s_v(t) = s_v(0) + \\dot s_v(0) t + \\tfrac12 \\ddot s_v(0) t^2$, $d(t) = d(0)$; bei $\\dot s_v(t) \\le 0$ wird der Stillstand gehalten. Objekte ohne Spur werden kartesisch entlang ihrer Orientierung prädiziert."
    },
    "constant_velocity": {
     "purpose": "Einfache, kartenunabhängige Referenzprädiktion, z. B. für Fußgänger oder ohne Straßenkarte.",
-    "summary": "Geradlinige Prädiktion mit konstanter Geschwindigkeit (optional konstanter Gierrate)."
+    "summary": "Geradlinige Prädiktion mit konstanter Geschwindigkeit (optional konstanter Gierrate).",
+    "theory": "$x(t) = x_0 + v \\cos\\psi\\, t$, $y(t) = y_0 + v \\sin\\psi\\, t$; mit CTRV $\\psi(t) = \\psi_0 + \\dot\\psi t$."
    },
    "lane_following": {
+    "assumptions": [
+     "Objekte folgen der Standardfortsetzung der Spur"
+    ],
+    "limitations": [
+     "Abbiegeabsichten an Kreuzungen werden nicht geschätzt"
+    ],
     "purpose": "Erkennt Spurwechsel (Einscherer) frühzeitig aus der Quergeschwindigkeit relativ zur Spur.",
-    "summary": "Konstante Geschwindigkeit entlang der Spurfolge, Querablage konvergiert zur Zielspurmitte."
+    "summary": "Konstante Geschwindigkeit entlang der Spurfolge, Querablage konvergiert zur Zielspurmitte.",
+    "theory": "Längs: $s(t) = s_0 + \\dot s_0 t$ (optional mit $\\ddot s_0$). Quer: kritisch gedämpft $d(t) = d_z + (e_0 + (\\dot d_0 + e_0/\\tau) t) e^{-t/\\tau}$ mit $e_0 = d_0 - d_z$. Die Zielablage $d_z$ ist die Mitte der Nachbarspur, wenn $|\\dot d_0|$ die Absichtsschwelle überschreitet und das Objekt auf sie zuläuft, sonst die eigene Spurmitte."
    }
   },
   "tracking_controller": {
    "acc": {
+    "assumptions": [
+     "Vorderfahrzeug im Fahrschlauch der Trajektorie"
+    ],
+    "expert": "String-Stabilität für $\\tau>0$ und geeignete Verstärkungen (Rajamani Kap. 5).",
+    "limitations": [
+     "Keine Kollisionsfreiheit garantiert"
+    ],
     "purpose": "Vergleich der trajektorienbasierten Längsführung mit klassischem ACC ohne Planer (Werling 4.1.3: bei Trajektorienfolge implizit enthalten).",
-    "summary": "Abstandsbasierte Längsregelung mit konstanter Zeitlücke."
+    "summary": "Abstandsbasierte Längsregelung mit konstanter Zeitlücke.",
+    "theory": "$a=\\min(a_{cruise},k_g(d-d_0-\\tau v)+k_v(v_l-v))$"
    },
    "composite": {
+    "assumptions": [
+     "Quer- und Längsdynamik entkoppelt"
+    ],
+    "expert": "Stabilität folgt aus den Teilreglern nur bei schwacher Kopplung.",
+    "limitations": [
+     "Kopplung (Kammscher Kreis) unberücksichtigt"
+    ],
     "purpose": "Klassische entkoppelte Quer-/Längsregelung als Vergleich zur gekoppelten Werling-Regelung.",
     "summary": "Kombiniert einen beliebigen Quer- und Längsregler zu einem Trackingregler."
    },
    "ff_fb": {
+    "assumptions": [
+     "Vorwärtsfahrt"
+    ],
+    "expert": "Fehlerdynamik $\\ddot e_t+k_v\\dot e_t+k_se_t=0$, stabil für $k_v,k_s>0$.",
+    "limitations": [
+     "Stellbeschränkungen nur geklemmt"
+    ],
     "purpose": "Zeitbasiertes Längstracking (Trajektorie statt Bahn).",
-    "summary": "Beschleunigungsvorsteuerung aus der Trajektorie mit Rückführung von Geschwindigkeits- und Längsfehler."
+    "summary": "Beschleunigungsvorsteuerung aus der Trajektorie mit Rückführung von Geschwindigkeits- und Längsfehler.",
+    "theory": "$a=a_d+k_v(v_d-v)-k_se_t$"
    },
    "lqr": {
+    "assumptions": [
+     "Lineare Reifen, kleine Winkel, Vorwärtsfahrt"
+    ],
+    "expert": "Für jedes feste $v$ ist der geschlossene diskrete Kreis $A_d-B_dK$ asymptotisch stabil (stabilisierbares Paar, $Q\\geq0$ beobachtbar); langsames Gain-Scheduling erhält die Stabilität.",
+    "limitations": [
+     "Linearisierung, Modell singulär bei v -> 0 (v_min)"
+    ],
     "purpose": "Optimaler linearer Vergleichsregler (Rajamani 3.2).",
-    "summary": "Zustandsregler auf das Querfehlermodell des Einspurmodells mit diskreter Riccati-Lösung, Gain-Scheduling über die Geschwindigkeit und stationärer Vorsteuerung."
+    "summary": "Zustandsregler auf das Querfehlermodell des Einspurmodells mit diskreter Riccati-Lösung, Gain-Scheduling über die Geschwindigkeit und stationärer Vorsteuerung.",
+    "theory": "$x=[e_1,\\dot e_1,e_2,\\dot e_2]$, $u=-Kx+\\delta_{ff}$, $K$ aus der DARE des mit ZOH diskretisierten Modells, $\\delta_{ff}=l\\kappa+K_V v^2\\kappa-k_3e_{2,ss}$."
    },
    "mpc": {
+    "assumptions": [
+     "Kinematik mit Untersteuergradient (quasi-stationäre Gierdynamik)",
+     "Vorwärtsfahrt"
+    ],
+    "expert": "Rekursive Machbarkeit ist durch die Box-Beschränkungen allein nicht garantiert; in der Praxis stabil bei hinreichend langem Horizont (Rawlings/Mayne).",
+    "limitations": [
+     "Kein Stabilitätsbeweis ohne Endkosten/Endbeschränkung",
+     "Rechenaufwand höher"
+    ],
     "purpose": "Vergleichsregler, der Stellgrößenbeschränkungen explizit berücksichtigt (Werling Tab. 4.1).",
-    "summary": "Linear zeitvariante modellprädiktive Querregelung entlang des Trajektorienhorizonts mit Lenkwinkel- und Lenkratenbeschränkung."
+    "summary": "Linear zeitvariante modellprädiktive Querregelung entlang des Trajektorienhorizonts mit Lenkwinkel- und Lenkratenbeschränkung.",
+    "theory": "Zustände $[e_y,e_\\psi,\\delta]$, Eingang $\\dot\\delta$; $\\dot e_y=v_ke_\\psi$, $\\dot e_\\psi=v_k(\\delta/(l+EG\\,v_k^2)-\\kappa_k)$ mit $v_k,\\kappa_k$ der Solltrajektorie zu den Horizontzeitpunkten; kondensiertes QP, gelöst mit ADMM."
    },
    "pi": {
+    "assumptions": [
+     "Vorwärtsfahrt"
+    ],
+    "expert": "PT2-ähnlicher geschlossener Kreis, stabil für $K_P,K_I>0$.",
+    "limitations": [
+     "Keine Vorsteuerung"
+    ],
     "purpose": "Klassischer Längsregler.",
-    "summary": "PI-Regler auf den Geschwindigkeitsfehler."
+    "summary": "PI-Regler auf den Geschwindigkeitsfehler.",
+    "theory": "$a=K_Pe_v+K_I\\int e_v$"
    },
    "pid": {
+    "assumptions": [
+     "Vorwärtsfahrt"
+    ],
+    "expert": "Stabil für positive Verstärkungen am Integrator $\\dot v=a$.",
+    "limitations": [
+     "Keine Vorsteuerung, Schleppfehler in e_t"
+    ],
     "purpose": "Klassischer Längsregler zum Vergleich.",
-    "summary": "PID-Regler auf den Geschwindigkeitsfehler der Solltrajektorie."
+    "summary": "PID-Regler auf den Geschwindigkeitsfehler der Solltrajektorie.",
+    "theory": "$a=K_Pe_v+K_I\\int e_v+K_D\\dot e_v$"
    },
    "pure_pursuit": {
+    "assumptions": [
+     "Kinematisches Fahrzeug, Vorwärtsfahrt"
+    ],
+    "expert": "Für kleine Fehler entspricht Pure Pursuit einem P-Regler auf den Querfehler mit Verstärkung $2/L_d^2$; die Stabilität folgt aus der positiven Vorausschau (Snider 2009).",
+    "limitations": [
+     "Schneidet Kurven, stationärer Querfehler bei großer Vorausschau",
+     "Keine Rückwärtsfahrt"
+    ],
     "purpose": "Einfacher, robuster Vergleichsregler (Snider 2009).",
-    "summary": "Geometrischer Querregler: Kreisbogen von der Hinterachse zu einem Zielpunkt auf der Bahn."
+    "summary": "Geometrischer Querregler: Kreisbogen von der Hinterachse zu einem Zielpunkt auf der Bahn.",
+    "theory": "$\\delta=\\arctan(2l\\sin\\alpha/L_d)$, $L_d=\\max(L_{min},kv)$, $\\alpha$ Winkel zum Zielpunkt."
    },
    "speed_pi": {
+    "assumptions": [
+     "Vorwärtsfahrt"
+    ],
+    "expert": "Die Rückrechnung begrenzt den Integrator in der Sättigung (Åström/Hägglund).",
+    "limitations": [
+     "Kein Positionsfehler"
+    ],
     "purpose": "Robuster Geschwindigkeitsregler bei Stellgrößensättigung.",
-    "summary": "PI-Geschwindigkeitsregler mit Back-Calculation-Anti-Windup und Vorsteuerung."
+    "summary": "PI-Geschwindigkeitsregler mit Back-Calculation-Anti-Windup und Vorsteuerung.",
+    "theory": "$a=a_d+K_Pe_v+K_II$, $\\dot I=e_v+k_{aw}(a_{sat}-a)/K_I$"
    },
    "stanley": {
+    "assumptions": [
+     "Vorwärtsfahrt"
+    ],
+    "expert": "Für das kinematische Modell konvergiert der Vorderachsfehler exponentiell, $\\dot e=-v\\sin(\\arctan(ke/v))$ (Hoffmann et al. 2007).",
+    "limitations": [
+     "Keine Rückwärtsfahrt, kinematische Herleitung"
+    ],
     "purpose": "Vergleichsregler mit guter Spurtreue bei mittleren Geschwindigkeiten.",
-    "summary": "Querregler auf Vorderachs-Querfehler und Kurswinkelfehler (Stanley, DARPA Grand Challenge)."
+    "summary": "Querregler auf Vorderachs-Querfehler und Kurswinkelfehler (Stanley, DARPA Grand Challenge).",
+    "theory": "$\\delta=\\theta_e+\\arctan(-k e_{fa}/(k_{soft}+v))+\\delta_{ff}-k_r(r-v\\kappa)$."
    },
    "werling_bilevel": {
+    "assumptions": [
+     "Planer setzt reference_point mit Hysterese um v_s (contracts.md Abschnitt 7)",
+     "Planer beantwortet reinit_request mit einer Trajektorie mit reinitialized=True"
+    ],
+    "expert": "Jeder Teilregler ist für sich asymptotisch stabil (Sätze 4, 6, 8). Da beim Umschalten beide Modelle gültig sind und die Vorsteueranteile dominieren, bleiben die Sprünge klein; die Reinitialisierung setzt die Low-level-Fehler auf null (Werling 2.3).",
+    "limitations": [
+     "Harte Umschaltung: kleine Stellgrößensprünge möglich, Verstärkungen abgestimmt",
+     "Schwellwerte c_t, c_n experimentell (Standardwerte für die Mittelklasselimousine)"
+    ],
     "purpose": "Vereint Low-level-Stabilisierung (permanente Störungen, Modellfehler) mit der High-level-Stabilisierung durch Reinitialisierung bei Impulsstörungen (Werling 2.3, 4.4, 4.5).",
-    "summary": "Standard-Trackingregler: stoßfreie Umschaltung der drei Werling-Regler nach Referenzpunkt und Fahrtrichtung, dazu Reinitialisierungsauslösung und Bewegungsprädiktion für die Planung."
+    "summary": "Standard-Trackingregler: stoßfreie Umschaltung der drei Werling-Regler nach Referenzpunkt und Fahrtrichtung, dazu Reinitialisierungsauslösung und Bewegungsprädiktion für die Planung.",
+    "theory": "Umschaltung nach Abb. 4.13; elliptisches Maß $(\\dot e_t/c_t)^2+(\\dot e_n/c_n)^2\\geq1$ (4.5.1) im Schwerpunkt bzw. geometrischen Mittelpunkt; Taylor-Prädiktion des Referenzpunkts über die Planungslatenz (4.5.2)."
    },
    "werling_dynamic": {
+    "assumptions": [
+     "Ebene Fahrbahn, keine dynamischen Radlasten (Einspurmodell)",
+     "Reifenparameter A, B, C je Achse bekannt (Certainty Equivalence)",
+     "Antriebs-/Bremskräfte schnell eingeregelt, Kräfteverhältnis gamma bekannt",
+     "v > 0 (Vorwärtsfahrt, singulär bei v = 0)"
+    ],
+    "expert": "Nach Linearisierung gilt $\\ddot{\\tilde e}_t=\\tilde w_2$, $\\ddot{\\tilde e}_n=\\tilde w_1$; mit (4.68)/(4.69) und $k>0$ konvergieren die Fehler exponentiell. Die Nulldynamik (4.67) ist für $\\lambda>\\max(-l_h,-J/[l_vm])$ stabil (Satz 9), ihre Dämpfung $\\zeta$ wird über (4.70) konstant gehalten.",
+    "limitations": [
+     "Nur lokal (Reifensättigung, Bedingung (4.49))",
+     "Stellgrößenbeschränkungen nicht im Regelgesetz",
+     "Nulldynamik nur für Geradeausfahrt linear analysiert (Satz 9)"
+    ],
     "purpose": "Stabilisiert einen Referenzpunkt lambda vor dem Schwerpunkt invariant auf der Solltrajektorie; die dynamische Sollgrößentransformation beseitigt den Schleppfehler, die geschwindigkeitsabhängige Vorausschau hält die Dämpfung der Nulldynamik konstant (Werling 4.3).",
-    "summary": "Exakt E/A-linearisierender Trackingregler auf dem dynamischen Einspurmodell mit isotropem Pacejka-Reifen für schnelle Fahrt."
+    "summary": "Exakt E/A-linearisierender Trackingregler auf dem dynamischen Einspurmodell mit isotropem Pacejka-Reifen für schnelle Fahrt.",
+    "theory": "Ausgang (4.46), invariante Fehler (4.48), relativer Grad [2,2], linearisierende Rückführung als Lösung von (4.60) (2D-Newton), lineare Stabilisierung (4.68)/(4.69), Nulldynamik (4.67), lambda(zeta, v_d) (4.70), Online-Simulation der Nulldynamik (4.71)-(4.74), Lenkratenregelung (4.75)."
    },
    "werling_kinematic_center": {
+    "assumptions": [
+     "Kinematisches Einspurmodell, |beta~| < pi/2 (durch die Lenkwinkelgrenze erfüllt)",
+     "Nur Vorwärtsfahrt, |kappa_d| < 1/lambda (Satz 7)"
+    ],
+    "expert": "Mit $\\tilde V=\\frac{1}{2}[\\tilde k_1\\tilde e_t^2+\\tilde k_1\\tilde e_n^2+\\tilde e_\\theta^2+\\tilde e_v^2]$ und $\\tilde w_2=\\dot{\\tilde v}_d-\\tilde k_3\\tilde e_v-\\tilde k_1[\\tilde e_t\\cos\\tilde e_\\theta+\\tilde e_n\\sin\\tilde e_\\theta]$ folgt $\\dot{\\tilde V}=-\\tilde k_4\\tilde e_\\theta^2-\\tilde k_3\\tilde e_v^2\\leq0$ (Satz 6). Nulldynamik (4.36) stabil für $v_d>0$, $|\\kappa_d|<1/\\lambda$ (Satz 7).",
+    "limitations": [
+     "Rückwärts instabile Nulldynamik (Taschenmessereffekt)",
+     "Orientierung nur über die Nulldynamik stabil (|psi - psi_d| <= pi/2 zu Beginn)"
+    ],
     "purpose": "Stabilisiert den Punkt lambda ~ l/2 vor der Hinterachse direkt, damit das Fahrzeug ruhiger lenkt und mit kleineren Korrekturamplituden der kollisionsfrei geplanten Konfiguration folgt (Werling 4.2.4).",
-    "summary": "Lyapunov-basierter Trackingregler der geometrischen Fahrzeugmitte ohne Orientierungsstabilisierung für langsame Vorwärtsfahrt."
+    "summary": "Lyapunov-basierter Trackingregler der geometrischen Fahrzeugmitte ohne Orientierungsstabilisierung für langsame Vorwärtsfahrt.",
+    "theory": "Flachheitsbasierte Sollgrößentransformation (4.20)-(4.24), invariante Fehler der Fahrzeugmitte (4.25), Fehlerdynamik Modell 3 (4.26)/(4.27), Regelgesetz (4.30)/(4.31) mit Inversen (4.28)/(4.29) und Rücksubstitution (4.7)."
    },
    "werling_kinematic_orientation": {
+    "assumptions": [
+     "Keine Reifenschräglaufwinkel (langsame Fahrt, kinematisches Einspurmodell)",
+     "Alle Zustände gemessen, Lenkwinkel |delta| < pi/2",
+     "Antriebs- und Bremskräfte werden von unterlagerten Regelkreisen schnell eingestellt"
+    ],
+    "expert": "Mit $V_c=\\frac{1}{2}[k_1e_t^2+k_1e_n^2+e_\\psi^2+e_v^2+e_\\delta^2]$ gilt $\\dot V_c=-\\dot s_dk_2e_\\psi^2-k_3e_v^2-k_4e_\\delta^2\\leq0$; LaSalle liefert asymptotische Stabilität von $[e_t,e_n,e_\\psi,e_v,e_\\delta]=0$ für $\\dot s_d\\ne0$ (Satz 4). Vorwärts und rückwärts über $\\varsigma$, kein Lenkwinkelsprung im Stand, da keine Division durch $v$.",
+    "limitations": [
+     "Front schwenkt bei großen Korrekturen aus (Referenzpunkt Hinterachse)",
+     "Keine Stellgrößenbeschränkung im Regelgesetz (Reserve durch die Planung)",
+     "Für schnelle Fahrt ungeeignet (Schräglauf vernachlässigt)"
+    ],
     "purpose": "Stabilisiert Position, Orientierung, Geschwindigkeit und Lenkwinkel des erweiterten kinematischen Einspurmodells entlang der Solltrajektorie, auch im Stand und rückwärts (Werling 4.2.3).",
-    "summary": "Lyapunov-basierter Trackingregler der Hinterachsmitte mit Orientierungsstabilisierung für langsame Vorwärts- und Rückwärtsfahrt."
+    "summary": "Lyapunov-basierter Trackingregler der Hinterachsmitte mit Orientierungsstabilisierung für langsame Vorwärts- und Rückwärtsfahrt.",
+    "theory": "Invariante Fehler im Frenet-Rahmen der Solltrajektorie (4.9), fiktives Regelgesetz für $\\kappa_\\delta$ (4.11), virtueller Eingang $w_2=\\dot v$ (4.12), Backstepping auf $u_1=\\dot\\delta$ (4.16)-(4.18), Rücksubstitution (4.15), (4.7)."
    }
   },
   "trajectory_planner": {
    "frenet_naive": {
+    "limitations": [
+     "keine zeitliche Konsistenz: Ergebnis hängt von der Neuplanungsfrequenz ab",
+     "Regelfehler werden in jedem Zyklus zu Null gesetzt (keine Low-level-Robustheit)"
+    ],
     "purpose": "Zeigt den Nutzen der zeitlichen Konsistenz (Werling Abb. 3.2) in Planer-Vergleichen.",
     "summary": "Vergleichsplaner: Frenet-Sampling mit relativem Endzeitraster und Neuplanung vom Messzustand."
    },
    "learned": {
+    "assumptions": [
+     "Schnelle Fahrt mit d(t), Geschwindigkeitsmodus"
+    ],
+    "expert": "docs/learning/trajectory_model.md",
+    "limitations": [
+     "Folgen, Einfädeln, Anhalten, langsame Fahrt und Rückwärtsfahrt plant der Werling-Planer",
+     "Kostenabstand zum Lehrer ist gemessen, nicht begrenzt"
+    ],
     "purpose": "Gelernte Planung mit der Sicherheit des Werling-Planers: Ist kein lokaler Kandidat gültig oder liegt der beste am Rand der lokalen Menge, sucht der Zyklus vollständig.",
-    "summary": "Ein Netz schlägt die Trajektorie vor (Endversatz, Endgeschwindigkeit, Endzeiten); der Werling-Planer baut nur die Kandidaten neben dem Vorschlag und prüft sie mit seinen Restriktionen und der Kollisionsprüfung."
+    "summary": "Ein Netz schlägt die Trajektorie vor (Endversatz, Endgeschwindigkeit, Endzeiten); der Werling-Planer baut nur die Kandidaten neben dem Vorschlag und prüft sie mit seinen Restriktionen und der Kollisionsprüfung.",
+    "theory": "Imitationslernen der Auswahl des Werling-Planers; Merkmale: Startzustand, Aufgabe, Krümmung voraus, nächste Objekte, vorherige Wahl (Bellman-Prinzip)."
    },
    "sequential": {
+    "limitations": [
+     "Längskandidaten lexikographisch vor Querkandidaten sortiert"
+    ],
     "purpose": "Zeigt den Vorteil der kombinierten Quer-/Längsoptimierung (Ausweichen mit abgestimmtem Bremsen).",
     "summary": "Vergleichsplaner: Längsbewegung ohne Kenntnis der Querbewegung, danach Querbewegung (Werling 3.1)."
    },
    "werling": {
+    "assumptions": [
+     "Schwimmwinkel am Referenzpunkt = 0 für die Kollisionsprüfung",
+     "Vorderfahrzeuge mit konstanter Beschleunigung (geklemmt im Stillstand)",
+     "Referenzkurve mit stetiger Krümmungsänderung (Bemerkung 4)"
+    ],
+    "limitations": [
+     "zeitliche Konsistenz nur bei inaktiven Restriktionen und rein konsistenten Kostentermen",
+     "Funktionenklasse auf doppelte Kursänderung beschränkt (keine Labyrinth-Manöver)",
+     "Richtungswechsel (ς) nur im Stillstand über die Verhaltensebene"
+    ],
     "purpose": "Reaktive, zeitkritische Kollisionsvermeidung mit kombinierter Längs- und Queroptimierung, die bei inaktiven Restriktionen dank Bellman-Prinzip zeitlich konsistent ist (Werling 2011, Kap. 3).",
-    "summary": "Trajektorienplanung nach Werling: optimale Polynome in Frenet-Koordinaten, diskretisierte Zielmannigfaltigkeiten auf absolutem Zeitraster, zeitliche Konsistenz und Bi-level-Stabilisierung."
+    "summary": "Trajektorienplanung nach Werling: optimale Polynome in Frenet-Koordinaten, diskretisierte Zielmannigfaltigkeiten auf absolutem Zeitraster, zeitliche Konsistenz und Bi-level-Stabilisierung.",
+    "theory": "Quer- und Längsbewegung sind Ausgang einer Integratorkette; die ruckoptimalen Lösungen sind quintische (fester Endzustand) bzw. quartische Polynome (freie Endposition). Endzeitpunkte und Endversätze werden auf der Zielmannigfaltigkeit diskretisiert; die beste restriktionskonforme Kombination wird lazy in aufsteigender Kostenreihenfolge gesucht."
    },
    "werling_parking": {
+    "assumptions": [
+     "Vorderachslenkung, niedrige Geschwindigkeit im Parkmodus"
+    ],
+    "expert": "docs/planning/parking.md",
+    "limitations": [
+     "Im Stack nur Längsparken rückwärts"
+    ],
     "purpose": "Parkmanöver mit Richtungswechseln, die der Frenet-Planer auf der Referenzlinie nicht darstellen kann.",
-    "summary": "Werling-Planer für normale Fahrt; bei einer Parkaufgabe plant ein Hybrid-A*-/Reeds-Shepp-Planer den Parkpfad und gibt ihn Zug für Zug an den Regler."
+    "summary": "Werling-Planer für normale Fahrt; bei einer Parkaufgabe plant ein Hybrid-A*-/Reeds-Shepp-Planer den Parkpfad und gibt ihn Zug für Zug an den Regler.",
+    "theory": "Reeds-Shepp-Kurven, Hybrid A*, Mehrzug-Ausparken; Zeitparametrierung mit Lenkratengrenze."
    }
   },
   "vehicle_dynamics": {
    "split_range": {
+    "assumptions": [
+     "Antriebsstrangdynamik vernachlässigt (Momente wirken unverzögert, Werling 5.1.2.2)",
+     "Bremskraftverteilung fest gamma (Standard 0.75)"
+    ],
+    "expert": "Stationär (konstante Störung F_s) gilt mit aktivem Integrator $a\\to a_{exp}$, da der Integrator die Störung vollständig übernimmt; bei Sättigung bleibt sein Zustand begrenzt, sodass nach dem Verlassen der Sättigung kein Überschwingen entsteht.",
+    "limitations": [
+     "Kein Motorkennfeld F_M^-1 / Getriebe-Schleppmoment (Momentenschnittstelle)"
+    ],
     "purpose": "Die Entwurfsmodelle der Trackingregler vernachlässigen Roll- und Luftwiderstand; die Ebene kompensiert F_W(v) und regelt Restfehler (Gegenwind, Steigung) mit einem Integrator aus.",
-    "summary": "Setzt die Solllängskraft bzw. Sollbeschleunigung über Antrieb oder Bremse in Radmomente um."
+    "summary": "Setzt die Solllängskraft bzw. Sollbeschleunigung über Antrieb oder Bremse in Radmomente um.",
+    "theory": "$u=F_{ld}+F_W(v)+k_I\\int m(a_{exp}-a)\\,dt$; $u\\varsigma\\geq0$: Antrieb (Rückwärtsgang bei $\\varsigma=-1$), sonst Bremse. Anti-Windup: Integration angehalten, wenn das Stellglied gesättigt ist und der Fehler weiter in die Sättigung treibt (Werling Abb. 5.3)."
    }
   },
   "vehicle_plant": {
    "vehicle_model": {
+    "assumptions": [
+     "Stellgrößen über einen Executor-Schritt konstant (Halteglied)"
+    ],
+    "expert": "Explizite Integration (Euler/Heun/RK4) mit Teilschritten; die Teilschrittweite ist durch die Empfehlung bzw. stable_dt des Modells begrenzt (z. B. DESM: $h<2/\\max(\\lambda_i)$ mit $\\lambda\\approx(c_v+c_h)/(mv)$), damit RK4 numerisch stabil bleibt.",
+    "limitations": [
+     "Rückwärtsfahrt nur mit werling_kesm, bicycle_kinematic (werling_desm nur langsam)",
+     "Störkräfte nur bei Modellen mit Zuständen vy und r"
+    ],
     "purpose": "Beliebige Fahrzeugmodelle (Werling-Entwurfsmodelle, Einspur-, Zweispur-, Mehrkörpermodell) als Strecke für Reglerentwicklung und Robustheitsuntersuchungen.",
     "summary": "Umschließt ein registriertes vdsim-Fahrzeugmodell als Strecke der Wirkkette (ohne Durchgriff)."
    }
   },
   "world": {
    "scenario_engine": {
+    "assumptions": [
+     "Ego-Umriss als Rechteck; Mittelpunkt in der Mitte zwischen den Achsen (Überhänge gleich)",
+     "Akteure reagieren auf das Ego über IDM, sofern es ihre Spur belegt"
+    ],
+    "limitations": [
+     "keine Fahrzeugdynamik der Akteure (kinematische Bewegung entlang der Spur)",
+     "Störungen wie die Seitenwindböe werden nur als Ereignis gemeldet, nicht selbst eingeprägt"
+    ],
     "purpose": "Reproduzierbare Testszenarien für die gesamte Wirkkette: Akteure mit IDM/MOBIL, skriptbaren Triggern, Ampeln, Kollisions- und Off-Road-Erkennung sowie Störungsereignissen.",
-    "summary": "Simuliert die Verkehrsteilnehmer eines Szenarios und liefert die Ground Truth (WorldState)."
+    "summary": "Simuliert die Verkehrsteilnehmer eines Szenarios und liefert die Ground Truth (WorldState).",
+    "theory": "Synchrones Update aller Akteure (Beschleunigungen aus dem Zustand zur Zeit t, dann Integration mit Teilschritten $h \\le h_{max}$). Kollisionen zwischen orientierten Rechtecken mit dem Trennachsensatz (SAT)."
    }
   }
  },

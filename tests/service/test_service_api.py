@@ -324,4 +324,8 @@ def test_simulation_report(client):
     assert pdf.content[:5] == b"%PDF-" and len(pdf.content) > 50_000
     summary = client.post("/simulate/report", json={"run_ids": ids[:1], "format": "summary"}, headers=KEY)
     assert summary.status_code == 200 and summary.text.startswith("# Engineering Summary")
+    assert "| Group | Key figure |" in summary.text and "Max. lateral acceleration" in summary.text      # English by default
+    german = client.post("/simulate/report", json={"run_ids": ids[:1], "format": "summary", "lang": "de"}, headers=KEY)
+    assert "| Gruppe | Kennwert |" in german.text and "Max. Querbeschleunigung" in german.text
+    assert client.post("/simulate/report", json={"run_ids": ids[:1], "lang": "fr"}, headers=KEY).status_code == 422
     assert client.post("/simulate/report", json={"run_ids": ["missing"]}, headers=KEY).status_code == 404

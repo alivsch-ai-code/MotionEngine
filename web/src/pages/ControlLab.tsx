@@ -13,6 +13,7 @@ import { ParamDialog } from "../components/ParamDialog";
 import { PathPlot, type Polyline } from "../components/PathPlot";
 import { RichText } from "../components/RichText";
 import type { ControlResult, ControlRun, ControlRunRequest } from "../lib/api";
+import { componentList, componentNote } from "../lib/domain";
 import { fmt } from "../lib/format";
 import { useClient, useMutation, usePersistentState, useQuery } from "../lib/hooks";
 
@@ -211,9 +212,8 @@ function Law({ run, runs, onFocus, k, tt, time, onTime, duration, lang, doc }:
         {typeof doc?.theory === "string" && doc.theory ? <details className="expert"><summary><Icon name="book" />{t("control.law.library")}</summary>
           <div className="stack"><p>{t(`domain:componentDoc.tracking_controller.${run.name}.summary`, { defaultValue: String(doc.summary ?? "") })}</p>
             <p>{t(`domain:componentDoc.tracking_controller.${run.name}.purpose`, { defaultValue: String(doc.purpose ?? "") })}</p>
-            {(["theory", "expert"] as const).map((key) => (typeof doc[key] === "string" && doc[key] ? <RichText key={key} text={doc[key] as string} /> : null))}
-            {lang.startsWith("de") ? null : <p className="subtle">{t("architecture.doc.german")}</p>}
-            {Array.isArray(doc.limitations) && doc.limitations.length ? <RichText text={(doc.limitations as string[]).map((x) => `- ${x}`).join("\n")} /> : null}</div></details> : null}
+            {(["theory", "expert"] as const).map((key) => (typeof doc[key] === "string" && doc[key] ? <RichText key={key} text={componentNote(t, `tracking_controller/${run.name}`, key, doc[key])} /> : null))}
+            {Array.isArray(doc.limitations) && doc.limitations.length ? <RichText text={componentList(t, `tracking_controller/${run.name}`, "limitations", doc.limitations).map((x) => `- ${x}`).join("\n")} /> : null}</div></details> : null}
       </div>
     </div>
   );
