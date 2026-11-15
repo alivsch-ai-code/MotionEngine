@@ -10,7 +10,7 @@ import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import type { ControlRunRequest, ExperimentRequest, LayerSpec, RunRequest } from "../lib/api";
 import { fmt } from "../lib/format";
-import { useClient, usePersistentState } from "../lib/hooks";
+import { useClient } from "../lib/hooks";
 import { applyConditions, type Conditions } from "../lib/stack";
 import { CONTROL_DEFAULT, CONTROL_FORM_KEY, type ControlForm } from "./ControlLab";
 
@@ -53,7 +53,11 @@ const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
 export default function Learn() {
   const { t, i18n } = useTranslation(["app", "common", "domain"]);
   const lang = i18n.language;
-  const [done, setDone] = usePersistentState<string[]>("me.learn.done", []);
+  // progress is kept on this device (local storage), not only for the session
+  const [done, setDoneState] = useState<string[]>(() => {
+    try { const v: unknown = JSON.parse(localStorage.getItem("me.learn.done") ?? "[]"); return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []; } catch { return []; }
+  });
+  const setDone = (v: string[]) => { setDoneState(v); try { localStorage.setItem("me.learn.done", JSON.stringify(v)); } catch { /* storage unavailable: progress lasts until the page is closed */ } };
   const topics = ["control", "planning", "system"] as const;
   return (
     <div className="stack stack--lg">

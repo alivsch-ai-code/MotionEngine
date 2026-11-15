@@ -187,7 +187,7 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
   return (
     <div className="split split--wide">
       <form className="card" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-        <div className="card__header"><div><h2>{t("models.trainForm.title")}</h2><p>{t("models.trainForm.text")}</p></div></div>
+        <div className="card__header"><div><h2>{planner ? t("models.trainForm.titlePlanner") : t("models.trainForm.title")}</h2><p>{planner ? t("models.trainForm.textPlanner") : t("models.trainForm.text")}</p></div></div>
         <div className="card__body stack">
           <SelectField label={t("models.trainForm.kind")} value={form.kind ?? "vehicle_dynamics"} hint={t(`models.trainForm.kindHint.${form.kind ?? "vehicle_dynamics"}`)}
             onChange={(v) => setForm({ ...form, kind: v, ...TRAIN_DEFAULTS[v] })}
@@ -245,9 +245,9 @@ function TrainPanel({ onDone }: { onDone: (id: string) => void }) {
           </div></div>
         ) : (
           <div className="card"><div className="card__body stack">
-            <h2>{t("models.how.title")}</h2>
+            <h2>{planner ? t("models.how.titlePlanner") : t("models.how.title")}</h2>
             <p>{planner ? t("models.howPlanner.text") : t("models.how.text")}</p>
-            <div className="code-block">{planner ? "x = [d, ḋ, d̈, ṡ, s̈, v_ref, d_min, d_max, κ(s), objects, previous plan]   →   MLP (tanh)   →   y = [δ, τ_lat, ν, τ_lon]"
+            <div className="code-block" style={{ whiteSpace: "pre-wrap" }}>{planner ? "x = [d, ḋ, d̈, ṡ, s̈, v_ref, d_min, d_max, κ(s), objects, previous plan]   →   MLP (tanh)   →   y = [δ, τ_lat, ν, τ_lon]"
               : "x = [vₓ, v_y, ψ̇, δ, Fₓ]   →   MLP (tanh)   →   y = [v̇ₓ, v̇_y, ψ̈]"}</div>
             <p className="subtle">{planner ? t("models.howPlanner.validation") : t("models.how.validation")}</p>
           </div></div>

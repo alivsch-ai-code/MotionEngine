@@ -307,3 +307,7 @@ details.expert[open] > summary { margin-bottom: var(--me-space-3); color: var(--
 @media (max-width: 1100px) { .split--editor { grid-template-columns: minmax(0, 1fr); } }
 .lesson .card__header h3 { margin: 0; }
 .lesson p { margin: 0; }
+.control-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--me-space-2); }
+.control-name { white-space: nowrap; }
+.control-name .badge { margin-left: var(--me-space-2); }
+.law-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--me-space-4); align-items: start; }

@@ -10,10 +10,12 @@ import { maneuverLabel, modelLabel } from "../lib/domain";
 import { readRecentRuns } from "./recentRuns";
 
 const ACTIONS: { to: string; icon: IconName; key: string }[] = [
+  { to: "/app/learn", icon: "book", key: "learn" },
+  { to: "/app/control", icon: "settings", key: "control" },
+  { to: "/app/workbench", icon: "route", key: "workbench" },
   { to: "/app/simulate", icon: "play", key: "simulate" },
   { to: "/app/inspector", icon: "sigma", key: "inspector" },
   { to: "/app/models", icon: "brain", key: "models" },
-  { to: "/app/vehicles", icon: "car", key: "vehicles" },
 ];
 
 export default function Dashboard() {
@@ -48,7 +50,7 @@ export default function Dashboard() {
 
       <section className="stack" aria-labelledby="quick">
         <h2 id="quick">{t("dashboard.quickActions")}</h2>
-        <div className="grid grid--4">
+        <div className="grid grid--3">
           {ACTIONS.map((a) => (
             <Link key={a.to} to={a.to} className="card card--interactive">
               <div className="card__body stack stack--sm">
@@ -83,7 +85,7 @@ export default function Dashboard() {
           <div className="card__header"><h2 id="start">{t("dashboard.gettingStarted.title")}</h2></div>
           <div className="card__body">
             <ol className="stack" style={{ margin: 0, paddingLeft: "1.2rem" }}>
-              {(["connect", "simulate", "inspect", "learn"] as const).map((k) => (
+              {(["connect", "lesson", "simulate", "inspect", "stack", "learn"] as const).map((k) => (
                 <li key={k}><strong>{t(`dashboard.gettingStarted.${k}.title`)}</strong><p className="subtle">{t(`dashboard.gettingStarted.${k}.text`)}</p></li>
               ))}
             </ol>
